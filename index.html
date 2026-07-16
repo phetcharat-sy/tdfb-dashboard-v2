@@ -509,7 +509,7 @@ function setHero(numId, ringId, pct){
   const ringEl = document.getElementById(ringId);
   const target = numId === 'hero_tab1' ? 98 : 99;
   const below = pct < target;
-  numEl.textContent = pct.toFixed(1) + '%';
+  numEl.textContent = pct.toFixed(2) + '%';
   numEl.classList.toggle('below-target', below);
   ringEl.classList.toggle('below-target', below);
   ringEl.style.strokeDashoffset = RING_CIRC;
