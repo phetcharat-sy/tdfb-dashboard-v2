@@ -356,7 +356,9 @@ const percentDataLabelsPlugin = {
       meta.data.forEach((bar, index) => {
         const value = dataset.data[index];
         if(value === null || value === undefined || Number.isNaN(Number(value))) return;
-        ctx.fillText(formatPercentLabel(value), bar.x, Math.max(12, bar.y - 7));
+        const formatter = options.formatter || formatPercentLabel;
+        const formatter = options.formatter || formatPercentLabel;
+        ctx.fillText(formatter(value), bar.x, Math.max(12, bar.y - 7));
       });
     });
     ctx.restore();
