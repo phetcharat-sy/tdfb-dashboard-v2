@@ -578,6 +578,23 @@ function renderTab1(){
 }
 
 function renderTab1RemarkTable(rows){
+  const remarkRows = rows.filter(r => r.remarkTeam && r.remarkTeam.trim());
+  const seen = new Set();
+  const uniqueRows = [];
+  remarkRows
+    .sort((a,b) => { const da=parseDate(a.createDate), db=parseDate(b.createDate); return (db?db.getTime():0)-(da?da.getTime():0); })
+    .forEach(r => { if(!seen.has(r.orderRef)){ seen.add(r.orderRef); uniqueRows.push(r); } });
+  const tbody = document.getElementById('tab1_remark_body');
+  if(uniqueRows.length === 0){
+    tbody.innerHTML = '<tr><td colspan="3"><div class="empty-state">No Remark Team notes found</div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = uniqueRows.map(r => (
+    '<tr><td>' + escapeHtml(r.source||r.channel||'-') + '</td>' +
+    '<td class="strong">' + escapeHtml(r.orderRef) + '</td>' +
+    '<td>' + escapeHtml(r.remarkTeam) + '</td></tr>'
+  )).join('');
+}
   const remarkRows = rows
     .filter(r => r.remarkTeam && r.remarkTeam.trim())
     .sort((a,b) => {
