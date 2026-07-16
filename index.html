@@ -747,7 +747,7 @@ function renderOosChart(onTime, early, late){
       { type:'bar', data:[onP, earP, lateP], backgroundColor:['#7A9A3F','#4C6B26','#A6432E'], borderRadius:6, maxBarThickness:46, order:2 },
       { type:'line', data:[99,99,99], borderColor:'#A6432E', borderDash:[6,4], borderWidth:1.5, pointRadius:0, spanGaps:true, order:1, label:'Target 99%' }
     ]},
-    options: percentChartOptions()
+    options: percentChartOptions({ dataLabels:true })
   });
 }
 
