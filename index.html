@@ -639,7 +639,6 @@ function renderPlatformChart(platform, walkin){
     options: percentChartOptions({ dataLabels:true })
   });
 }
-
 function renderChannelChart(orderRows){
   const counts = {};
   orderRows.forEach(r => { const c = r.senderName || 'Unspecified'; counts[c] = (counts[c]||0)+1; });
@@ -662,6 +661,8 @@ function renderChannelChart(orderRows){
     }
   });
 }
+
+function renderUrgentChart(orderRows){
   const counts = {};
   orderRows.forEach(r => { const u = r.urgent || 'Unspecified'; counts[u] = (counts[u]||0)+1; });
   const total = orderRows.length || 1;
