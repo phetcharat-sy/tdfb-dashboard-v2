@@ -569,6 +569,7 @@ function renderTab1(){
   renderPackingChart(onTimeOrders, lateOrders);
   renderPlatformChart(platformOrders, walkInOrders);
   renderUrgentChart(orderRows);
+    renderChannelChart(orderRows);
   renderTab1RemarkTable(lineRows);
 
   document.getElementById('tab1_footer').textContent =
