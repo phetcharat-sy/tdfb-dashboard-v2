@@ -380,7 +380,7 @@ async function loadData(){
     if(csvText.trim().startsWith('<')){
       throw new Error('This sheet may not be shared publicly ("Anyone with the link"), or the URL is wrong.');
     }
-    const parsed = Papa.parse(csvText, { header:true, skipEmptyLines:true });
+    const parsed = Papa.parse(csvText, { header:true, skipEmptyLines:true, transformHeader: h => h.trim() });
     ALL_ROWS = mapRows(parsed.data);
     populateFilterOptions();
     renderAll();
