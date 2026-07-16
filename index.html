@@ -669,7 +669,7 @@ function renderTab2(){
   const early = rows.filter(r => classify(r.whStatus)==='early').length;
   const late = rows.filter(r => classify(r.whStatus)==='late').length;
   const uniqueOrders = new Set(rows.map(r=>r.orderRef)).size;
-  const denom = onTime+early+late || 1;
+  const denom = totalLines || 1;
   const oosPct = Math.round(((onTime+early)/denom)*1000)/10;
 
   setHero('hero_tab2', 'hero_tab2_ring', oosPct);
