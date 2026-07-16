@@ -731,10 +731,13 @@ function renderTop5Chart(rows){
   const data = entries.map(e=>e[1]);
   const ctx = document.getElementById('chart_top5');
   if(charts.top5) charts.top5.destroy();
+  const opts = baseChartOptions({ legend:false });
+  opts.plugins.percentDataLabels = { display:true, formatter: v => Number(v).toLocaleString('en-US') };
+  opts.layout = { padding:{ top:18 } };
   charts.top5 = new Chart(ctx, {
     type:'bar',
     data:{ labels, datasets:[{ data, backgroundColor:'#7A9A3F', borderRadius:6, maxBarThickness:42 }] },
-    options: baseChartOptions({ legend:false })
+    options: opts
   });
 }
 
