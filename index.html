@@ -639,7 +639,28 @@ function renderPlatformChart(platform, walkin){
   });
 }
 
-function renderUrgentChart(orderRows){
+function renderChannelChart(orderRows){
+  const counts = {};
+  orderRows.forEach(r => { const c = r.senderName || 'Unspecified'; counts[c] = (counts[c]||0)+1; });
+  const total = orderRows.length || 1;
+  const entries = Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+  const labels = entries.map(e=>e[0]);
+  const data = entries.map(e=> Math.round((e[1]/total)*1000)/10);
+  const palette = ['#7A9A3F','#A6432E','#4C6B26','#C89B4A','#8C9482','#5E7B32'];
+  const ctx = document.getElementById('chart_channel');
+  if(charts.channel) charts.channel.destroy();
+  charts.channel = new Chart(ctx, {
+    type:'pie',
+    data:{ labels, datasets:[{ data, backgroundColor:palette.slice(0,labels.length) }] },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{ position:'right', labels:{ color:'#4E5C46', font:{family:"'IBM Plex Sans Thai'"} } },
+        tooltip:{ ...tooltipStyle(), callbacks:{ label: c => c.label+': '+c.formattedValue+'%' } }
+      }
+    }
+  });
+}
   const counts = {};
   orderRows.forEach(r => { const u = r.urgent || 'Unspecified'; counts[u] = (counts[u]||0)+1; });
   const total = orderRows.length || 1;
