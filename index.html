@@ -733,13 +733,22 @@ function renderWeekly2Chart(rows){
     options: baseChartOptions({ legend:false })
   });
 }
-
+const EXCLUDED_PRODUCTS = [
+  'box xs','box s','box m','box l','box xl','box 1xl','box 2xl (kerry)',
+  'post bag air bubble 6x9"','product card usage & storage guideline',
+  'product card im, ce 30 g','เอกสาร invoice customerz',
+  'box c (11th year) 20x30x11 cm','box e (11th year) 24x40x17 cm',
+  'coupon','discount','product card anniversary coupon120b',
+  'product card - coupon website 50b',
+  'product card - sample sachet rich 3.1g + coupon 50'
+]; 
 function renderTop5Chart(rows){
   // Fix: filter out empty/unspecified products and use actual product names
   const counts = {};
   rows.forEach(r => {
     const p = (r.product || '').trim();
     if(!p || p.toLowerCase() === 'unspecified') return;
+    if(EXCLUDED_PRODUCTS.includes(p.toLowerCase())) return;
     counts[p] = (counts[p]||0)+1;
   });
   const entries = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,5);
