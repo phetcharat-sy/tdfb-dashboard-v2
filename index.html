@@ -372,10 +372,14 @@
     <div class="section">
       <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>รวมทั้งหมด</div>
       <div class="section-desc">ทุกสินค้า — ต้องเติมและไม่ต้องเติม</div>
-      <div class="table-panel">
+      <div class="table-panel" style="overflow-x:auto;">
         <div class="table-scroll remark-scroll">
-          <table class="data-table">
-            <thead><tr><th>Product</th><th>คะแนนขายดี</th><th>สถานะ</th><th>Quota</th><th>จำนวนที่ต้องเติม</th><th>Remark</th></tr></thead>
+          <table class="data-table" style="min-width:900px;">
+            <thead><tr>
+              <th>No</th><th>Product</th><th>คะแนนขายดี</th><th>สถานะ</th>
+              <th>WH300</th><th>QUOTA</th><th>Plan PD</th><th>FAC16</th>
+              <th>OWH</th><th>Quarantine</th><th>จำนวนที่ต้องเติม</th><th>Remark</th>
+            </tr></thead>
             <tbody id="tab3_all_body"></tbody>
           </table>
         </div>
@@ -698,7 +702,7 @@ function renderTab3(){
     return sb - sa;
   });
   if(allSorted.length === 0){
-    tbodyAll.innerHTML = '<tr><td colspan="6"><div class="empty-state">ไม่มีข้อมูล</div></td></tr>';
+    tbodyAll.innerHTML = '<tr><td colspan="12"><div class="empty-state">ไม่มีข้อมูล</div></td></tr>';
   } else {
     const isNeed = r => (r.needStock||'').includes('ต้องเติม') && !(r.needStock||'').includes('ไม่ต้อง');
     tbodyAll.innerHTML = allSorted.map(r => {
@@ -707,10 +711,16 @@ function renderTab3(){
         ? '<span style="color:var(--azuki);font-weight:700;">ต้องเติม</span>'
         : '<span style="color:var(--matcha-deep);font-weight:600;">ไม่ต้องเติม</span>';
       return '<tr>' +
+        '<td>' + escapeHtml(r.no||'—') + '</td>' +
         '<td class="strong">' + escapeHtml(r.product) + '</td>' +
         '<td>' + escapeHtml(r.score||'—') + '</td>' +
         '<td>' + statusHtml + '</td>' +
+        '<td>' + escapeHtml(r.wh300||'—') + '</td>' +
         '<td>' + escapeHtml(r.quota||'—') + '</td>' +
+        '<td>' + escapeHtml(r.planPd||'—') + '</td>' +
+        '<td>' + escapeHtml(r.fac16||'—') + '</td>' +
+        '<td>' + escapeHtml(r.owh||'—') + '</td>' +
+        '<td>' + escapeHtml(r.quarantine||'—') + '</td>' +
         '<td>' + (need ? '<span class="qty-highlight">' + escapeHtml(r.qtyNeeded||'0') + '</span>' : '—') + '</td>' +
         '<td>' + escapeHtml(r.remark3||'—') + '</td></tr>';
     }).join('');
