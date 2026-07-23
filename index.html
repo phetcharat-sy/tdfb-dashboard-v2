@@ -557,9 +557,15 @@ function mapRows(rawRows){
 function mapRows3(rawRows){
   return rawRows.map(r => {
     const out = {};
+    // Build case-insensitive key map once per row
+    const rLower = {};
+    Object.keys(r).forEach(k => { rLower[k.trim().toLowerCase()] = r[k]; });
     for(const [th, key] of Object.entries(COLMAP3)){
       if(out[key]) continue;
-      out[key] = (r[th] !== undefined ? r[th] : '').toString().trim();
+      // Try exact match first, then case-insensitive
+      let val = r[th];
+      if(val === undefined) val = rLower[th.trim().toLowerCase()];
+      out[key] = (val !== undefined ? val : '').toString().trim();
     }
     if(!out.safetyStock){
       const fk = Object.keys(r).find(k => k.trim().toLowerCase().includes('safety stock'));
@@ -749,9 +755,12 @@ function renderTab3(){
  
 function renderRemark3Chart(needRows){
   const counts = {};
+  const productsByRemark = {};
   needRows.forEach(r => {
     const key = (r.remark3||'').trim() || 'ไม่มี Remark';
     counts[key] = (counts[key]||0)+1;
+    if(!productsByRemark[key]) productsByRemark[key] = [];
+    productsByRemark[key].push(r.product);
   });
   const entries = Object.entries(counts).sort((a,b)=>b[1]-a[1]);
   const labels = entries.map(e=>e[0]);
@@ -762,6 +771,16 @@ function renderRemark3Chart(needRows){
   const opts = baseChartOptions({ legend:false });
   opts.plugins.percentDataLabels = { display:true, formatter: v => Number(v).toLocaleString('en-US') };
   opts.layout = { padding:{ top:18 } };
+  opts.plugins.tooltip = {
+    ...tooltipStyle(),
+    callbacks: {
+      title: (items) => items[0].label,
+      label: (item) => {
+        const products = productsByRemark[labels[item.dataIndex]] || [];
+        return ['จำนวน: ' + item.formattedValue + ' รายการ', ...products.map(p => '• ' + p)];
+      }
+    }
+  };
   charts.remark3 = new Chart(ctx, {
     type:'bar',
     data:{ labels, datasets:[{ data, backgroundColor:palette.slice(0,labels.length), borderRadius:6, maxBarThickness:56 }] },
