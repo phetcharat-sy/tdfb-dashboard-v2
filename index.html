@@ -184,6 +184,7 @@
     <button class="tab-btn active" data-tab="tab1" onclick="switchTab('tab1')">On-Time Performance<span class="cap">Target ≥ 98%</span></button>
     <button class="tab-btn" data-tab="tab2" onclick="switchTab('tab2')">Out of Stock<span class="cap">Target ≥ 99%</span></button>
     <button class="tab-btn" data-tab="tab3" onclick="switchTab('tab3')">Replenishment<span class="cap">รายสัปดาห์</span></button>
+    <button class="tab-btn" data-tab="tab4" onclick="switchTab('tab4')">Forecast<span class="cap">ประมาณการ</span></button>
   </div>
  
   <!-- ============ TAB 1 ============ -->
@@ -387,6 +388,50 @@
     </div>
  
     <div class="footer-note" id="tab3_footer"></div>
+  </div>
+ 
+  <!-- ============ TAB 4 (Forecast) ============ -->
+  <div class="tab-page" id="tab4">
+ 
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-icon i-azuki"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l10 18H2L12 3z"/><path d="M12 9v5"/><path d="M12 17h.01"/></svg></div><div class="stat-label">วิกฤต &lt; 2 สัปดาห์</div><div class="stat-value c-azuki" id="m4_critical">—</div></div>
+      <div class="stat-card"><div class="stat-icon i-bamboo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></div><div class="stat-label">เฝ้าระวัง 2–4 สัปดาห์</div><div class="stat-value c-bamboo" id="m4_warning">—</div></div>
+      <div class="stat-card"><div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12l2.5 2.5L16 9"/></svg></div><div class="stat-label">Stock ปกติ ≥ 4 สัปดาห์</div><div class="stat-value c-matcha" id="m4_ok">—</div></div>
+      <div class="stat-card"><div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h18v18H3z"/><path d="M3 9h18M9 21V9"/></svg></div><div class="stat-label">สินค้าที่วิเคราะห์ได้</div><div class="stat-value" id="m4_total">—</div></div>
+    </div>
+ 
+    <div class="section">
+      <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>Demand Trend &amp; Forecast</div>
+      <div class="section-desc">ยอด order จริงรายสัปดาห์ + ประมาณการ 4 สัปดาห์ข้างหน้า (moving average)</div>
+      <div class="chart-panel"><div class="chart-box" style="height:300px;"><canvas id="chart_forecast_demand"></canvas></div></div>
+    </div>
+ 
+    <div class="section">
+      <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>Stock vs Projected Demand (Top Products)</div>
+      <div class="section-desc">เปรียบ stock ปัจจุบัน vs demand คาดการณ์ 4 สัปดาห์ — แท่งสีแดงคือขาด</div>
+      <div class="chart-panel"><div class="chart-box" style="height:400px;"><canvas id="chart_forecast_top10"></canvas></div></div>
+    </div>
+ 
+    <div class="section">
+      <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>Stock Depletion Forecast</div>
+      <div class="section-desc">เรียงจากวิกฤตที่สุด — Avg weekly demand คำนวณจากข้อมูล order ย้อนหลัง</div>
+      <div class="table-panel">
+        <div class="table-scroll remark-scroll">
+          <table class="data-table">
+            <thead><tr>
+              <th>Product</th>
+              <th>Avg Demand/สัปดาห์</th>
+              <th>Stock ปัจจุบัน (WH300)</th>
+              <th>Stock เหลือ (สัปดาห์)</th>
+              <th>สถานะ</th>
+            </tr></thead>
+            <tbody id="tab4_forecast_body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+ 
+    <div class="footer-note" id="tab4_footer"></div>
   </div>
  
 </div>
@@ -809,6 +854,7 @@ function renderAll(){
   renderTab1();
   renderTab2();
   renderTab3();
+  renderTab4();
 }
  
 function renderLatestLine(rows){
@@ -1178,6 +1224,183 @@ function tooltipStyle(){
 function escapeHtml(s){
   if(s===undefined||s===null) return '';
   return s.toString().replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+ 
+/* ================= TAB 4 FORECAST ================= */
+function renderTab4(){
+  if(!ALL_ROWS.length && !ALL_ROWS_3.length){ return; }
+ 
+  // --- Build avg weekly demand per product from order data ---
+  const demandByProductWeek = {}; // product -> { week -> qty }
+  const allWeeks = new Set();
+  ALL_ROWS.forEach(r => {
+    const p = (r.product||'').trim();
+    if(!p || !r.week) return;
+    const qty = Number(r.orderLine) || 0;
+    if(!demandByProductWeek[p]) demandByProductWeek[p] = {};
+    demandByProductWeek[p][r.week] = (demandByProductWeek[p][r.week]||0) + qty;
+    allWeeks.add(r.week);
+  });
+ 
+  const weekList = [...allWeeks].sort((a,b) => Number(a)-Number(b));
+  const numWeeks = weekList.length || 1;
+ 
+  // Avg weekly demand per product
+  const avgDemand = {};
+  Object.entries(demandByProductWeek).forEach(([product, weekData]) => {
+    const total = Object.values(weekData).reduce((s,v) => s+v, 0);
+    avgDemand[product] = total / numWeeks;
+  });
+ 
+  // --- Cross-reference with stock data ---
+  const forecastRows = ALL_ROWS_3.map(r => {
+    const stock = Number(String(r.wh300||'0').replace(/,/g,'')) || 0;
+    const demand = avgDemand[r.product] || 0;
+    const weeksLeft = demand > 0 ? stock / demand : null;
+    return { ...r, stock, demand, weeksLeft };
+  }).filter(r => r.demand > 0 || r.stock > 0);
+ 
+  // Sort: critical first
+  forecastRows.sort((a,b) => {
+    if(a.weeksLeft === null && b.weeksLeft === null) return 0;
+    if(a.weeksLeft === null) return 1;
+    if(b.weeksLeft === null) return -1;
+    return a.weeksLeft - b.weeksLeft;
+  });
+ 
+  // --- Stat cards ---
+  const critical = forecastRows.filter(r => r.weeksLeft !== null && r.weeksLeft < 2).length;
+  const warning  = forecastRows.filter(r => r.weeksLeft !== null && r.weeksLeft >= 2 && r.weeksLeft < 4).length;
+  const ok       = forecastRows.filter(r => r.weeksLeft === null || r.weeksLeft >= 4).length;
+  document.getElementById('m4_critical').textContent = critical;
+  document.getElementById('m4_warning').textContent  = warning;
+  document.getElementById('m4_ok').textContent       = ok;
+  document.getElementById('m4_total').textContent    = forecastRows.length;
+ 
+  // --- Charts ---
+  renderDemandForecastChart(weekList, demandByProductWeek);
+  renderForecastTop10Chart(forecastRows);
+  renderForecastTable(forecastRows);
+ 
+  document.getElementById('tab4_footer').textContent =
+    forecastRows.length + ' products · ' + numWeeks + ' weeks of history · updated ' + new Date().toLocaleString('en-GB');
+}
+ 
+function renderDemandForecastChart(weekList, demandByProductWeek){
+  // Weekly total demand
+  const weeklyTotals = {};
+  weekList.forEach(w => { weeklyTotals[w] = 0; });
+  Object.values(demandByProductWeek).forEach(wd => {
+    Object.entries(wd).forEach(([w, qty]) => {
+      if(weeklyTotals[w] !== undefined) weeklyTotals[w] += qty;
+    });
+  });
+  const historical = weekList.map(w => weeklyTotals[w]);
+ 
+  // Moving average of last 4 weeks as forecast
+  const lastN = Math.min(4, weekList.length);
+  const recent = historical.slice(-lastN);
+  const avg4 = recent.reduce((s,v)=>s+v,0) / (lastN||1);
+ 
+  // Linear trend (simple least-squares slope)
+  const n = historical.length;
+  let slope = 0;
+  if(n >= 2){
+    const xs = historical.map((_,i)=>i);
+    const xMean = xs.reduce((s,v)=>s+v,0)/n;
+    const yMean = historical.reduce((s,v)=>s+v,0)/n;
+    const num = xs.reduce((s,xi,i) => s + (xi-xMean)*(historical[i]-yMean), 0);
+    const den = xs.reduce((s,xi) => s + (xi-xMean)**2, 0);
+    slope = den !== 0 ? num/den : 0;
+  }
+ 
+  const lastWeekNum = Number(weekList[weekList.length-1]) || weekList.length;
+  const forecastLabels = [1,2,3,4].map(i => 'W'+(lastWeekNum+i)+'*');
+  const forecastData   = [1,2,3,4].map(i => Math.max(0, Math.round(avg4 + slope * i)));
+ 
+  const labels = [...weekList.map(w=>'W'+w), ...forecastLabels];
+ 
+  const ctx = document.getElementById('chart_forecast_demand');
+  if(charts.forecastDemand) charts.forecastDemand.destroy();
+  const opts = baseChartOptions({ legend:true });
+  opts.plugins.lineDataLabels = { display:true };
+  opts.layout = { padding:{ top:20 } };
+  charts.forecastDemand = new Chart(ctx, {
+    type:'line',
+    data:{ labels, datasets:[
+      {
+        label:'Actual demand (qty)',
+        data:[...historical, null, null, null, null],
+        borderColor:'#7A9A3F', backgroundColor:'rgba(122,154,63,0.10)',
+        pointBackgroundColor:'#7A9A3F', pointRadius:3, tension:0.3, fill:true, borderWidth:2
+      },
+      {
+        label:'Forecast (4-week MA + trend)',
+        data:[...Array(weekList.length).fill(null), ...forecastData],
+        borderColor:'#C89B4A', backgroundColor:'rgba(200,155,74,0.08)',
+        pointBackgroundColor:'#C89B4A', pointRadius:4, borderDash:[7,4],
+        tension:0, fill:false, borderWidth:2.5
+      }
+    ]},
+    options: opts
+  });
+}
+ 
+function renderForecastTop10Chart(forecastRows){
+  const top = forecastRows.filter(r => r.demand > 0).slice(0, 12);
+  if(!top.length){ return; }
+ 
+  const labels       = top.map(r => r.product.length > 28 ? r.product.slice(0,26)+'…' : r.product);
+  const stockData    = top.map(r => r.stock);
+  const demand4wData = top.map(r => Math.round(r.demand * 4));
+  const deficit      = top.map(r => Math.max(0, Math.round(r.demand * 4) - r.stock));
+ 
+  const ctx = document.getElementById('chart_forecast_top10');
+  if(charts.forecastTop10) charts.forecastTop10.destroy();
+ 
+  const opts = baseChartOptions({ legend:true });
+  opts.indexAxis = 'y';
+  opts.scales.x = { ...opts.scales.x, beginAtZero:true };
+  opts.scales.y = { ticks:{ color:'#4E5C46', font:{size:10.5, family:"'IBM Plex Sans Thai'"} }, grid:{ display:false } };
+ 
+  charts.forecastTop10 = new Chart(ctx, {
+    type:'bar',
+    data:{ labels, datasets:[
+      { label:'Stock ปัจจุบัน (WH300)', data:stockData, backgroundColor:'rgba(122,154,63,0.75)', borderRadius:4, maxBarThickness:18 },
+      { label:'Demand คาด 4 สัปดาห์', data:demand4wData, backgroundColor:'rgba(200,155,74,0.55)', borderRadius:4, maxBarThickness:18 },
+      { label:'ขาด (Deficit)', data:deficit, backgroundColor:'rgba(166,67,46,0.80)', borderRadius:4, maxBarThickness:18 }
+    ]},
+    options: opts
+  });
+}
+ 
+function renderForecastTable(forecastRows){
+  const tbody = document.getElementById('tab4_forecast_body');
+  if(!forecastRows.length){
+    tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state">ไม่มีข้อมูล</div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = forecastRows.map(r => {
+    const w = r.weeksLeft;
+    let statusHtml;
+    if(w === null){
+      statusHtml = '<span style="color:var(--ink-faint);">ไม่มีข้อมูล demand</span>';
+    } else if(w < 2){
+      statusHtml = '<span style="color:var(--azuki);font-weight:700;">⚠ วิกฤต</span>';
+    } else if(w < 4){
+      statusHtml = '<span style="color:#8a6a2f;font-weight:700;">⚡ เฝ้าระวัง</span>';
+    } else {
+      statusHtml = '<span style="color:var(--matcha-deep);font-weight:600;">✓ ปกติ</span>';
+    }
+    const rowBg = w !== null && w < 2 ? ' style="background:rgba(166,67,46,.06);"'
+                : w !== null && w < 4 ? ' style="background:rgba(200,155,74,.06);"' : '';
+    return '<tr' + rowBg + '>' +
+      '<td class="strong">' + escapeHtml(r.product) + '</td>' +
+      '<td>' + (r.demand > 0 ? r.demand.toFixed(1) : '—') + '</td>' +
+      '<td>' + (r.stock > 0 ? r.stock.toLocaleString('en-US') : '0') + '</td>' +
+      '<td><b>' + (w !== null ? w.toFixed(1) : '—') + '</b></td>' +
+      '<td>' + statusHtml + '</td></tr>';
+  }).join('');
 }
  
 loadData();
