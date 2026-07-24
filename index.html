@@ -344,6 +344,19 @@
     </div>
  
     <div class="section">
+      <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>รายการที่ต้องเติม Stock <span style="font-size:13px;font-weight:400;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;">(มี Quota เท่านั้น)</span></div>
+      <div class="section-desc">เรียงตามคะแนนขายดี · แสดงเฉพาะสินค้าที่มี Quota</div>
+      <div class="table-panel">
+        <div class="table-scroll remark-scroll">
+          <table class="data-table">
+            <thead><tr><th>Product</th><th>คะแนนขายดี</th><th>ต้องเติมสินค้า</th><th>Quota</th><th>จำนวนที่ต้องเติม</th><th>Remark</th></tr></thead>
+            <tbody id="tab3_body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+ 
+    <div class="section">
       <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>สาเหตุที่ยังไม่ได้เติม</div>
       <div class="section-desc">Products blocked, by reason</div>
       <div class="chart-panel"><div class="chart-box" style="height:270px;"><canvas id="chart_remark3"></canvas></div></div>
@@ -352,19 +365,6 @@
           <table class="data-table">
             <thead><tr><th>Product</th><th>จำนวนที่ต้องเติม</th><th>Remark</th></tr></thead>
             <tbody id="tab3_remark_detail_body"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
- 
-    <div class="section">
-      <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>รายการที่ต้องเติม Stock <span style="font-size:13px;font-weight:400;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;">(มี Quota เท่านั้น)</span></div>
-      <div class="section-desc">เรียงตามคะแนนขายดี · แสดงเฉพาะสินค้าที่มี Quota</div>
-      <div class="table-panel">
-        <div class="table-scroll remark-scroll">
-          <table class="data-table">
-            <thead><tr><th>Product</th><th>คะแนนขายดี</th><th>ต้องเติมสินค้า</th><th>Quota</th><th>จำนวนที่ต้องเติม</th><th>Remark</th></tr></thead>
-            <tbody id="tab3_body"></tbody>
           </table>
         </div>
       </div>
