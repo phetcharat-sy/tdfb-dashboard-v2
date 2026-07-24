@@ -407,9 +407,15 @@
     </div>
  
     <div class="section">
-      <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>Stock vs Projected Demand (Top Products)</div>
-      <div class="section-desc">เรียงจากปริมาณที่ขาด (deficit) มากสุด · เปรียบ stock vs demand 1 สัปดาห์ และ 4 สัปดาห์</div>
-      <div class="chart-panel"><div class="chart-box" style="height:400px;"><canvas id="chart_forecast_top10"></canvas></div></div>
+      <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>Stock vs Demand 1 สัปดาห์</div>
+      <div class="section-desc">เรียงจากปริมาณที่ขาด (deficit) มากสุด · แท่งแดงคือส่วนที่ stock ไม่พอ 1 สัปดาห์</div>
+      <div class="chart-panel"><div class="chart-box" style="height:400px;"><canvas id="chart_forecast_1w"></canvas></div></div>
+    </div>
+ 
+    <div class="section">
+      <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>Stock vs Demand 4 สัปดาห์ (1 เดือน)</div>
+      <div class="section-desc">เรียงจากปริมาณที่ขาด (deficit) มากสุด · แท่งแดงคือส่วนที่ stock ไม่พอใน 1 เดือน</div>
+      <div class="chart-panel"><div class="chart-box" style="height:400px;"><canvas id="chart_forecast_4w"></canvas></div></div>
     </div>
  
     <div class="section">
@@ -1280,7 +1286,8 @@ function renderTab4(){
  
   // --- Charts ---
   renderDemandForecastChart(weekList, demandByProductWeek);
-  renderForecastTop10Chart(forecastRows);
+  renderForecast1wChart(forecastRows);
+  renderForecast4wChart(forecastRows);
   renderForecastTable(forecastRows);
  
   document.getElementById('tab4_footer').textContent =
@@ -1347,26 +1354,19 @@ function renderDemandForecastChart(weekList, demandByProductWeek){
   });
 }
  
-function renderForecastTop10Chart(forecastRows){
-  // เรียงจาก deficit (4w) มากสุด
-  const top = forecastRows
+function buildForecastItems(forecastRows, weeks){
+  return forecastRows
     .filter(r => r.demand > 0)
     .map(r => ({
       ...r,
-      deficit4w: Math.max(0, Math.round(r.demand * 4) - r.stock),
-      demand1w:  Math.round(r.demand * 1),
-      demand4w:  Math.round(r.demand * 4)
+      demandN:  Math.round(r.demand * weeks),
+      deficitN: Math.max(0, Math.round(r.demand * weeks) - r.stock)
     }))
-    .sort((a,b) => b.deficit4w - a.deficit4w)
+    .sort((a,b) => b.deficitN - a.deficitN)
     .slice(0, 14);
+}
  
-  if(!top.length){ return; }
- 
-  const labels = top.map(r => r.product.length > 28 ? r.product.slice(0,26)+'…' : r.product);
- 
-  const ctx = document.getElementById('chart_forecast_top10');
-  if(charts.forecastTop10) charts.forecastTop10.destroy();
- 
+function buildForecastChartOpts(items){
   const opts = baseChartOptions({ legend:true });
   opts.indexAxis = 'y';
   opts.scales.x = { ticks:{ color:'#8C9482', font:{size:10.5} }, grid:{ color:'rgba(31,46,26,0.06)' }, beginAtZero:true };
@@ -1375,28 +1375,51 @@ function renderForecastTop10Chart(forecastRows){
     ...tooltipStyle(),
     callbacks:{
       label: ctx => {
-        const r = top[ctx.dataIndex];
-        if(!r) return ctx.dataset.label + ': ' + ctx.formattedValue;
+        const r = items[ctx.dataIndex];
+        if(!r) return ctx.dataset.label + ': ' + Number(ctx.raw).toLocaleString('en-US');
         return [
           ctx.dataset.label + ': ' + Number(ctx.raw).toLocaleString('en-US'),
           'Stock: ' + r.stock.toLocaleString('en-US'),
-          '1w demand: ' + r.demand1w,
-          '4w demand: ' + r.demand4w,
-          'Deficit: ' + r.deficit4w
+          'Demand: ' + r.demandN,
+          'Deficit: ' + r.deficitN
         ];
       }
     }
   };
+  return opts;
+}
  
-  charts.forecastTop10 = new Chart(ctx, {
+function renderForecast1wChart(forecastRows){
+  const items = buildForecastItems(forecastRows, 1);
+  if(!items.length) return;
+  const labels = items.map(r => r.product.length > 28 ? r.product.slice(0,26)+'…' : r.product);
+  const ctx = document.getElementById('chart_forecast_1w');
+  if(charts.forecast1w) charts.forecast1w.destroy();
+  charts.forecast1w = new Chart(ctx, {
     type:'bar',
     data:{ labels, datasets:[
-      { label:'Stock ปัจจุบัน (WH300)', data:top.map(r=>r.stock),    backgroundColor:'rgba(122,154,63,0.75)', borderRadius:4, maxBarThickness:16 },
-      { label:'Demand 1 สัปดาห์',       data:top.map(r=>r.demand1w),  backgroundColor:'rgba(200,155,74,0.55)', borderRadius:4, maxBarThickness:16 },
-      { label:'Demand 4 สัปดาห์',       data:top.map(r=>r.demand4w),  backgroundColor:'rgba(76,107,38,0.35)',  borderRadius:4, maxBarThickness:16 },
-      { label:'ขาด / Deficit (4w)',      data:top.map(r=>r.deficit4w), backgroundColor:'rgba(166,67,46,0.85)', borderRadius:4, maxBarThickness:16 }
+      { label:'Stock ปัจจุบัน (WH300)', data:items.map(r=>r.stock),    backgroundColor:'rgba(122,154,63,0.75)', borderRadius:4, maxBarThickness:18 },
+      { label:'Demand 1 สัปดาห์',       data:items.map(r=>r.demandN),  backgroundColor:'rgba(200,155,74,0.65)', borderRadius:4, maxBarThickness:18 },
+      { label:'ขาด / Deficit (1w)',      data:items.map(r=>r.deficitN), backgroundColor:'rgba(166,67,46,0.85)', borderRadius:4, maxBarThickness:18 }
     ]},
-    options: opts
+    options: buildForecastChartOpts(items)
+  });
+}
+ 
+function renderForecast4wChart(forecastRows){
+  const items = buildForecastItems(forecastRows, 4);
+  if(!items.length) return;
+  const labels = items.map(r => r.product.length > 28 ? r.product.slice(0,26)+'…' : r.product);
+  const ctx = document.getElementById('chart_forecast_4w');
+  if(charts.forecast4w) charts.forecast4w.destroy();
+  charts.forecast4w = new Chart(ctx, {
+    type:'bar',
+    data:{ labels, datasets:[
+      { label:'Stock ปัจจุบัน (WH300)', data:items.map(r=>r.stock),    backgroundColor:'rgba(122,154,63,0.75)', borderRadius:4, maxBarThickness:18 },
+      { label:'Demand 4 สัปดาห์ (1 เดือน)', data:items.map(r=>r.demandN), backgroundColor:'rgba(76,107,38,0.45)',  borderRadius:4, maxBarThickness:18 },
+      { label:'ขาด / Deficit (4w)',      data:items.map(r=>r.deficitN), backgroundColor:'rgba(166,67,46,0.85)', borderRadius:4, maxBarThickness:18 }
+    ]},
+    options: buildForecastChartOpts(items)
   });
 }
  
