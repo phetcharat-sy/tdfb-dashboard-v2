@@ -408,13 +408,13 @@
  
     <div class="section">
       <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>Stock vs Demand 1 สัปดาห์</div>
-      <div class="section-desc">เรียงจากปริมาณที่ขาด (deficit) มากสุด · แท่งแดงคือส่วนที่ stock ไม่พอ 1 สัปดาห์</div>
+      <div class="section-desc">เรียงตาม demand มากสุด → น้อยสุด · แท่งแดงคือส่วนที่ stock ไม่พอ 1 สัปดาห์</div>
       <div class="chart-panel"><div class="chart-box" style="height:400px;"><canvas id="chart_forecast_1w"></canvas></div></div>
     </div>
  
     <div class="section">
       <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>Stock vs Demand 4 สัปดาห์ (1 เดือน)</div>
-      <div class="section-desc">เรียงจากปริมาณที่ขาด (deficit) มากสุด · แท่งแดงคือส่วนที่ stock ไม่พอใน 1 เดือน</div>
+      <div class="section-desc">เรียงตาม demand มากสุด → น้อยสุด · แท่งแดงคือส่วนที่ stock ไม่พอใน 1 เดือน</div>
       <div class="chart-panel"><div class="chart-box" style="height:400px;"><canvas id="chart_forecast_4w"></canvas></div></div>
     </div>
  
@@ -1362,7 +1362,7 @@ function buildForecastItems(forecastRows, weeks){
       demandN:  Math.round(r.demand * weeks),
       deficitN: Math.max(0, Math.round(r.demand * weeks) - r.stock)
     }))
-    .sort((a,b) => b.deficitN - a.deficitN)
+    .sort((a,b) => b.demandN - a.demandN || b.deficitN - a.deficitN)
     .slice(0, 14);
 }
  
