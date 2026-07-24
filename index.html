@@ -855,7 +855,7 @@ function renderTab1(){
   const lateOrders = orderRows.filter(r => r._packWorst === 'late').length;
   const pendingOrders = orderRows.filter(r => isPending(r.deliveryStatus)).length;
   const denom = onTimeOrders + lateOrders || 1;
-  const onPct = Math.round((onTimeOrders/denom)*1000)/10;
+  const onPct = Math.round((onTimeOrders/denom)*10000)/100;
  
   setHero('hero_tab1', 'hero_tab1_ring', onPct);
  
@@ -1030,7 +1030,7 @@ function renderTab2(){
   const late = pctRows.filter(r => classify(r.whStatus)==='late').length;
   const uniqueOrders = new Set(rows.map(r=>r.orderRef)).size;
   const denom = (onTime+early+late) || 1;
-  const oosPct = Math.round(((onTime+early)/denom)*1000)/10;
+  const oosPct = Math.round(((onTime+early)/denom)*10000)/100;
  
   setHero('hero_tab2', 'hero_tab2_ring', oosPct);
  
