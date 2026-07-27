@@ -27,12 +27,12 @@
     color:var(--ink);font-family:'IBM Plex Sans Thai',sans-serif;min-height:100vh;
   }
   .wrap{max-width:1180px;margin:0 auto;padding:48px 28px 80px;}
- 
+
   /* Logo + brand header */
   .brand-header{display:flex;align-items:center;gap:14px;margin-bottom:16px;}
   .brand-logo{flex-shrink:0;}
   .brand-name{font-family:'Zen Maru Gothic',sans-serif;font-weight:700;font-size:18px;color:#3f4a30;line-height:1.2;}
- 
+
   .eyebrow{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.2em;color:var(--matcha-deep);text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:7px;}
   .eyebrow svg{width:13px;height:13px;}
   .header-row{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap;padding-bottom:24px;margin-bottom:30px;border-bottom:2px solid var(--matcha);}
@@ -45,14 +45,14 @@
   .btn-plain{font-family:'IBM Plex Mono',monospace;font-size:11.5px;font-weight:700;background:none;color:var(--matcha-deep);border:none;border-bottom:1.5px solid var(--matcha-deep);padding:2px 0;cursor:pointer;margin-top:8px;letter-spacing:.04em;}
   .btn-plain:hover{opacity:.65;}
   .btn-plain:disabled{opacity:.4;cursor:wait;}
- 
+
   .latest-line{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink-faint);margin-bottom:32px;display:flex;gap:10px;align-items:center;}
   .latest-line b{color:var(--ink-soft);font-weight:600;}
   .status-dot{width:7px;height:7px;border-radius:50%;display:inline-block;}
   .status-dot.ontime{background:var(--matcha);}
   .status-dot.early{background:var(--bamboo);}
   .status-dot.late{background:var(--azuki);}
- 
+
   .tabs{display:flex;gap:8px;margin-bottom:36px;}
   .tab-btn{font-family:'Zen Maru Gothic',sans-serif;font-weight:700;font-size:17px;background:var(--panel);border:1.5px solid var(--hairline-strong);color:var(--ink-soft);padding:14px 26px;cursor:pointer;border-radius:16px;transition:all .15s ease;}
   .tab-btn span.cap{display:block;font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:10px;letter-spacing:.1em;color:var(--ink-faint);text-transform:uppercase;margin-top:4px;}
@@ -61,7 +61,7 @@
   .tab-btn:hover:not(.active){border-color:var(--matcha);color:var(--ink);}
   .tab-page{display:none;}
   .tab-page.active{display:block;}
- 
+
   .hero{padding:14px 0 44px;text-align:center;}
   .bowl{width:230px;height:230px;margin:0 auto;position:relative;filter:drop-shadow(0 8px 20px rgba(76,107,38,.12));}
   .bowl svg{transform:rotate(-90deg);width:100%;height:100%;}
@@ -73,7 +73,7 @@
   .bowl-number.below-target{color:var(--azuki);}
   .hero-caption{font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:.14em;color:var(--ink-faint);text-transform:uppercase;margin-top:16px;}
   .hero-caption b{color:var(--matcha-deep);}
- 
+
   .filter-row{display:flex;gap:22px;flex-wrap:wrap;align-items:flex-end;padding:16px 20px;border-radius:14px;background:var(--panel);border:1px solid var(--hairline);margin-bottom:28px;}
   .filter-field{display:flex;flex-direction:column;gap:5px;}
   .filter-field label{font-size:10px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;}
@@ -81,7 +81,7 @@
   .filter-field select:focus, .filter-field input:focus{outline:none;border-bottom-color:var(--matcha-deep);}
   .filter-clear{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-faint);background:none;border:none;cursor:pointer;text-decoration:underline;text-underline-offset:3px;}
   .filter-clear:hover{color:var(--azuki);}
- 
+
   .stat-grid{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:22px;}
   .stat-card{flex:1;min-width:150px;background:var(--panel);border:1px solid var(--hairline);border-radius:18px;padding:20px 16px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px;box-shadow:0 3px 12px rgba(31,46,26,.05);transition:transform .15s ease, box-shadow .15s ease;}
   .stat-card:hover{transform:translateY(-3px);box-shadow:0 8px 20px rgba(31,46,26,.09);}
@@ -95,7 +95,7 @@
   .stat-value.c-matcha{color:var(--matcha-deep);}
   .stat-value.c-azuki{color:var(--azuki);}
   .stat-value.c-bamboo{color:#8a6a2f;}
- 
+
   .section{margin-bottom:42px;}
   .section-title{font-family:'Zen Maru Gothic',sans-serif;font-weight:700;font-size:19px;color:var(--ink);margin:0 0 4px;display:flex;align-items:center;gap:7px;}
   .section-title svg{width:15px;height:15px;color:var(--matcha);flex-shrink:0;}
@@ -105,7 +105,7 @@
   @media (max-width:900px){.grid-2,.grid-3{grid-template-columns:1fr;}}
   .chart-panel{background:var(--panel);border:1px solid var(--hairline);border-radius:16px;padding:18px;box-shadow:0 3px 12px rgba(31,46,26,.05);}
   .chart-box{position:relative;height:250px;}
- 
+
   .table-panel{background:var(--panel);border:1px solid var(--hairline);border-radius:16px;padding:18px;box-shadow:0 3px 12px rgba(31,46,26,.05);}
   table.data-table{width:100%;border-collapse:collapse;font-size:13px;}
   table.data-table thead th{text-align:left;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.06em;color:var(--ink-faint);text-transform:uppercase;font-weight:600;padding:8px 12px 10px;border-bottom:1.5px solid var(--hairline-strong);position:sticky;top:0;background:var(--panel);}
@@ -124,7 +124,7 @@
   .pagination{display:flex;justify-content:flex-end;align-items:center;gap:12px;margin-top:12px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-faint);}
   .pagination button{background:none;border:1px solid var(--hairline-strong);color:var(--matcha-deep);border-radius:5px;width:26px;height:26px;cursor:pointer;font-size:12px;}
   .pagination button:disabled{opacity:.3;cursor:default;}
- 
+
   .loading-overlay{position:fixed;inset:0;background:var(--paper);z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;}
   .spinner{width:28px;height:28px;border-radius:50%;border:3px solid var(--hairline-strong);border-top-color:var(--matcha);animation:spin .8s linear infinite;}
   @keyframes spin{to{transform:rotate(360deg);}}
@@ -132,21 +132,21 @@
   .error-box{background:#F7E7E3;border:1px solid rgba(166,67,46,.25);border-radius:10px;padding:18px 20px;margin-bottom:24px;font-size:13px;color:var(--azuki);}
   .error-box b{display:block;margin-bottom:4px;color:var(--ink);}
   .footer-note{font-size:11px;color:var(--ink-faint);margin-top:8px;font-family:'IBM Plex Mono',monospace;}
- 
+
   ::-webkit-scrollbar{width:7px;height:7px;}
   ::-webkit-scrollbar-track{background:transparent;}
   ::-webkit-scrollbar-thumb{background:var(--hairline-strong);border-radius:4px;}
 </style>
 </head>
 <body>
- 
+
 <div class="loading-overlay" id="loadingOverlay">
   <div class="spinner"></div>
   <div class="loading-text">Loading data from Google Sheets…</div>
 </div>
- 
+
 <div class="wrap" id="dashboardWrap" style="display:none;">
- 
+
   <div class="header-row">
     <div>
       <!-- Logo + brand name -->
@@ -175,21 +175,21 @@
       <div><button class="btn-plain" id="refreshBtn" onclick="loadData()">Refresh</button></div>
     </div>
   </div>
- 
+
   <div id="errorBox" style="display:none;" class="error-box"></div>
- 
+
   <div class="latest-line" id="latestLine"></div>
- 
+
   <div class="tabs">
     <button class="tab-btn active" data-tab="tab1" onclick="switchTab('tab1')">On-Time Performance<span class="cap">Target ≥ 98%</span></button>
     <button class="tab-btn" data-tab="tab2" onclick="switchTab('tab2')">Out of Stock<span class="cap">Target ≥ 99%</span></button>
     <button class="tab-btn" data-tab="tab3" onclick="switchTab('tab3')">Replenishment<span class="cap">รายสัปดาห์</span></button>
     <button class="tab-btn" data-tab="tab4" onclick="switchTab('tab4')">Forecast<span class="cap">ประมาณการ</span></button>
   </div>
- 
+
   <!-- ============ TAB 1 ============ -->
   <div class="tab-page active" id="tab1">
- 
+
     <div class="hero">
       <div class="bowl">
         <svg viewBox="0 0 220 220">
@@ -200,14 +200,14 @@
       </div>
       <div class="hero-caption">Packed on time · target <b>98%</b></div>
     </div>
- 
+
     <div class="filter-row">
       <div class="filter-field"><label>Month</label><select id="f1_month" onchange="onFilterChange()"><option value="">All</option></select></div>
       <div class="filter-field"><label>Week</label><select id="f1_week" onchange="onFilterChange()"><option value="">All</option></select></div>
       <div class="filter-field"><label>Order Reference</label><input type="text" id="f1_orderRef" placeholder="Search order..." oninput="onFilterChange()"></div>
       <button class="filter-clear" onclick="clearFilters()">Clear filters</button>
     </div>
- 
+
     <div class="stat-grid">
       <div class="stat-card"><div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg></div><div class="stat-label">Orders</div><div class="stat-value" id="m1_order">—</div></div>
       <div class="stat-card"><div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12l2.5 2.5L16 9"/></svg></div><div class="stat-label">Packed On Time</div><div class="stat-value c-matcha" id="m1_ontime">—</div></div>
@@ -221,19 +221,19 @@
       <div class="stat-card"><div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v6c0 5-3.5 8-7 9-3.5-1-7-4-7-9V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg></div><div class="stat-label">ส่งปกติ</div><div class="stat-value c-matcha" id="m1_normal">—</div></div>
       <div class="stat-card"><div class="stat-icon i-azuki"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L4 14h6l-1 8 9-12h-6l1-8z"/></svg></div><div class="stat-label">ด่วน</div><div class="stat-value c-azuki" id="m1_urgent">—</div></div>
     </div>
- 
+
     <div class="section">
       <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>Weekly Order Volume</div>
       <div class="section-desc">Unique orders per week</div>
       <div class="chart-panel"><div class="chart-box" style="height:270px;"><canvas id="chart_weekly"></canvas></div></div>
     </div>
- 
+
     <div class="grid-3">
       <div class="section"><div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>Packing On-Time</div><div class="section-desc">Target ≥ 98%</div><div class="chart-panel"><div class="chart-box"><canvas id="chart_packing"></canvas></div></div></div>
       <div class="section"><div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>Orders by Platform</div><div class="section-desc">Platform vs walk-in</div><div class="chart-panel"><div class="chart-box"><canvas id="chart_platform"></canvas></div></div></div>
       <div class="section"><div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>Shipping Method</div><div class="section-desc">Share by delivery type</div><div class="chart-panel"><div class="chart-box"><canvas id="chart_urgent"></canvas></div></div></div>
     </div>
- 
+
     <!-- Remark Team table only (tab1) -->
     <div class="section">
       <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>Order Detail</div>
@@ -247,19 +247,19 @@
         </div>
       </div>
     </div>
- 
+
     <div class="section">
       <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>Sales Channel Share</div>
       <div class="section-desc">Orders by Sender Name</div>
       <div class="chart-panel"><div class="chart-box" style="height:280px;"><canvas id="chart_channel"></canvas></div></div>
     </div>
- 
+
     <div class="footer-note" id="tab1_footer"></div>
   </div>
- 
+
   <!-- ============ TAB 2 ============ -->
   <div class="tab-page" id="tab2">
- 
+
     <div class="hero">
       <div class="bowl">
         <svg viewBox="0 0 220 220">
@@ -270,7 +270,7 @@
       </div>
       <div class="hero-caption">Dispatched on time · target <b>99%</b></div>
     </div>
- 
+
     <div class="filter-row">
       <div class="filter-field"><label>Month</label><select id="f2_month" onchange="onFilterChange()"><option value="">All</option></select></div>
       <div class="filter-field"><label>Week</label><select id="f2_week" onchange="onFilterChange()"><option value="">All</option></select></div>
@@ -283,7 +283,7 @@
       <div class="filter-field"><label>Product</label><input type="text" id="f2_product" placeholder="Search product..." oninput="onFilterChange()"></div>
       <button class="filter-clear" onclick="clearFilters()">Clear filters</button>
     </div>
- 
+
     <div class="stat-grid">
       <div class="stat-card"><div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg></div><div class="stat-label">Line Items</div><div class="stat-value" id="m2_product">—</div></div>
       <div class="stat-card"><div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12l2.5 2.5L16 9"/></svg></div><div class="stat-label">On-Time Dispatch</div><div class="stat-value c-matcha" id="m2_ontime">—</div></div>
@@ -291,19 +291,19 @@
       <div class="stat-card"><div class="stat-icon i-azuki"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l10 18H2L12 3z"/><path d="M12 9v5"/><path d="M12 17h.01"/></svg></div><div class="stat-label">จัดส่งล่าช้า</div><div class="stat-value c-azuki" id="m2_late">—</div></div>
       <div class="stat-card"><div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 3h6v3H9z"/><path d="M9 11h6M9 15h4"/></svg></div><div class="stat-label">Orders</div><div class="stat-value" id="m2_order">—</div></div>
     </div>
- 
+
     <!-- Weekly chart for tab2 -->
     <div class="section">
       <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>Weekly Line Items</div>
       <div class="section-desc">Line items per week</div>
       <div class="chart-panel"><div class="chart-box" style="height:270px;"><canvas id="chart_weekly2"></canvas></div></div>
     </div>
- 
+
     <div class="grid-2">
       <div class="section"><div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>Top 5 Products</div><div class="section-desc">Highest line-item count</div><div class="chart-panel"><div class="chart-box" style="height:270px;"><canvas id="chart_top5"></canvas></div></div></div>
       <div class="section"><div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>Out-of-Stock Rate</div><div class="section-desc">Target ≥ 99%</div><div class="chart-panel"><div class="chart-box" style="height:270px;"><canvas id="chart_oos"></canvas></div></div></div>
     </div>
- 
+
     <!-- Remark Team table only (tab2) -->
     <div class="section">
       <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>Order Detail</div>
@@ -317,13 +317,13 @@
         </div>
       </div>
     </div>
- 
+
     <div class="footer-note" id="tab2_footer"></div>
   </div>
- 
+
   <!-- ============ TAB 3 (Replenishment) ============ -->
   <div class="tab-page" id="tab3">
- 
+
     <div class="filter-row">
       <div class="filter-field"><label>Status</label>
         <select id="f3_status" onchange="onFilterChange3()">
@@ -335,14 +335,14 @@
       <div class="filter-field"><label>Product</label><input type="text" id="f3_product" placeholder="Search product..." oninput="onFilterChange3()"></div>
       <button class="filter-clear" onclick="clearFilters3()">Clear filters</button>
     </div>
- 
+
     <div class="stat-grid">
       <div class="stat-card"><div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6v6H9z"/></svg></div><div class="stat-label">สินค้าทั้งหมด</div><div class="stat-value" id="m3_total">—</div></div>
       <div class="stat-card"><div class="stat-icon i-azuki"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l10 18H2L12 3z"/><path d="M12 9v5"/><path d="M12 17h.01"/></svg></div><div class="stat-label">ต้องเติม Stock</div><div class="stat-value c-azuki" id="m3_need">—</div></div>
       <div class="stat-card"><div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12l2.5 2.5L16 9"/></svg></div><div class="stat-label">ไม่ต้องเติม</div><div class="stat-value c-matcha" id="m3_nonneed">—</div></div>
       <div class="stat-card"><div class="stat-icon i-bamboo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20"/></svg></div><div class="stat-label">จำนวนรวมที่ต้องเติม</div><div class="stat-value c-bamboo" id="m3_qty">—</div></div>
     </div>
- 
+
     <div class="section">
       <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>รายการที่ต้องเติม Stock <span style="font-size:13px;font-weight:400;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;">(มี Quota เท่านั้น)</span></div>
       <div class="section-desc">เรียงตามคะแนนขายดี · แสดงเฉพาะสินค้าที่มี Quota</div>
@@ -355,7 +355,7 @@
         </div>
       </div>
     </div>
- 
+
     <div class="section">
       <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>สาเหตุที่ยังไม่ได้เติม</div>
       <div class="section-desc">Products blocked, by reason</div>
@@ -369,7 +369,7 @@
         </div>
       </div>
     </div>
- 
+
     <div class="section">
       <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>รวมทั้งหมด</div>
       <div class="section-desc">ทุกสินค้า — ต้องเติมและไม่ต้องเติม</div>
@@ -386,38 +386,38 @@
         </div>
       </div>
     </div>
- 
+
     <div class="footer-note" id="tab3_footer"></div>
   </div>
- 
+
   <!-- ============ TAB 4 (Forecast) ============ -->
   <div class="tab-page" id="tab4">
- 
+
     <div class="stat-grid">
       <div class="stat-card"><div class="stat-icon i-azuki"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l10 18H2L12 3z"/><path d="M12 9v5"/><path d="M12 17h.01"/></svg></div><div class="stat-label">วิกฤต &lt; 2 สัปดาห์</div><div class="stat-value c-azuki" id="m4_critical">—</div></div>
       <div class="stat-card"><div class="stat-icon i-bamboo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></div><div class="stat-label">เฝ้าระวัง 2–4 สัปดาห์</div><div class="stat-value c-bamboo" id="m4_warning">—</div></div>
       <div class="stat-card"><div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12l2.5 2.5L16 9"/></svg></div><div class="stat-label">Stock ปกติ ≥ 4 สัปดาห์</div><div class="stat-value c-matcha" id="m4_ok">—</div></div>
       <div class="stat-card"><div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h18v18H3z"/><path d="M3 9h18M9 21V9"/></svg></div><div class="stat-label">สินค้าที่วิเคราะห์ได้</div><div class="stat-value" id="m4_total">—</div></div>
     </div>
- 
+
     <div class="section">
       <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>Demand Trend &amp; Forecast</div>
       <div class="section-desc">ยอด order จริงรายสัปดาห์ + ประมาณการ 4 สัปดาห์ข้างหน้า (moving average)</div>
       <div class="chart-panel"><div class="chart-box" style="height:300px;"><canvas id="chart_forecast_demand"></canvas></div></div>
     </div>
- 
+
     <div class="section">
       <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>Stock vs Demand 1 สัปดาห์</div>
       <div class="section-desc">เรียงตาม demand มากสุด → น้อยสุด · แท่งแดงคือส่วนที่ stock ไม่พอ 1 สัปดาห์</div>
       <div class="chart-panel"><div class="chart-box" style="height:400px;"><canvas id="chart_forecast_1w"></canvas></div></div>
     </div>
- 
+
     <div class="section">
       <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>Stock vs Demand 4 สัปดาห์ (1 เดือน)</div>
       <div class="section-desc">เรียงตาม demand มากสุด → น้อยสุด · แท่งแดงคือส่วนที่ stock ไม่พอใน 1 เดือน</div>
       <div class="chart-panel"><div class="chart-box" style="height:400px;"><canvas id="chart_forecast_4w"></canvas></div></div>
     </div>
- 
+
     <div class="section">
       <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>Stock Depletion Forecast</div>
       <div class="section-desc">เรียงจากวิกฤตที่สุด — Avg weekly demand คำนวณจากข้อมูล order ย้อนหลัง</div>
@@ -437,12 +437,12 @@
         </div>
       </div>
     </div>
- 
+
     <div class="footer-note" id="tab4_footer"></div>
   </div>
- 
+
 </div>
- 
+
 <script>
 const SHEET_ID = '1WkCx6lRNm-4LyX8CY9EEPSb2NuZPxZV0YE_z3ayu8ys';
 const GID = '0';
@@ -453,10 +453,10 @@ const CSV_URL_3 = 'https://docs.google.com/spreadsheets/d/' + SHEET_ID_3 + '/exp
 const PAGE_SIZE = 100;
 const MONTH_ORDER = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
 const RING_CIRC = 565.48;
- 
+
 // Platform sources that count as "Platform" (not walk-in)
 const PLATFORM_SOURCES = ['shopee','lazada','tiktok shop','line oa'];
- 
+
 const COLMAP = {
   'Month':'month','Year':'year','Week':'week',
   'วันที่ลง Odoo':'createDate','วันที่ต้องการจัดส่ง':'expectedDelivery','Order Reference':'orderRef',
@@ -466,19 +466,19 @@ const COLMAP = {
   'Remark':'remark','Sender Name':'senderName','Channel':'channel','Source':'source','Urgent':'urgent',
   'Product':'product','Order Line':'orderLine','Remark Team':'remarkTeam'
 };
- 
+
 const COLMAP3 = {
   'No':'no','Product':'product','คะแนนขายดี':'score','รายการเติมสินค้า':'needStock',
   'WH300':'wh300','QUOTA':'quota','Plan PD':'planPd','FAC16':'fac16','OWH':'owh',
   'Quarantine':'quarantine','จำนวนที่ต้องเติม':'qtyNeeded','Check List':'checklist','Remark':'remark3'
 };
- 
+
 let ALL_ROWS = [];
 let ALL_ROWS_3 = [];
 let charts = {};
 let filters = { month1:'', week1:'', orderRef:'', month2:'', week2:'', whstatus:'', product:'' };
 let filters3 = { status:'', product:'' };
- 
+
 const percentDataLabelsPlugin = {
   id: 'percentDataLabels',
   afterDatasetsDraw(chart, args, options){
@@ -504,7 +504,7 @@ const percentDataLabelsPlugin = {
   }
 };
 Chart.register(percentDataLabelsPlugin);
- 
+
 const targetLinePlugin = {
   id: 'targetLine',
   afterDatasetsDraw(chart, args, options){
@@ -523,7 +523,7 @@ const targetLinePlugin = {
   }
 };
 Chart.register(targetLinePlugin);
- 
+
 const lineDataLabelsPlugin = {
   id: 'lineDataLabels',
   afterDatasetsDraw(chart, args, options){
@@ -549,7 +549,7 @@ const lineDataLabelsPlugin = {
   }
 };
 Chart.register(lineDataLabelsPlugin);
- 
+
 async function loadData(){
   const btn = document.getElementById('refreshBtn');
   const overlay = document.getElementById('loadingOverlay');
@@ -558,7 +558,7 @@ async function loadData(){
   errBox.style.display = 'none';
   if(btn){ btn.disabled = true; btn.textContent = 'Refreshing…'; }
   if(wrap.style.display === 'none'){ overlay.style.display = 'flex'; }
- 
+
   try {
     const res = await fetch(CSV_URL + '&_=' + Date.now());
     if(!res.ok) throw new Error('HTTP ' + res.status);
@@ -569,7 +569,7 @@ async function loadData(){
     const parsed = Papa.parse(csvText, { header:true, skipEmptyLines:true, transformHeader: h => h.trim() });
     ALL_ROWS = mapRows(parsed.data);
     populateFilterOptions();
- 
+
     try {
       const res3 = await fetch(CSV_URL_3 + '&_=' + Date.now());
       if(res3.ok){
@@ -580,7 +580,7 @@ async function loadData(){
         }
       }
     } catch(e3){ /* Replenishment sheet is optional; ignore failures here */ }
- 
+
     renderAll();
     document.getElementById('lastUpdated').textContent = new Date().toLocaleString('en-GB', {dateStyle:'medium', timeStyle:'medium'});
     overlay.style.display = 'none';
@@ -594,7 +594,7 @@ async function loadData(){
     if(btn){ btn.disabled = false; btn.textContent = 'Refresh'; }
   }
 }
- 
+
 function mapRows(rawRows){
   return rawRows.map(r => {
     const out = {};
@@ -605,7 +605,7 @@ function mapRows(rawRows){
     return out;
   }).filter(r => r.orderRef);
 }
- 
+
 function mapRows3(rawRows){
   return rawRows.map(r => {
     const out = {};
@@ -626,13 +626,13 @@ function mapRows3(rawRows){
     return out;
   }).filter(r => r.product);
 }
- 
+
 function parseDate(s){
   if(!s) return null;
   const d = new Date(s.replace(' ', 'T'));
   return isNaN(d.getTime()) ? null : d;
 }
- 
+
 function classify(status){
   if(!status) return 'unknown';
   const s = status.trim();
@@ -648,21 +648,21 @@ function isPending(deliveryStatus){
   if(!deliveryStatus) return true;
   return deliveryStatus.toLowerCase().includes('pending');
 }
- 
+
 // Check if source is a platform
 function isPlatformSource(source){
   if(!source) return false;
   const s = source.toLowerCase().trim();
   return PLATFORM_SOURCES.some(p => s === p || s.includes(p));
 }
- 
+
 function switchTab(tab){
   document.querySelectorAll('.tab-page').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
   document.getElementById(tab).classList.add('active');
   document.querySelector('.tab-btn[data-tab="' + tab + '"]').classList.add('active');
 }
- 
+
 function populateFilterOptions(){
   const months = [...new Set(ALL_ROWS.map(r=>r.month).filter(Boolean))].sort((a,b)=> MONTH_ORDER.indexOf(a) - MONTH_ORDER.indexOf(b));
   const weeks = [...new Set(ALL_ROWS.map(r=>r.week).filter(Boolean))].sort((a,b)=> Number(a)-Number(b));
@@ -675,7 +675,7 @@ function populateFilterOptions(){
     el.innerHTML = '<option value="">All</option>' + weeks.map(w=>'<option value="'+escapeHtml(w)+'">Week '+escapeHtml(w)+'</option>').join('');
   });
 }
- 
+
 function onFilterChange(){
   filters.month1 = document.getElementById('f1_month').value;
   filters.week1 = document.getElementById('f1_week').value;
@@ -686,47 +686,47 @@ function onFilterChange(){
   filters.product = document.getElementById('f2_product').value;
   renderAll();
 }
- 
+
 function clearFilters(){
   ['f1_month','f1_week','f2_month','f2_week','f2_whstatus'].forEach(id=>document.getElementById(id).value='');
   ['f1_orderRef','f2_product'].forEach(id=>document.getElementById(id).value='');
   filters = { month1:'', week1:'', orderRef:'', month2:'', week2:'', whstatus:'', product:'' };
   renderAll();
 }
- 
+
 function onFilterChange3(){
   filters3.status = document.getElementById('f3_status').value;
   filters3.product = document.getElementById('f3_product').value;
   renderTab3();
 }
- 
+
 function clearFilters3(){
   document.getElementById('f3_status').value = '';
   document.getElementById('f3_product').value = '';
   filters3 = { status:'', product:'' };
   renderTab3();
 }
- 
+
 function renderTab3(){
   let rows = ALL_ROWS_3;
   if(filters3.status === 'need') rows = rows.filter(r => (r.needStock||'').includes('ต้องเติม') && !(r.needStock||'').includes('ไม่ต้อง'));
   if(filters3.status === 'nonneed') rows = rows.filter(r => (r.needStock||'').includes('ไม่ต้อง'));
   if(filters3.product) rows = rows.filter(r => (r.product||'').toLowerCase().includes(filters3.product.toLowerCase()));
- 
+
   const needRows = rows.filter(r => (r.needStock||'').includes('ต้องเติม') && !(r.needStock||'').includes('ไม่ต้อง'));
   const nonNeedRows = rows.filter(r => (r.needStock||'').includes('ไม่ต้อง'));
   const totalQty = needRows.reduce((sum, r) => {
     const v = Number(String(r.qtyNeeded||'0').replace(/,/g,''));
     return sum + (Number.isFinite(v) && v > 0 ? v : 0);
   }, 0);
- 
+
   document.getElementById('m3_total').textContent = rows.length.toLocaleString('en-US');
   document.getElementById('m3_need').textContent = needRows.length.toLocaleString('en-US');
   document.getElementById('m3_nonneed').textContent = nonNeedRows.length.toLocaleString('en-US');
   document.getElementById('m3_qty').textContent = totalQty.toLocaleString('en-US');
- 
+
   renderRemark3Chart(needRows);
- 
+
   // รายการที่ต้องเติม — เฉพาะที่มี Quota > 0
   const tbody = document.getElementById('tab3_body');
   const sorted = [...needRows]
@@ -751,7 +751,7 @@ function renderTab3(){
       '<td>' + escapeHtml(r.remark3||'—') + '</td></tr>'
     )).join('');
   }
- 
+
   // รวมทั้งหมด
   const tbodyAll = document.getElementById('tab3_all_body');
   const allSorted = [...rows].sort((a,b) => {
@@ -783,7 +783,7 @@ function renderTab3(){
         '<td>' + escapeHtml(r.remark3||'—') + '</td></tr>';
     }).join('');
   }
- 
+
   // Remark detail table (ใต้ chart)
   const tbodyDetail = document.getElementById('tab3_remark_detail_body');
   const detailSorted = [...needRows].sort((a,b) => {
@@ -800,11 +800,11 @@ function renderTab3(){
       '<td>' + escapeHtml(r.remark3||'—') + '</td></tr>'
     )).join('');
   }
- 
+
   document.getElementById('tab3_footer').textContent =
     rows.length.toLocaleString('en-US') + ' products · updated ' + new Date().toLocaleString('en-GB');
 }
- 
+
 function renderRemark3Chart(needRows){
   const counts = {};
   const productsByRemark = {};
@@ -839,7 +839,7 @@ function renderRemark3Chart(needRows){
     options: opts
   });
 }
- 
+
 function toOrderLevel(rows){
   const priority = { late:3, unknown:2, early:1, ontime:1 };
   const map = new Map();
@@ -855,7 +855,7 @@ function toOrderLevel(rows){
   });
   return [...map.values()];
 }
- 
+
 function renderAll(){
   renderLatestLine(ALL_ROWS);
   renderTab1();
@@ -863,7 +863,7 @@ function renderAll(){
   renderTab3();
   renderTab4();
 }
- 
+
 function renderLatestLine(rows){
   const el = document.getElementById('latestLine');
   if(rows.length === 0){ el.innerHTML = 'No data yet'; return; }
@@ -872,7 +872,7 @@ function renderLatestLine(rows){
   el.innerHTML = 'Latest — <b>' + escapeHtml(latest.orderRef) + '</b> · ' + escapeHtml(latest.channel||latest.source||'-') +
     ' <span class="status-dot ' + (cls==='late'?'late':cls==='early'?'early':'ontime') + '"></span> ' + statusLabel(cls);
 }
- 
+
 function setHero(numId, ringId, pct){
   const numEl = document.getElementById(numId);
   const ringEl = document.getElementById(ringId);
@@ -889,7 +889,7 @@ function setHero(numId, ringId, pct){
     }, 60);
   });
 }
- 
+
 /* ================= TAB 1 ================= */
 function getTab1Rows(){
   return ALL_ROWS.filter(r =>
@@ -898,49 +898,49 @@ function getTab1Rows(){
     (!filters.orderRef || r.orderRef.toLowerCase().includes(filters.orderRef.toLowerCase()))
   );
 }
- 
+
 function renderTab1(){
   const lineRows = getTab1Rows();
   const orderRows = toOrderLevel(lineRows);
- 
+
   const totalOrders = orderRows.length;
   const onTimeOrders = orderRows.filter(r => r._packWorst === 'ontime' || r._packWorst === 'early').length;
   const lateOrders = orderRows.filter(r => r._packWorst === 'late').length;
   const pendingOrders = orderRows.filter(r => isPending(r.deliveryStatus)).length;
   const denom = onTimeOrders + lateOrders || 1;
   const onPct = Math.round((onTimeOrders/denom)*10000)/100;
- 
+
   setHero('hero_tab1', 'hero_tab1_ring', onPct);
- 
+
   document.getElementById('m1_order').textContent = totalOrders.toLocaleString('en-US');
   document.getElementById('m1_ontime').textContent = onTimeOrders.toLocaleString('en-US');
   document.getElementById('m1_late').textContent = lateOrders.toLocaleString('en-US');
   document.getElementById('m1_pending').textContent = pendingOrders.toLocaleString('en-US');
- 
+
   const uniqueCustomers = new Set(orderRows.map(r=>r.customer).filter(Boolean)).size;
   // Fix: use isPlatformSource to correctly classify platform vs walk-in
   const platformOrders = orderRows.filter(r => isPlatformSource(r.source)).length;
   const walkInOrders = totalOrders - platformOrders;
   const normalOrders = orderRows.filter(r => r.urgent === 'ส่งปกติ').length;
   const urgentOrders = orderRows.filter(r => r.urgent === 'ส่งด่วน').length;
- 
+
   document.getElementById('m1_customer').textContent = uniqueCustomers.toLocaleString('en-US');
   document.getElementById('m1_platform').textContent = platformOrders.toLocaleString('en-US');
   document.getElementById('m1_walkin').textContent = walkInOrders.toLocaleString('en-US');
   document.getElementById('m1_normal').textContent = normalOrders.toLocaleString('en-US');
   document.getElementById('m1_urgent').textContent = urgentOrders.toLocaleString('en-US');
- 
+
   renderWeeklyChart(orderRows);
   renderPackingChart(onTimeOrders, lateOrders);
   renderPlatformChart(platformOrders, walkInOrders);
   renderUrgentChart(orderRows);
     renderChannelChart(orderRows);
   renderTab1RemarkTable(lineRows);
- 
+
   document.getElementById('tab1_footer').textContent =
     totalOrders.toLocaleString('en-US') + ' orders (from ' + lineRows.length.toLocaleString('en-US') + ' line items) · updated ' + new Date().toLocaleString('en-GB');
 }
- 
+
 function renderTab1RemarkTable(rows){
   const remarkRows = rows
     .filter(r => r.remarkTeam && r.remarkTeam.trim())
@@ -965,7 +965,7 @@ function renderTab1RemarkTable(rows){
     '<td>' + escapeHtml(r.remarkTeam) + '</td></tr>'
   )).join('');
 }
- 
+
 function renderWeeklyChart(orderRows){
   const counts = {};
   orderRows.forEach(r => { if(r.week){ counts[r.week] = (counts[r.week]||0)+1; } });
@@ -985,7 +985,7 @@ function renderWeeklyChart(orderRows){
     options: opts
   });
 }
- 
+
 function renderPackingChart(onTime, late){
   const total = onTime + late || 1;
   const onPct = Math.round((onTime/total)*1000)/10;
@@ -1000,7 +1000,7 @@ function renderPackingChart(onTime, late){
     options: percentChartOptions({ dataLabels:true, target:98 })
   });
 }
- 
+
 function renderPlatformChart(platform, walkin){
   const total = platform + walkin || 1;
   const pPct = Math.round((platform/total)*1000)/10;
@@ -1044,7 +1044,7 @@ function renderChannelChart(orderRows){
     }
   });
 }
- 
+
 function renderUrgentChart(orderRows){
   const counts = {};
   orderRows.forEach(r => { const u = r.urgent || 'Unspecified'; counts[u] = (counts[u]||0)+1; });
@@ -1062,7 +1062,7 @@ function renderUrgentChart(orderRows){
     options: percentChartOptions({ dataLabels:true })
   });
 }
- 
+
 /* ================= TAB 2 ================= */
 function getTab2Rows(){
   return ALL_ROWS.filter(r =>
@@ -1072,7 +1072,7 @@ function getTab2Rows(){
     (!filters.product || r.product.toLowerCase().includes(filters.product.toLowerCase()))
   );
 }
- 
+
 function renderTab2(){
   const rows = getTab2Rows();
   const totalLines = rows.length;
@@ -1084,24 +1084,24 @@ function renderTab2(){
   const uniqueOrders = new Set(rows.map(r=>r.orderRef)).size;
   const denom = (onTime+early+late) || 1;
   const oosPct = Math.round(((onTime+early)/denom)*10000)/100;
- 
+
   setHero('hero_tab2', 'hero_tab2_ring', oosPct);
- 
+
   document.getElementById('m2_product').textContent = totalLines.toLocaleString('en-US');
   document.getElementById('m2_ontime').textContent = onTime.toLocaleString('en-US');
   document.getElementById('m2_early').textContent = early.toLocaleString('en-US');
   document.getElementById('m2_late').textContent = late.toLocaleString('en-US');
   document.getElementById('m2_order').textContent = uniqueOrders.toLocaleString('en-US');
- 
+
   renderWeekly2Chart(rows);
   renderTop5Chart(rows);
   renderOosChart(onTime, early, late);
   renderTab2RemarkTable(rows);
- 
+
   document.getElementById('tab2_footer').textContent =
     totalLines.toLocaleString('en-US') + ' line items from ' + uniqueOrders.toLocaleString('en-US') + ' orders · updated ' + new Date().toLocaleString('en-GB');
 }
- 
+
 function renderWeekly2Chart(rows){
   const counts = {};
   rows.forEach(r => { if(r.week){ counts[r.week] = (counts[r.week]||0)+1; } });
@@ -1118,7 +1118,7 @@ function renderWeekly2Chart(rows){
     options: baseChartOptions({ legend:false })
   });
 }
- 
+
 function renderTop5Chart(rows){
   // Fix: filter out empty/unspecified products, sum actual qty shipped (Order Line) per product
   const counts = {};
@@ -1153,7 +1153,7 @@ function renderTop5Chart(rows){
     options: opts
   });
 }
- 
+
 function renderOosChart(onTime, early, late){
   const total = onTime+early+late || 1;
   const pct = arr => arr.map(v => Math.round((v/total)*1000)/10);
@@ -1168,7 +1168,7 @@ function renderOosChart(onTime, early, late){
     options: percentChartOptions({ dataLabels:true, target:99 })
   });
 }
- 
+
 function renderTab2RemarkTable(rows){
   const remarkRows = rows
     .filter(r => r.remarkTeam && r.remarkTeam.trim())
@@ -1193,12 +1193,12 @@ function renderTab2RemarkTable(rows){
     '<td>' + escapeHtml(r.remarkTeam) + '</td></tr>'
   )).join('');
 }
- 
+
 /* ================= Shared helpers ================= */
 function statusText(cls){
   return '<span class="status-text ' + cls + '"><span class="status-dot ' + cls + '"></span>' + statusLabel(cls) + '</span>';
 }
- 
+
 function baseChartOptions({legend=true}={}){
   return {
     responsive:true, maintainAspectRatio:false,
@@ -1232,11 +1232,11 @@ function escapeHtml(s){
   if(s===undefined||s===null) return '';
   return s.toString().replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
- 
+
 /* ================= TAB 4 FORECAST ================= */
 function renderTab4(){
   if(!ALL_ROWS.length && !ALL_ROWS_3.length){ return; }
- 
+
   // --- Build avg weekly demand per product from order data ---
   const demandByProductWeek = {}; // product -> { week -> qty }
   const allWeeks = new Set();
@@ -1248,17 +1248,17 @@ function renderTab4(){
     demandByProductWeek[p][r.week] = (demandByProductWeek[p][r.week]||0) + qty;
     allWeeks.add(r.week);
   });
- 
+
   const weekList = [...allWeeks].sort((a,b) => Number(a)-Number(b));
   const numWeeks = weekList.length || 1;
- 
+
   // Avg weekly demand per product
   const avgDemand = {};
   Object.entries(demandByProductWeek).forEach(([product, weekData]) => {
     const total = Object.values(weekData).reduce((s,v) => s+v, 0);
     avgDemand[product] = total / numWeeks;
   });
- 
+
   // --- Cross-reference with stock data ---
   const forecastRows = ALL_ROWS_3.map(r => {
     const stock = Number(String(r.wh300||'0').replace(/,/g,'')) || 0;
@@ -1266,7 +1266,7 @@ function renderTab4(){
     const weeksLeft = demand > 0 ? stock / demand : null;
     return { ...r, stock, demand, weeksLeft };
   }).filter(r => r.demand > 0 || r.stock > 0);
- 
+
   // Sort: critical first
   forecastRows.sort((a,b) => {
     if(a.weeksLeft === null && b.weeksLeft === null) return 0;
@@ -1274,7 +1274,7 @@ function renderTab4(){
     if(b.weeksLeft === null) return -1;
     return a.weeksLeft - b.weeksLeft;
   });
- 
+
   // --- Stat cards ---
   const critical = forecastRows.filter(r => r.weeksLeft !== null && r.weeksLeft < 2).length;
   const warning  = forecastRows.filter(r => r.weeksLeft !== null && r.weeksLeft >= 2 && r.weeksLeft < 4).length;
@@ -1283,17 +1283,17 @@ function renderTab4(){
   document.getElementById('m4_warning').textContent  = warning;
   document.getElementById('m4_ok').textContent       = ok;
   document.getElementById('m4_total').textContent    = forecastRows.length;
- 
+
   // --- Charts ---
   renderDemandForecastChart(weekList, demandByProductWeek);
   renderForecast1wChart(forecastRows);
   renderForecast4wChart(forecastRows);
   renderForecastTable(forecastRows);
- 
+
   document.getElementById('tab4_footer').textContent =
     forecastRows.length + ' products · ' + numWeeks + ' weeks of history · updated ' + new Date().toLocaleString('en-GB');
 }
- 
+
 function renderDemandForecastChart(weekList, demandByProductWeek){
   // Weekly total demand
   const weeklyTotals = {};
@@ -1304,12 +1304,12 @@ function renderDemandForecastChart(weekList, demandByProductWeek){
     });
   });
   const historical = weekList.map(w => weeklyTotals[w]);
- 
+
   // Moving average of last 4 weeks as forecast
   const lastN = Math.min(4, weekList.length);
   const recent = historical.slice(-lastN);
   const avg4 = recent.reduce((s,v)=>s+v,0) / (lastN||1);
- 
+
   // Linear trend (simple least-squares slope)
   const n = historical.length;
   let slope = 0;
@@ -1321,13 +1321,13 @@ function renderDemandForecastChart(weekList, demandByProductWeek){
     const den = xs.reduce((s,xi) => s + (xi-xMean)**2, 0);
     slope = den !== 0 ? num/den : 0;
   }
- 
+
   const lastWeekNum = Number(weekList[weekList.length-1]) || weekList.length;
   const forecastLabels = [1,2,3,4].map(i => 'W'+(lastWeekNum+i)+'*');
   const forecastData   = [1,2,3,4].map(i => Math.max(0, Math.round(avg4 + slope * i)));
- 
+
   const labels = [...weekList.map(w=>'W'+w), ...forecastLabels];
- 
+
   const ctx = document.getElementById('chart_forecast_demand');
   if(charts.forecastDemand) charts.forecastDemand.destroy();
   const opts = baseChartOptions({ legend:true });
@@ -1353,7 +1353,7 @@ function renderDemandForecastChart(weekList, demandByProductWeek){
     options: opts
   });
 }
- 
+
 function buildForecastItems(forecastRows, weeks){
   return forecastRows
     .filter(r => r.demand > 0)
@@ -1365,7 +1365,7 @@ function buildForecastItems(forecastRows, weeks){
     .sort((a,b) => b.demandN - a.demandN || b.deficitN - a.deficitN)
     .slice(0, 14);
 }
- 
+
 function buildForecastChartOpts(items){
   const opts = baseChartOptions({ legend:true });
   opts.indexAxis = 'y';
@@ -1388,7 +1388,7 @@ function buildForecastChartOpts(items){
   };
   return opts;
 }
- 
+
 function renderForecast1wChart(forecastRows){
   const items = buildForecastItems(forecastRows, 1);
   if(!items.length) return;
@@ -1405,7 +1405,7 @@ function renderForecast1wChart(forecastRows){
     options: buildForecastChartOpts(items)
   });
 }
- 
+
 function renderForecast4wChart(forecastRows){
   const items = buildForecastItems(forecastRows, 4);
   if(!items.length) return;
@@ -1422,7 +1422,7 @@ function renderForecast4wChart(forecastRows){
     options: buildForecastChartOpts(items)
   });
 }
- 
+
 function renderForecastTable(forecastRows){
   const tbody = document.getElementById('tab4_forecast_body');
   if(!forecastRows.length){
@@ -1456,11 +1456,9 @@ function renderForecastTable(forecastRows){
       '<td>' + statusHtml + '</td></tr>';
   }).join('');
 }
- 
+
 loadData();
 setInterval(loadData, 5 * 60 * 1000);
 </script>
 </body>
 </html>
- 
-
