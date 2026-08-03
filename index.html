@@ -1401,7 +1401,14 @@ function renderDemandForecastChart(weekList, ordersByWeek, weekDateRange, orders
   const lastRange = weekDateRange ? weekDateRange[weekList[weekList.length-1]] : null;
   const lastKnownDate = lastRange ? lastRange.max : new Date();
   const dailyBaseline = avg4 / 7;
-  const doubleDayHits = []; // for footer note
+  const doubleDayHits = []; // weeks (historical or forecast) that contain a Double Day
+ 
+  // Check historical weeks for Double Days using their real date ranges
+  weekList.forEach(w => {
+    const r = weekDateRange ? weekDateRange[w] : null;
+    if(r && countDoubleDaysInRange(r.min, r.max) > 0) doubleDayHits.push('W'+w);
+  });
+ 
   const forecastRangeLabels = [];
   const forecastData = [1,2,3,4].map(i => {
     let val = Math.max(0, avg4 + slope * i);
@@ -1409,8 +1416,8 @@ function renderDemandForecastChart(weekList, ordersByWeek, weekDateRange, orders
     const end   = new Date(lastKnownDate); end.setDate(lastKnownDate.getDate() + 7*i);
     forecastRangeLabels.push(formatDateShort(start) + ' – ' + formatDateShort(end) + ' (est.)');
     const ddCount = countDoubleDaysInRange(start, end);
-    if(ddCount > 0 && DOUBLE_DAY_BOOST > 1){
-      val += dailyBaseline * (DOUBLE_DAY_BOOST - 1) * ddCount;
+    if(ddCount > 0){
+      if(DOUBLE_DAY_BOOST > 1) val += dailyBaseline * (DOUBLE_DAY_BOOST - 1) * ddCount;
       doubleDayHits.push('W'+(lastWeekNum+i));
     }
     return Math.max(0, Math.round(val));
@@ -1446,8 +1453,12 @@ function renderDemandForecastChart(weekList, ordersByWeek, weekDateRange, orders
         const isDD = doubleDayHits.includes(labels[ctx.dataIndex]);
         const base = ctx.dataset.label + ': ' + Number(ctx.raw).toLocaleString('en-US');
         if(!isDD) return base;
-        const multText = DOUBLE_DAY_BOOST.toFixed(1);
-        return [base, '⚡ มี Double Day ในสัปดาห์นี้ (คูณ x' + multText + ' เฉพาะวันนั้น, อ้างอิงจากข้อมูลย้อนหลัง ' + ddSamples + ' ครั้ง)'];
+        const isForecastPoint = ctx.dataIndex > boundaryIndex;
+        if(isForecastPoint && DOUBLE_DAY_BOOST > 1){
+          const multText = DOUBLE_DAY_BOOST.toFixed(1);
+          return [base, '⚡ มี Double Day ในสัปดาห์นี้ (คูณ x' + multText + ' เฉพาะวันนั้น, อ้างอิงจากข้อมูลย้อนหลัง ' + ddSamples + ' ครั้ง)'];
+        }
+        return [base, '⚡ สัปดาห์นี้มี Double Day (ยอดออเดอร์จริงพุ่งจากแคมเปญ)'];
       }
     }
   };
