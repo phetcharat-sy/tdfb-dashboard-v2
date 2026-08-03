@@ -1362,6 +1362,12 @@ function learnDoubleDayMultiplier(ordersByDate){
   return { multiplier: avgRatio, samples: ratios.length };
 }
  
+function formatDateShort(d){
+  if(!d) return '';
+  const months = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  return d.getDate() + ' ' + months[d.getMonth()];
+}
+ 
 function renderDemandForecastChart(weekList, ordersByWeek, weekDateRange, ordersByDate){
   // Weekly total demand — number of orders (distinct Order Reference), not product quantity
   const historical = weekList.map(w => (ordersByWeek[w] ? ordersByWeek[w].size : 0));
@@ -1396,10 +1402,12 @@ function renderDemandForecastChart(weekList, ordersByWeek, weekDateRange, orders
   const lastKnownDate = lastRange ? lastRange.max : new Date();
   const dailyBaseline = avg4 / 7;
   const doubleDayHits = []; // for footer note
+  const forecastRangeLabels = [];
   const forecastData = [1,2,3,4].map(i => {
     let val = Math.max(0, avg4 + slope * i);
     const start = new Date(lastKnownDate); start.setDate(lastKnownDate.getDate() + 7*(i-1) + 1);
     const end   = new Date(lastKnownDate); end.setDate(lastKnownDate.getDate() + 7*i);
+    forecastRangeLabels.push(formatDateShort(start) + ' – ' + formatDateShort(end) + ' (est.)');
     const ddCount = countDoubleDaysInRange(start, end);
     if(ddCount > 0 && DOUBLE_DAY_BOOST > 1){
       val += dailyBaseline * (DOUBLE_DAY_BOOST - 1) * ddCount;
@@ -1407,6 +1415,13 @@ function renderDemandForecastChart(weekList, ordersByWeek, weekDateRange, orders
     }
     return Math.max(0, Math.round(val));
   });
+ 
+  // Date range per point: real dates for historical weeks, projected dates for forecast weeks
+  const historicalRangeLabels = weekList.map(w => {
+    const r = weekDateRange ? weekDateRange[w] : null;
+    return r ? (formatDateShort(r.min) + ' – ' + formatDateShort(r.max)) : '';
+  });
+  const allRangeLabels = [...historicalRangeLabels, ...forecastRangeLabels];
  
   const labels = [...weekList.map(w=>'W'+w), ...forecastLabels];
  
@@ -1422,6 +1437,11 @@ function renderDemandForecastChart(weekList, ordersByWeek, weekDateRange, orders
   opts.plugins.tooltip = {
     ...tooltipStyle(),
     callbacks:{
+      title: items => {
+        const idx = items[0].dataIndex;
+        const range = allRangeLabels[idx];
+        return range ? labels[idx] + ' (' + range + ')' : labels[idx];
+      },
       label: ctx => {
         const isDD = doubleDayHits.includes(labels[ctx.dataIndex]);
         const base = ctx.dataset.label + ': ' + Number(ctx.raw).toLocaleString('en-US');
