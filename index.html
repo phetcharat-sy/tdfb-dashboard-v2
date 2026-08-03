@@ -408,13 +408,13 @@
  
     <div class="section">
       <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>Stock vs Demand 1 สัปดาห์</div>
-      <div class="section-desc">เรียงตาม demand มากสุด → น้อยสุด · แท่งแดงคือส่วนที่ stock ไม่พอ 1 สัปดาห์</div>
+      <div class="section-desc">เรียงตาม demand มากสุด → น้อยสุด · แท่งแดงคือส่วนที่ stock ไม่พอ 1 สัปดาห์ (คำนวณจากพฤติกรรมสั่งซื้อ ไม่ใช่ตัวเลขจากชีต Replenishment)</div>
       <div class="chart-panel"><div class="chart-box" style="height:400px;"><canvas id="chart_forecast_1w"></canvas></div></div>
     </div>
  
     <div class="section">
       <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>Stock vs Demand 4 สัปดาห์ (1 เดือน)</div>
-      <div class="section-desc">เรียงตาม demand มากสุด → น้อยสุด · แท่งแดงคือส่วนที่ stock ไม่พอใน 1 เดือน</div>
+      <div class="section-desc">เรียงตาม demand มากสุด → น้อยสุด · แท่งแดงคือส่วนที่ stock ไม่พอใน 1 เดือน (คำนวณจากพฤติกรรมสั่งซื้อ ไม่ใช่ตัวเลขจากชีต Replenishment)</div>
       <div class="chart-panel"><div class="chart-box" style="height:400px;"><canvas id="chart_forecast_4w"></canvas></div></div>
     </div>
  
@@ -1251,16 +1251,31 @@ function renderTab4(){
  
   // --- Build weekly order count (distinct Order Reference) — used for Demand Trend & Forecast chart ---
   const ordersByWeek = {}; // week -> Set of order reference
+  const weekDateRange = {}; // week -> {min:Date, max:Date} — used to detect "Double Day" campaign dates
+  const ordersByDate = {}; // 'YYYY-MM-DD' -> Set of order reference — used to learn the Double Day spike size from history
   ALL_ROWS.forEach(r => {
     if(!r.week) return;
     const orderKey = (r.orderRef||'').trim();
-    if(!orderKey) return;
-    if(!ordersByWeek[r.week]) ordersByWeek[r.week] = new Set();
-    ordersByWeek[r.week].add(orderKey);
+    if(orderKey){
+      if(!ordersByWeek[r.week]) ordersByWeek[r.week] = new Set();
+      ordersByWeek[r.week].add(orderKey);
+    }
+    const d = parseDate(r.createDate);
+    if(d){
+      if(!weekDateRange[r.week]) weekDateRange[r.week] = { min:d, max:d };
+      if(d < weekDateRange[r.week].min) weekDateRange[r.week].min = d;
+      if(d > weekDateRange[r.week].max) weekDateRange[r.week].max = d;
+      if(orderKey){
+        const dateKey = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+        if(!ordersByDate[dateKey]) ordersByDate[dateKey] = new Set();
+        ordersByDate[dateKey].add(orderKey);
+      }
+    }
   });
  
   const weekList = [...allWeeks].sort((a,b) => Number(a)-Number(b));
   const numWeeks = weekList.length || 1;
+ 
  
   // Avg weekly demand per product
   const avgDemand = {};
@@ -1295,16 +1310,59 @@ function renderTab4(){
   document.getElementById('m4_total').textContent    = forecastRows.length;
  
   // --- Charts ---
-  renderDemandForecastChart(weekList, ordersByWeek);
+  renderDemandForecastChart(weekList, ordersByWeek, weekDateRange, ordersByDate);
   renderForecast1wChart(forecastRows);
   renderForecast4wChart(forecastRows);
   renderForecastTable(forecastRows);
  
+  const ddNote = lastDoubleDayInfo.samples > 0
+    ? (' · Double Day boost ×' + lastDoubleDayInfo.multiplier.toFixed(1) + ' (เรียนรู้จาก ' + lastDoubleDayInfo.samples + ' ครั้งในอดีต)')
+    : ' · ยังไม่พบข้อมูล Double Day ในอดีต (ไม่มีการ boost)';
   document.getElementById('tab4_footer').textContent =
-    forecastRows.length + ' products · ' + numWeeks + ' weeks of history · updated ' + new Date().toLocaleString('en-GB');
+    forecastRows.length + ' products · ' + numWeeks + ' weeks of history' + ddNote + ' · updated ' + new Date().toLocaleString('en-GB');
 }
  
-function renderDemandForecastChart(weekList, ordersByWeek){
+let lastDoubleDayInfo = { multiplier:null, samples:0 };
+// "Double Day" campaign dates: 1.1, 2.2, 3.3 ... 9.9, 10.10, 11.11, 12.12 (day-of-month === month number)
+function isDoubleDay(d){
+  return d.getDate() === (d.getMonth()+1);
+}
+function countDoubleDaysInRange(start, end){
+  if(!start || !end) return 0;
+  let count = 0;
+  const cur = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+  const last = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+  while(cur <= last){
+    if(isDoubleDay(cur)) count++;
+    cur.setDate(cur.getDate()+1);
+  }
+  return count;
+}
+ 
+// Learn the actual Double Day spike multiplier from history: for every past Double Day found in
+// the data, compare that day's order count to the average of the surrounding 7 "normal" days.
+function learnDoubleDayMultiplier(ordersByDate){
+  const dateKeys = Object.keys(ordersByDate).sort();
+  if(!dateKeys.length) return { multiplier: null, samples: 0 };
+  const ratios = [];
+  dateKeys.forEach(key => {
+    const d = new Date(key + 'T00:00:00');
+    if(!isDoubleDay(d)) return;
+    const ddCount = ordersByDate[key].size;
+    let sum = 0, n = 0;
+    for(let offset = 1; offset <= 7; offset++){
+      const prev = new Date(d); prev.setDate(d.getDate() - offset);
+      const prevKey = prev.getFullYear()+'-'+String(prev.getMonth()+1).padStart(2,'0')+'-'+String(prev.getDate()).padStart(2,'0');
+      if(ordersByDate[prevKey]){ sum += ordersByDate[prevKey].size; n++; }
+    }
+    if(n > 0 && sum > 0) ratios.push(ddCount / (sum/n));
+  });
+  if(!ratios.length) return { multiplier: null, samples: 0 };
+  const avgRatio = ratios.reduce((s,v)=>s+v,0) / ratios.length;
+  return { multiplier: avgRatio, samples: ratios.length };
+}
+ 
+function renderDemandForecastChart(weekList, ordersByWeek, weekDateRange, ordersByDate){
   // Weekly total demand — number of orders (distinct Order Reference), not product quantity
   const historical = weekList.map(w => (ordersByWeek[w] ? ordersByWeek[w].size : 0));
  
@@ -1327,7 +1385,28 @@ function renderDemandForecastChart(weekList, ordersByWeek){
  
   const lastWeekNum = Number(weekList[weekList.length-1]) || weekList.length;
   const forecastLabels = [1,2,3,4].map(i => 'W'+(lastWeekNum+i)+'*');
-  const forecastData   = [1,2,3,4].map(i => Math.max(0, Math.round(avg4 + slope * i)));
+ 
+  // Learn the Double Day spike size from history instead of guessing a fixed multiplier
+  const { multiplier: learnedMultiplier, samples: ddSamples } = learnDoubleDayMultiplier(ordersByDate);
+  const DOUBLE_DAY_BOOST = learnedMultiplier || 1; // if no Double Day found in history yet, don't boost
+  lastDoubleDayInfo = { multiplier: learnedMultiplier, samples: ddSamples };
+ 
+  // Project each future week's calendar date range from the last known week, then check for Double Days
+  const lastRange = weekDateRange ? weekDateRange[weekList[weekList.length-1]] : null;
+  const lastKnownDate = lastRange ? lastRange.max : new Date();
+  const dailyBaseline = avg4 / 7;
+  const doubleDayHits = []; // for footer note
+  const forecastData = [1,2,3,4].map(i => {
+    let val = Math.max(0, avg4 + slope * i);
+    const start = new Date(lastKnownDate); start.setDate(lastKnownDate.getDate() + 7*(i-1) + 1);
+    const end   = new Date(lastKnownDate); end.setDate(lastKnownDate.getDate() + 7*i);
+    const ddCount = countDoubleDaysInRange(start, end);
+    if(ddCount > 0 && DOUBLE_DAY_BOOST > 1){
+      val += dailyBaseline * (DOUBLE_DAY_BOOST - 1) * ddCount;
+      doubleDayHits.push('W'+(lastWeekNum+i));
+    }
+    return Math.max(0, Math.round(val));
+  });
  
   const labels = [...weekList.map(w=>'W'+w), ...forecastLabels];
  
@@ -1340,6 +1419,18 @@ function renderDemandForecastChart(weekList, ordersByWeek){
   const opts = baseChartOptions({ legend:true });
   opts.plugins.lineDataLabels = { display:true };
   opts.layout = { padding:{ top:20 } };
+  opts.plugins.tooltip = {
+    ...tooltipStyle(),
+    callbacks:{
+      label: ctx => {
+        const isDD = doubleDayHits.includes(labels[ctx.dataIndex]);
+        const base = ctx.dataset.label + ': ' + Number(ctx.raw).toLocaleString('en-US');
+        if(!isDD) return base;
+        const multText = DOUBLE_DAY_BOOST.toFixed(1);
+        return [base, '⚡ มี Double Day ในสัปดาห์นี้ (คูณ x' + multText + ' เฉพาะวันนั้น, อ้างอิงจากข้อมูลย้อนหลัง ' + ddSamples + ' ครั้ง)'];
+      }
+    }
+  };
   charts.forecastDemand = new Chart(ctx, {
     type:'line',
     data:{ labels, datasets:[
@@ -1348,8 +1439,8 @@ function renderDemandForecastChart(weekList, ordersByWeek){
         data: fullData,
         borderColor:'#7A9A3F',
         backgroundColor:'rgba(122,154,63,0.10)',
-        pointBackgroundColor: c => c.dataIndex <= boundaryIndex ? '#7A9A3F' : '#C89B4A',
-        pointRadius: c => c.dataIndex <= boundaryIndex ? 3 : 4,
+        pointBackgroundColor: c => doubleDayHits.includes(labels[c.dataIndex]) ? '#A6432E' : (c.dataIndex <= boundaryIndex ? '#7A9A3F' : '#C89B4A'),
+        pointRadius: c => doubleDayHits.includes(labels[c.dataIndex]) ? 6 : (c.dataIndex <= boundaryIndex ? 3 : 4),
         tension:0.3, fill:true, borderWidth:2,
         segment:{
           borderColor: c => c.p0DataIndex >= boundaryIndex ? '#C89B4A' : '#7A9A3F',
@@ -1389,7 +1480,7 @@ function buildForecastChartOpts(items){
           ctx.dataset.label + ': ' + Number(ctx.raw).toLocaleString('en-US'),
           'Stock ปัจจุบัน: ' + r.stock.toLocaleString('en-US'),
           'Demand รวม: ' + r.demandN,
-          'ขาด / Deficit: ' + r.deficitN
+          'ขาดตามคาดการณ์: ' + r.deficitN
         ];
       }
     }
@@ -1407,7 +1498,7 @@ function renderForecast1wChart(forecastRows){
     type:'bar',
     data:{ labels, datasets:[
       { label:'ครอบคลุมด้วย Stock',  data:items.map(r=>r.coveredN), backgroundColor:'rgba(122,154,63,0.80)', borderRadius:{topLeft:4,bottomLeft:4}, maxBarThickness:18, stack:'s1w' },
-      { label:'ขาด / Deficit (1w)',   data:items.map(r=>r.deficitN), backgroundColor:'rgba(166,67,46,0.85)', borderRadius:{topRight:4,bottomRight:4}, maxBarThickness:18, stack:'s1w' }
+      { label:'ขาดตามคาดการณ์ (1w)',   data:items.map(r=>r.deficitN), backgroundColor:'rgba(166,67,46,0.85)', borderRadius:{topRight:4,bottomRight:4}, maxBarThickness:18, stack:'s1w' }
     ]},
     options: buildForecastChartOpts(items)
   });
@@ -1423,7 +1514,7 @@ function renderForecast4wChart(forecastRows){
     type:'bar',
     data:{ labels, datasets:[
       { label:'ครอบคลุมด้วย Stock',  data:items.map(r=>r.coveredN), backgroundColor:'rgba(122,154,63,0.80)', borderRadius:{topLeft:4,bottomLeft:4}, maxBarThickness:18, stack:'s4w' },
-      { label:'ขาด / Deficit (4w)',   data:items.map(r=>r.deficitN), backgroundColor:'rgba(166,67,46,0.85)', borderRadius:{topRight:4,bottomRight:4}, maxBarThickness:18, stack:'s4w' }
+      { label:'ขาดตามคาดการณ์ (4w)',   data:items.map(r=>r.deficitN), backgroundColor:'rgba(166,67,46,0.85)', borderRadius:{topRight:4,bottomRight:4}, maxBarThickness:18, stack:'s4w' }
     ]},
     options: buildForecastChartOpts(items)
   });
