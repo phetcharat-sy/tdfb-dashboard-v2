@@ -642,6 +642,10 @@ function classify(status){
   const s = status.trim();
   if(s === 'ใช่') return 'ontime';
   if(s === 'ไม่ใช่' || s === 'ไม่') return 'late';
+  // Negation-aware check FIRST: free-text remarks like "ส่งไม่เสร็จในวันที่กำหนด" contain
+  // positive-sounding keywords ("เสร็จในวัน") inside a NEGATIVE sentence. Without this check,
+  // such rows would be misclassified as on-time just because the keyword substring matched.
+  if(s.includes('ไม่')) return 'late';
   if(s.includes('ก่อน')) return 'early';
   if(s.includes('วันถัดไป') || s.includes('ไม่ตรง') || s.includes('ช้า')) return 'late';
   if(s.includes('ให้ในวัน') || s.includes('เสร็จในวัน')) return 'ontime';
