@@ -1251,7 +1251,7 @@ function renderTab4(){
  
   // --- Build weekly order count (distinct Order Reference) — used for Demand Trend & Forecast chart ---
   const ordersByWeek = {}; // week -> Set of order reference
-  const weekDateRange = {}; // week -> {min:Date, max:Date} — used to detect "Double Day" campaign dates
+  const datesByWeek = {}; // week -> array of Date (raw) — a single bad row shouldn't skew the whole week's range
   const ordersByDate = {}; // 'YYYY-MM-DD' -> Set of order reference — used to learn the Double Day spike size from history
   ALL_ROWS.forEach(r => {
     if(!r.week) return;
@@ -1262,15 +1262,25 @@ function renderTab4(){
     }
     const d = parseDate(r.createDate);
     if(d){
-      if(!weekDateRange[r.week]) weekDateRange[r.week] = { min:d, max:d };
-      if(d < weekDateRange[r.week].min) weekDateRange[r.week].min = d;
-      if(d > weekDateRange[r.week].max) weekDateRange[r.week].max = d;
+      if(!datesByWeek[r.week]) datesByWeek[r.week] = [];
+      datesByWeek[r.week].push(d);
       if(orderKey){
         const dateKey = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
         if(!ordersByDate[dateKey]) ordersByDate[dateKey] = new Set();
         ordersByDate[dateKey].add(orderKey);
       }
     }
+  });
+ 
+  // Build each week's date range from the MEDIAN date, not raw min/max — a stray mis-tagged
+  // row (wrong week, wrong year, typo'd date) can otherwise stretch a week's range to months.
+  const weekDateRange = {}; // week -> {min:Date, max:Date}
+  Object.entries(datesByWeek).forEach(([w, dates]) => {
+    dates.sort((a,b) => a-b);
+    const median = dates[Math.floor(dates.length/2)];
+    const min = new Date(median); min.setDate(median.getDate()-3);
+    const max = new Date(median); max.setDate(median.getDate()+3);
+    weekDateRange[w] = { min, max };
   });
  
   const weekList = [...allWeeks].sort((a,b) => Number(a)-Number(b));
@@ -1403,10 +1413,17 @@ function renderDemandForecastChart(weekList, ordersByWeek, weekDateRange, orders
   const dailyBaseline = avg4 / 7;
   const doubleDayHits = []; // weeks (historical or forecast) that contain a Double Day
  
-  // Check historical weeks for Double Days using their real date ranges
+  // Check historical weeks for Double Days using their real date ranges.
+  // Guard: only trust the range if it's a plausible single week (<=10 days) — a wider span
+  // usually means bad/outlier date data for that week bucket, which would otherwise cause
+  // false Double Day matches across many unrelated weeks.
+  const MAX_PLAUSIBLE_WEEK_SPAN_DAYS = 10;
   weekList.forEach(w => {
     const r = weekDateRange ? weekDateRange[w] : null;
-    if(r && countDoubleDaysInRange(r.min, r.max) > 0) doubleDayHits.push('W'+w);
+    if(!r) return;
+    const spanDays = (r.max - r.min) / 86400000;
+    if(spanDays > MAX_PLAUSIBLE_WEEK_SPAN_DAYS) return; // untrustworthy range — skip
+    if(countDoubleDaysInRange(r.min, r.max) > 0) doubleDayHits.push('W'+w);
   });
  
   const forecastRangeLabels = [];
