@@ -8,6 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&family=IBM+Plex+Sans+Thai:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
   :root{
     --paper:#F6F2E7; --panel:#FFFDF5; --ink:#1F2E1A; --ink-soft:#4E5C46; --ink-faint:#8C9482;
@@ -172,7 +173,10 @@
     </div>
     <div class="meta-right">
       Last updated<br><span id="lastUpdated">—</span>
-      <div><button class="btn-plain" id="refreshBtn" onclick="loadData()">Refresh</button></div>
+      <div>
+        <button class="btn-plain" id="refreshBtn" onclick="loadData()">Refresh</button>
+        <button class="btn-plain" id="saveImgBtn" onclick="saveTabAsPNG()" style="margin-left:14px;">Save as PNG (A4)</button>
+      </div>
     </div>
   </div>
  
@@ -661,6 +665,58 @@ function switchTab(tab){
   document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
   document.getElementById(tab).classList.add('active');
   document.querySelector('.tab-btn[data-tab="' + tab + '"]').classList.add('active');
+}
+ 
+// Capture the currently active tab and export it as a single A4-sized PNG.
+async function saveTabAsPNG(){
+  const btn = document.getElementById('saveImgBtn');
+  const activeTab = document.querySelector('.tab-page.active');
+  if(!activeTab || typeof html2canvas === 'undefined') return;
+ 
+  const originalLabel = btn.textContent;
+  btn.textContent = 'กำลังบันทึก...';
+  btn.disabled = true;
+ 
+  try{
+    // Render the tab's DOM at 2x scale for crisp text/lines
+    const captured = await html2canvas(activeTab, {
+      backgroundColor: '#F6F2E7',
+      scale: 2,
+      useCORS: true
+    });
+ 
+    // A4 at 200 DPI: 1654 x 2339 px (portrait)
+    const A4_W = 1654, A4_H = 2339;
+    const a4 = document.createElement('canvas');
+    a4.width = A4_W; a4.height = A4_H;
+    const ctx = a4.getContext('2d');
+    ctx.fillStyle = '#F6F2E7';
+    ctx.fillRect(0, 0, A4_W, A4_H);
+ 
+    // Fit the captured content to A4 width, keep aspect ratio; if taller than one page, scale down to fit whole page
+    const margin = 40;
+    const availW = A4_W - margin*2;
+    const availH = A4_H - margin*2;
+    const scale = Math.min(availW / captured.width, availH / captured.height);
+    const drawW = captured.width * scale;
+    const drawH = captured.height * scale;
+    const dx = (A4_W - drawW) / 2;
+    const dy = margin;
+    ctx.drawImage(captured, 0, 0, captured.width, captured.height, dx, dy, drawW, drawH);
+ 
+    const activeTabName = document.querySelector('.tab-btn.active')?.textContent?.trim().split('\n')[0] || activeTab.id;
+    const dateStr = new Date().toISOString().slice(0,10);
+    const link = document.createElement('a');
+    link.download = 'TDFB_' + activeTab.id + '_' + dateStr + '.png';
+    link.href = a4.toDataURL('image/png');
+    link.click();
+  } catch(err){
+    console.error('Save as PNG failed:', err);
+    alert('บันทึกภาพไม่สำเร็จ ลองใหม่อีกครั้ง');
+  } finally {
+    btn.textContent = originalLabel;
+    btn.disabled = false;
+  }
 }
  
 function populateFilterOptions(){
