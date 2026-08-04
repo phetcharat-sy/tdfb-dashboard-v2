@@ -241,7 +241,7 @@
     <!-- Remark Team table only (tab1) -->
     <div class="section">
       <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>Order Detail</div>
-      <div class="section-desc">All orders · most recent first · Remark Team left blank when not noted</div>
+      <div class="section-desc">All orders · with Remark Team notes first, then most recent · left blank when not noted</div>
       <div class="table-panel">
         <div class="table-scroll remark-scroll">
           <table class="data-table">
@@ -311,7 +311,7 @@
     <!-- Remark Team table only (tab2) -->
     <div class="section">
       <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>Order Detail</div>
-      <div class="section-desc">All orders · most recent first · Remark Team left blank when not noted</div>
+      <div class="section-desc">All orders · with Remark Team notes first, then most recent · left blank when not noted</div>
       <div class="table-panel">
         <div class="table-scroll remark-scroll">
           <table class="data-table">
@@ -464,7 +464,7 @@ const PLATFORM_SOURCES = ['shopee','lazada','tiktok shop','line oa'];
 const COLMAP = {
   'Month':'month','Year':'year','Week':'week',
   'วันที่ลง Odoo':'createDate','วันที่ต้องการจัดส่ง':'expectedDelivery','Order Reference':'orderRef',
-  'Created by':'createdBy','WH ส่งของให้ PK ภายในวันที่ต้องส่งหรือไม่':'whStatus','WH ส่งของให้ PK ภายในกี่วันที่ต้องส่ง':'whStatus','วันที่WHส่งให้PK':'whDate','วันที่WHส่งให้ PK':'whDate',
+  'Created by':'createdBy','WH ส่งของให้ PK ภายในวันที่ต้องส่งหรือไม่':'whStatus','WH ส่งของให้ PK ภายในกี่วันที่ต้องส่ง':'whStatus','WH ส่งของให้ PK ภายในวันที่ต้องส่ง':'whStatus','วันที่WHส่งให้PK':'whDate','วันที่WHส่งให้ PK':'whDate',
   'Last Updated by':'lastUpdatedBy','วันที่แพ็ค':'packDate','จัดส่งให้ในวันที่ต้องการหรือไม่':'whYesNo',
   'แพ็คสินค้าเสร็จตามวันที่ต้องการหรือไม่':'packStatus','แพ็คสินค้าเสร็จตามวันที่ต้องการหรือใม่':'packStatus','Customer':'customer','Delivery Status':'deliveryStatus',
   'Remark':'remark','Sender Name':'senderName','Channel':'channel','Source':'source','Urgent':'urgent',
@@ -602,9 +602,15 @@ async function loadData(){
 function mapRows(rawRows){
   return rawRows.map(r => {
     const out = {};
+    // Build a trimmed/case-insensitive lookup once per row as a fallback in case the sheet's
+    // header text has slightly different spacing/wording than expected (e.g. a missing "หรือไม่").
+    const rNorm = {};
+    Object.keys(r).forEach(k => { rNorm[k.trim().toLowerCase()] = r[k]; });
     for(const [th, key] of Object.entries(COLMAP)){
       if(out[key]) continue;
-      out[key] = (r[th] !== undefined ? r[th] : '').toString().trim();
+      let val = r[th];
+      if(val === undefined) val = rNorm[th.trim().toLowerCase()];
+      out[key] = (val !== undefined ? val : '').toString().trim();
     }
     return out;
   }).filter(r => r.orderRef);
@@ -648,7 +654,20 @@ function classify(status){
   if(s.includes('ไม่')) return 'late';
   if(s.includes('ก่อน')) return 'early';
   if(s.includes('วันถัดไป') || s.includes('ไม่ตรง') || s.includes('ช้า')) return 'late';
+  // "ส่งให้วันที่ 2/3/..." = delivered on day N (N>=2) — i.e. N-1 days late. Day 1 alone (no
+  // number, or "วันที่ 1") is on-time and is handled by the ontime check below.
+  const dayMatch = s.match(/วันที่\s*(\d+)/);
+  if(dayMatch && Number(dayMatch[1]) >= 2) return 'late';
   if(s.includes('ให้ในวัน') || s.includes('เสร็จในวัน')) return 'ontime';
+  return 'unknown';
+}
+function combineStatus(packCls, whCls){
+  // "Late" wins if either signal says late — a delayed WH→PK handoff (whStatus) means the
+  // order was already behind schedule even if the packing-completion field (packStatus)
+  // separately says the pack itself finished within its own day.
+  if(packCls === 'late' || whCls === 'late') return 'late';
+  if(packCls === 'ontime' || packCls === 'early') return packCls;
+  if(whCls === 'ontime' || whCls === 'early') return whCls;
   return 'unknown';
 }
 function statusLabel(cls){ return { ontime:'On time', early:'Early', late:'Delayed', unknown:'—' }[cls] || '—'; }
@@ -912,7 +931,7 @@ function toOrderLevel(rows){
   const priority = { late:3, unknown:2, early:1, ontime:1 };
   const map = new Map();
   rows.forEach(r=>{
-    const cls = classify(r.packStatus);
+    const cls = combineStatus(classify(r.packStatus), classify(r.whStatus));
     if(!map.has(r.orderRef)){
       map.set(r.orderRef, { ...r, _packWorst: cls });
     } else {
@@ -1012,6 +1031,9 @@ function renderTab1(){
 function renderTab1RemarkTable(rows){
   const sortedRows = [...rows]
     .sort((a,b) => {
+      const aHas = a.remarkTeam && a.remarkTeam.trim() ? 1 : 0;
+      const bHas = b.remarkTeam && b.remarkTeam.trim() ? 1 : 0;
+      if(aHas !== bHas) return bHas - aHas; // rows with a Remark Team note come first
       const da = parseDate(a.createDate), db = parseDate(b.createDate);
       return (db?db.getTime():0) - (da?da.getTime():0);
     });
@@ -1240,6 +1262,9 @@ function renderOosChart(onTime, early, late){
 function renderTab2RemarkTable(rows){
   const sortedRows = [...rows]
     .sort((a,b) => {
+      const aHas = a.remarkTeam && a.remarkTeam.trim() ? 1 : 0;
+      const bHas = b.remarkTeam && b.remarkTeam.trim() ? 1 : 0;
+      if(aHas !== bHas) return bHas - aHas; // rows with a Remark Team note come first
       const da = parseDate(a.createDate), db = parseDate(b.createDate);
       return (db?db.getTime():0) - (da?da.getTime():0);
     });
