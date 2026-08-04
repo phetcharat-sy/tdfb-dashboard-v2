@@ -344,8 +344,8 @@
     </div>
  
     <div class="section">
-      <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>รายการที่ต้องเติม Stock <span style="font-size:13px;font-weight:400;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;">(มี Quota เท่านั้น)</span></div>
-      <div class="section-desc">เรียงตามคะแนนขายดี · แสดงเฉพาะสินค้าที่มี Quota</div>
+      <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>รายการที่ต้องเติม Stock <span style="font-size:13px;font-weight:400;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;">(ไม่รวมที่ไม่มีโควต้า)</span></div>
+      <div class="section-desc">เรียงตามคะแนนขายดี · ไม่แสดงสินค้าที่ Remark ระบุว่า "ไม่มีโควต้า"</div>
       <div class="table-panel">
         <div class="table-scroll remark-scroll">
           <table class="data-table">
@@ -727,20 +727,17 @@ function renderTab3(){
  
   renderRemark3Chart(needRows);
  
-  // รายการที่ต้องเติม — เฉพาะที่มี Quota > 0
+  // รายการที่ต้องเติม — ตัดเฉพาะรายการที่ Remark ระบุว่า "ไม่มีโควต้า" ออก (ไม่ใช่กรองจากตัวเลข QUOTA)
   const tbody = document.getElementById('tab3_body');
   const sorted = [...needRows]
-    .filter(r => {
-      const q = Number(String(r.quota||'0').replace(/,/g,''));
-      return q > 0;
-    })
+    .filter(r => !(r.remark3||'').includes('ไม่มีโควต้า'))
     .sort((a,b) => {
       const sa = Number(String(a.score||'0').replace(/,/g,'')) || 0;
       const sb = Number(String(b.score||'0').replace(/,/g,'')) || 0;
       return sb - sa;
     });
   if(sorted.length === 0){
-    tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state">ไม่มีสินค้าที่ต้องเติมและมี Quota</div></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state">ไม่มีสินค้าที่ต้องเติม</div></td></tr>';
   } else {
     tbody.innerHTML = sorted.map(r => (
       '<tr><td class="strong">' + escapeHtml(r.product) + '</td>' +
