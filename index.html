@@ -241,11 +241,11 @@
     <!-- Remark Team table only (tab1) -->
     <div class="section">
       <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>Order Detail</div>
-      <div class="section-desc">Rows with Remark Team notes · most recent first</div>
+      <div class="section-desc">All orders · most recent first · Remark Team left blank when not noted</div>
       <div class="table-panel">
         <div class="table-scroll remark-scroll">
           <table class="data-table">
-            <thead><tr><th>Order Ref</th><th>Source</th><th>Remark Team</th></tr></thead>
+            <thead><tr><th>Order Ref</th><th>Source</th><th>Product</th><th>Remark Team</th></tr></thead>
             <tbody id="tab1_remark_body"></tbody>
           </table>
         </div>
@@ -311,11 +311,11 @@
     <!-- Remark Team table only (tab2) -->
     <div class="section">
       <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>Order Detail</div>
-      <div class="section-desc">Rows with Remark Team notes · most recent first</div>
+      <div class="section-desc">All orders · most recent first · Remark Team left blank when not noted</div>
       <div class="table-panel">
         <div class="table-scroll remark-scroll">
           <table class="data-table">
-            <thead><tr><th>Order Ref</th><th>Source</th><th>Remark Team</th></tr></thead>
+            <thead><tr><th>Order Ref</th><th>Source</th><th>Product</th><th>Remark Team</th></tr></thead>
             <tbody id="tab2_remark_body"></tbody>
           </table>
         </div>
@@ -667,7 +667,8 @@ function switchTab(tab){
   document.querySelector('.tab-btn[data-tab="' + tab + '"]').classList.add('active');
 }
  
-// Capture the currently active tab and export it as a single A4-sized PNG.
+// Capture the currently active tab and export it as two A4-sized PNGs (top half / bottom half),
+// so each page shows content at a bigger, more readable scale instead of one tiny full-page shot.
 async function saveTabAsPNG(){
   const btn = document.getElementById('saveImgBtn');
   const activeTab = document.querySelector('.tab-page.active');
@@ -687,29 +688,39 @@ async function saveTabAsPNG(){
  
     // A4 at 200 DPI: 1654 x 2339 px (portrait)
     const A4_W = 1654, A4_H = 2339;
-    const a4 = document.createElement('canvas');
-    a4.width = A4_W; a4.height = A4_H;
-    const ctx = a4.getContext('2d');
-    ctx.fillStyle = '#F6F2E7';
-    ctx.fillRect(0, 0, A4_W, A4_H);
- 
-    // Fit the captured content to A4 width, keep aspect ratio; if taller than one page, scale down to fit whole page
     const margin = 40;
     const availW = A4_W - margin*2;
     const availH = A4_H - margin*2;
-    const scale = Math.min(availW / captured.width, availH / captured.height);
-    const drawW = captured.width * scale;
-    const drawH = captured.height * scale;
-    const dx = (A4_W - drawW) / 2;
-    const dy = margin;
-    ctx.drawImage(captured, 0, 0, captured.width, captured.height, dx, dy, drawW, drawH);
  
-    const activeTabName = document.querySelector('.tab-btn.active')?.textContent?.trim().split('\n')[0] || activeTab.id;
+    const halfH = Math.ceil(captured.height / 2);
     const dateStr = new Date().toISOString().slice(0,10);
-    const link = document.createElement('a');
-    link.download = 'TDFB_' + activeTab.id + '_' + dateStr + '.png';
-    link.href = a4.toDataURL('image/png');
-    link.click();
+ 
+    for(let part = 0; part < 2; part++){
+      const srcY = part * halfH;
+      const srcH = Math.min(halfH, captured.height - srcY);
+      if(srcH <= 0) continue;
+ 
+      const a4 = document.createElement('canvas');
+      a4.width = A4_W; a4.height = A4_H;
+      const ctx = a4.getContext('2d');
+      ctx.fillStyle = '#F6F2E7';
+      ctx.fillRect(0, 0, A4_W, A4_H);
+ 
+      // Fit this half's width/height to the A4 page — since it's half the content, it scales up bigger
+      const scale = Math.min(availW / captured.width, availH / srcH);
+      const drawW = captured.width * scale;
+      const drawH = srcH * scale;
+      const dx = (A4_W - drawW) / 2;
+      const dy = margin;
+      ctx.drawImage(captured, 0, srcY, captured.width, srcH, dx, dy, drawW, drawH);
+ 
+      const link = document.createElement('a');
+      link.download = 'TDFB_' + activeTab.id + '_' + dateStr + '_part' + (part+1) + '.png';
+      link.href = a4.toDataURL('image/png');
+      link.click();
+      // small delay so the browser doesn't drop the second download
+      await new Promise(res => setTimeout(res, 300));
+    }
   } catch(err){
     console.error('Save as PNG failed:', err);
     alert('บันทึกภาพไม่สำเร็จ ลองใหม่อีกครั้ง');
@@ -995,27 +1006,27 @@ function renderTab1(){
 }
  
 function renderTab1RemarkTable(rows){
-  const remarkRows = rows
-    .filter(r => r.remarkTeam && r.remarkTeam.trim())
+  const sortedRows = [...rows]
     .sort((a,b) => {
       const da = parseDate(a.createDate), db = parseDate(b.createDate);
       return (db?db.getTime():0) - (da?da.getTime():0);
     });
   const seen = new Set();
-  const dedupedRows = remarkRows.filter(r => {
-    if(seen.has(r.orderRef)) return false;
+  const dedupedRows = sortedRows.filter(r => {
+    if(!r.orderRef || seen.has(r.orderRef)) return false;
     seen.add(r.orderRef);
     return true;
   });
   const tbody = document.getElementById('tab1_remark_body');
   if(dedupedRows.length === 0){
-    tbody.innerHTML = '<tr><td colspan="3"><div class="empty-state">No Remark Team notes found</div></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state">No orders found</div></td></tr>';
     return;
   }
   tbody.innerHTML = dedupedRows.map(r => (
     '<tr><td class="strong">' + escapeHtml(r.orderRef) + '</td>' +
     '<td>' + escapeHtml(r.source || '—') + '</td>' +
-    '<td>' + escapeHtml(r.remarkTeam) + '</td></tr>'
+    '<td>' + escapeHtml(r.product || '—') + '</td>' +
+    '<td>' + (r.remarkTeam && r.remarkTeam.trim() ? escapeHtml(r.remarkTeam) : '') + '</td></tr>'
   )).join('');
 }
  
@@ -1223,27 +1234,27 @@ function renderOosChart(onTime, early, late){
 }
  
 function renderTab2RemarkTable(rows){
-  const remarkRows = rows
-    .filter(r => r.remarkTeam && r.remarkTeam.trim())
+  const sortedRows = [...rows]
     .sort((a,b) => {
       const da = parseDate(a.createDate), db = parseDate(b.createDate);
       return (db?db.getTime():0) - (da?da.getTime():0);
     });
   const seen = new Set();
-  const dedupedRows = remarkRows.filter(r => {
-    if(seen.has(r.orderRef)) return false;
+  const dedupedRows = sortedRows.filter(r => {
+    if(!r.orderRef || seen.has(r.orderRef)) return false;
     seen.add(r.orderRef);
     return true;
   });
   const tbody = document.getElementById('tab2_remark_body');
   if(dedupedRows.length === 0){
-    tbody.innerHTML = '<tr><td colspan="3"><div class="empty-state">No Remark Team notes found</div></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state">No orders found</div></td></tr>';
     return;
   }
   tbody.innerHTML = dedupedRows.map(r => (
     '<tr><td class="strong">' + escapeHtml(r.orderRef) + '</td>' +
     '<td>' + escapeHtml(r.source || '—') + '</td>' +
-    '<td>' + escapeHtml(r.remarkTeam) + '</td></tr>'
+    '<td>' + escapeHtml(r.product || '—') + '</td>' +
+    '<td>' + (r.remarkTeam && r.remarkTeam.trim() ? escapeHtml(r.remarkTeam) : '') + '</td></tr>'
   )).join('');
 }
  
