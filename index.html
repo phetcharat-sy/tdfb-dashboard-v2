@@ -173,6 +173,7 @@
     </div>
     <div class="meta-right">
       Last updated<br><span id="lastUpdated">—</span>
+      <div style="font-size:9.5px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-04-v4-whstatus-fix</div>
       <div>
         <button class="btn-plain" id="refreshBtn" onclick="loadData()">Refresh</button>
         <button class="btn-plain" id="saveImgBtn" onclick="saveTabAsPNG()" style="margin-left:14px;">Save as PNG (A4)</button>
@@ -1024,8 +1025,11 @@ function renderTab1(){
     renderChannelChart(orderRows);
   renderTab1RemarkTable(lineRows);
  
+  const lateByPackOnly = lineRows.filter(r => classify(r.packStatus) === 'late').length;
+  const lateByWhOnly = lineRows.filter(r => classify(r.whStatus) === 'late').length;
+ 
   document.getElementById('tab1_footer').textContent =
-    totalOrders.toLocaleString('en-US') + ' orders (from ' + lineRows.length.toLocaleString('en-US') + ' line items) · updated ' + new Date().toLocaleString('en-GB');
+    totalOrders.toLocaleString('en-US') + ' orders (from ' + lineRows.length.toLocaleString('en-US') + ' line items) · late(pack)=' + lateByPackOnly + ' late(WH)=' + lateByWhOnly + ' late(combined orders)=' + lateOrders + ' · updated ' + new Date().toLocaleString('en-GB');
 }
  
 function renderTab1RemarkTable(rows){
