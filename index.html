@@ -168,7 +168,7 @@
     </div>
     <div class="meta-right">
       Last updated<br><span id="lastUpdated">—</span>
-      <div style="font-size:9.5px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-05-v7-fix-oos-denominator</div>
+      <div style="font-size:9.5px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-05-v9-fix-classify-songnaiwan-ontime</div>
       <div>
         <button class="btn-plain" id="refreshBtn" onclick="loadData()">Refresh</button>
         <button class="btn-plain" id="saveImgBtn" onclick="saveTabAsPNG()" style="margin-left:14px;">Save as PNG (A4)</button>
@@ -288,7 +288,6 @@
       <div class="stat-card"><div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12l2.5 2.5L16 9"/></svg></div><div class="stat-label">On-Time Dispatch</div><div class="stat-value c-matcha" id="m2_ontime">—</div></div>
       <div class="stat-card"><div class="stat-icon i-bamboo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 16V8"/><path d="M8 12l4-4 4 4"/></svg></div><div class="stat-label">จัดส่งก่อนกำหนด</div><div class="stat-value c-bamboo" id="m2_early">—</div></div>
       <div class="stat-card"><div class="stat-icon i-azuki"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l10 18H2L12 3z"/><path d="M12 9v5"/><path d="M12 17h.01"/></svg></div><div class="stat-label">จัดส่งล่าช้า</div><div class="stat-value c-azuki" id="m2_late">—</div></div>
-      <div class="stat-card"><div class="stat-icon i-gray"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></div><div class="stat-label">ไม่ทราบสถานะ (whYesNo ว่าง/ไม่ระบุ)</div><div class="stat-value" id="m2_unknown">—</div></div>
       <div class="stat-card"><div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 3h6v3H9z"/><path d="M9 11h6M9 15h4"/></svg></div><div class="stat-label">Orders</div><div class="stat-value" id="m2_order">—</div></div>
     </div>
  
@@ -300,7 +299,7 @@
  
     <div class="grid-2">
       <div class="section"><div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>Top 5 Products</div><div class="section-desc">Highest line-item count</div><div class="chart-panel"><div class="chart-box" style="height:270px;"><canvas id="chart_top5"></canvas></div></div></div>
-      <div class="section"><div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>Out-of-Stock Rate</div><div class="section-desc">Target ≥ 99% · รวม "ไม่ทราบสถานะ" เป็นตัวหารด้วย</div><div class="chart-panel"><div class="chart-box" style="height:270px;"><canvas id="chart_oos"></canvas></div></div></div>
+      <div class="section"><div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>Out-of-Stock Rate</div><div class="section-desc">Target ≥ 99% · ค่าว่าง/ไม่ระบุใน whYesNo นับเป็น Late</div><div class="chart-panel"><div class="chart-box" style="height:270px;"><canvas id="chart_oos"></canvas></div></div></div>
     </div>
  
     <div class="section">
@@ -637,12 +636,19 @@ function classify(status){
   const s = status.trim();
   if(s === 'ใช่') return 'ontime';
   if(s === 'ไม่ใช่' || s === 'ไม่') return 'late';
+  // Negation-aware check FIRST: catches "ส่งไม่ตรงวันจัดส่ง" → late
   if(s.includes('ไม่')) return 'late';
+  // Catches "ส่งก่อนวัน" → early
   if(s.includes('ก่อน')) return 'early';
-  if(s.includes('วันถัดไป') || s.includes('ไม่ตรง') || s.includes('ช้า')) return 'late';
+  // Catches "ส่งในวัน" (and "ให้ในวัน" / "เสร็จในวัน") → on time.
+  // FIX: was previously checking only for the exact substrings "ให้ในวัน" / "เสร็จในวัน",
+  // which "ส่งในวัน" does not match — that caused real "on time" rows to fall through to
+  // 'unknown' instead of 'ontime'. Broadened to match "ในวัน" generically; safe because the
+  // "ไม่" and "ก่อน" checks above already run first.
+  if(s.includes('ในวัน')) return 'ontime';
+  if(s.includes('วันถัดไป') || s.includes('ช้า')) return 'late';
   const dayMatch = s.match(/วันที่\s*(\d+)/);
   if(dayMatch && Number(dayMatch[1]) >= 2) return 'late';
-  if(s.includes('ให้ในวัน') || s.includes('เสร็จในวัน')) return 'ontime';
   return 'unknown';
 }
 function combineStatus(packCls, whCls){
@@ -1177,24 +1183,29 @@ function getTab2Rows(){
 }
  
 /*
-  FIX (2026-08-05): เดิมตัวหารของ % (denom) คำนวณจาก onTime+early+late ซึ่งนับเฉพาะแถวที่ whYesNo === 'ใช่'
-  (pctRows) เท่านั้น ทำให้แถวที่ whYesNo ว่าง/ไม่ระบุ ถูกตัดออกจากทั้งเศษและส่วนไปเลย พอบังเอิญว่าแถวที่เหลือ
-  ทุกแถวเป็น on-time หมด ก็เลยได้ 100% ทั้งที่ totalLines (Line Items) มากกว่าจำนวนที่เอามาคิด %
-  แก้โดยให้ตัวหารอ้างอิงจาก totalLines (ทุกแถวหลัง filter) แทน และเพิ่มตัวเลข "ไม่ทราบสถานะ" ให้เห็นชัดเจน
+  FIX (2026-08-05, v2): whYesNo = "จัดส่งให้ในวันที่ต้องการหรือไม่" เป็นคำถามที่ตอบได้แค่ ใช่/ไม่ใช่ ตามนิยาม
+  ถ้าคำตอบไม่ใช่ "ใช่" ไม่ว่าจะเป็น "ไม่ใช่" หรือค่าว่าง/ไม่ระบุ ก็แปลว่า "ไม่ได้ส่งตรงวันที่ต้องการ" ซึ่งคือ
+  late เสมอ (ไม่ใช่สถานะ "ไม่ทราบ" แยกต่างหาก) — v1 เคยตัดกลุ่มนี้ออกจากทั้งเศษ/ส่วนไปเลย (100% หลอก),
+  ส่วน v2-draft ตัดออกมาเป็น "ไม่ทราบสถานะ" ต่างหาก แต่ที่ถูกต้องคือให้ไหลไปรวมกับ late เพราะเป็น late จริง
 */
 function renderTab2(){
   const rows = getTab2Rows();
   const totalLines = rows.length;
  
-  const pctRows = rows.filter(r => (r.whYesNo || '').trim() === 'ใช่');
-  const onTime = pctRows.filter(r => classify(r.whStatus)==='ontime').length;
-  const early  = pctRows.filter(r => classify(r.whStatus)==='early').length;
-  const late   = pctRows.filter(r => classify(r.whStatus)==='late').length;
-  const unknownRows = totalLines - pctRows.length; // แถวที่ whYesNo ไม่ใช่ "ใช่" (ว่าง/ไม่ระบุ/อื่นๆ)
+  let onTime = 0, early = 0, late = 0;
+  rows.forEach(r => {
+    const yn = (r.whYesNo || '').trim();
+    if(yn === 'ใช่'){
+      const cls = classify(r.whStatus);
+      if(cls === 'early') early++;
+      else onTime++; // whYesNo ยืนยันว่าส่งตรงวันแล้ว ให้นับเป็น on time
+    } else {
+      late++; // "ไม่ใช่" หรือค่าว่าง/ไม่ระบุ → ส่งไม่ตรงวันที่ต้องการ = late
+    }
+  });
  
   const uniqueOrders = new Set(rows.map(r=>r.orderRef)).size;
  
-  // ✅ FIX: ตัวหารใช้ totalLines (ทุกแถวหลังกรอง) แทน (onTime+early+late) เดิม
   const denom = totalLines || 1;
   const oosPct = Math.round(((onTime+early)/denom)*10000)/100;
  
@@ -1204,16 +1215,15 @@ function renderTab2(){
   document.getElementById('m2_ontime').textContent = onTime.toLocaleString('en-US');
   document.getElementById('m2_early').textContent = early.toLocaleString('en-US');
   document.getElementById('m2_late').textContent = late.toLocaleString('en-US');
-  document.getElementById('m2_unknown').textContent = unknownRows.toLocaleString('en-US');
   document.getElementById('m2_order').textContent = uniqueOrders.toLocaleString('en-US');
  
   renderWeekly2Chart(rows);
   renderTop5Chart(rows);
-  renderOosChart(onTime, early, late, unknownRows);
+  renderOosChart(onTime, early, late);
   renderTab2RemarkTable(rows);
  
   document.getElementById('tab2_footer').textContent =
-    totalLines.toLocaleString('en-US') + ' line items from ' + uniqueOrders.toLocaleString('en-US') + ' orders · ไม่ทราบสถานะ ' + unknownRows.toLocaleString('en-US') + ' รายการ · updated ' + new Date().toLocaleString('en-GB');
+    totalLines.toLocaleString('en-US') + ' line items from ' + uniqueOrders.toLocaleString('en-US') + ' orders · updated ' + new Date().toLocaleString('en-GB');
 }
  
 function renderWeekly2Chart(rows){
@@ -1273,16 +1283,16 @@ function renderTop5Chart(rows){
   });
 }
  
-function renderOosChart(onTime, early, late, unknownRows){
-  const total = onTime+early+late+(unknownRows||0) || 1;
+function renderOosChart(onTime, early, late){
+  const total = onTime+early+late || 1;
   const pct = arr => arr.map(v => Math.round((v/total)*1000)/10);
-  const [onP, earP, lateP, unkP] = pct([onTime, early, late, unknownRows||0]);
+  const [onP, earP, lateP] = pct([onTime, early, late]);
   const ctx = document.getElementById('chart_oos');
   if(charts.oos) charts.oos.destroy();
   charts.oos = new Chart(ctx, {
     type:'bar',
-    data:{ labels:['On time','Early','Late','ไม่ทราบสถานะ'], datasets:[
-      { data:[onP, earP, lateP, unkP], backgroundColor:['#7A9A3F','#4C6B26','#A6432E','#8C9482'], borderRadius:6, maxBarThickness:46 }
+    data:{ labels:['On time','Early','Late'], datasets:[
+      { data:[onP, earP, lateP], backgroundColor:['#7A9A3F','#4C6B26','#A6432E'], borderRadius:6, maxBarThickness:46 }
     ]},
     options: percentChartOptions({ dataLabels:true, target:99 })
   });
