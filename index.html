@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -30,7 +30,6 @@
   }
   .wrap{max-width:1180px;margin:0 auto;padding:48px 28px 80px;}
  
-  /* Logo + brand header */
   .brand-header{display:flex;align-items:center;gap:14px;margin-bottom:16px;}
   .brand-logo{flex-shrink:0;}
   .brand-name{font-family:'Zen Maru Gothic',sans-serif;font-weight:700;font-size:18px;color:#3f4a30;line-height:1.2;}
@@ -151,19 +150,14 @@
  
   <div class="header-row">
     <div>
-      <!-- Logo + brand name -->
       <div class="brand-header">
         <div class="brand-logo">
           <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
             <circle cx="24" cy="24" r="24" fill="#6b7f4f"/>
-            <!-- Warehouse roof (triangle) -->
             <polygon points="10,22 24,11 38,22" fill="#f4f1e6"/>
-            <!-- Warehouse body -->
             <rect x="12" y="22" width="24" height="15" fill="#f4f1e6"/>
-            <!-- Windows -->
             <rect x="15" y="25" width="5" height="5" rx="1" fill="#6b7f4f"/>
             <rect x="28" y="25" width="5" height="5" rx="1" fill="#6b7f4f"/>
-            <!-- Door -->
             <rect x="20" y="30" width="8" height="7" rx="1" fill="#6b7f4f"/>
           </svg>
         </div>
@@ -174,7 +168,7 @@
     </div>
     <div class="meta-right">
       Last updated<br><span id="lastUpdated">—</span>
-      <div style="font-size:9.5px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-05-v6-png-section-split-zip</div>
+      <div style="font-size:9.5px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-05-v7-fix-oos-denominator</div>
       <div>
         <button class="btn-plain" id="refreshBtn" onclick="loadData()">Refresh</button>
         <button class="btn-plain" id="saveImgBtn" onclick="saveTabAsPNG()" style="margin-left:14px;">Save as PNG (A4)</button>
@@ -240,7 +234,6 @@
       <div class="section"><div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>Shipping Method</div><div class="section-desc">Share by delivery type</div><div class="chart-panel"><div class="chart-box"><canvas id="chart_urgent"></canvas></div></div></div>
     </div>
  
-    <!-- Remark Team table only (tab1) -->
     <div class="section">
       <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>Order Detail</div>
       <div class="section-desc">All orders · with Remark Team notes first, then most recent · left blank when not noted</div>
@@ -295,10 +288,10 @@
       <div class="stat-card"><div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12l2.5 2.5L16 9"/></svg></div><div class="stat-label">On-Time Dispatch</div><div class="stat-value c-matcha" id="m2_ontime">—</div></div>
       <div class="stat-card"><div class="stat-icon i-bamboo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 16V8"/><path d="M8 12l4-4 4 4"/></svg></div><div class="stat-label">จัดส่งก่อนกำหนด</div><div class="stat-value c-bamboo" id="m2_early">—</div></div>
       <div class="stat-card"><div class="stat-icon i-azuki"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l10 18H2L12 3z"/><path d="M12 9v5"/><path d="M12 17h.01"/></svg></div><div class="stat-label">จัดส่งล่าช้า</div><div class="stat-value c-azuki" id="m2_late">—</div></div>
+      <div class="stat-card"><div class="stat-icon i-gray"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></div><div class="stat-label">ไม่ทราบสถานะ (whYesNo ว่าง/ไม่ระบุ)</div><div class="stat-value" id="m2_unknown">—</div></div>
       <div class="stat-card"><div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 3h6v3H9z"/><path d="M9 11h6M9 15h4"/></svg></div><div class="stat-label">Orders</div><div class="stat-value" id="m2_order">—</div></div>
     </div>
  
-    <!-- Weekly chart for tab2 — now shows total quantity of products dispatched per week -->
     <div class="section">
       <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>Weekly Line Items</div>
       <div class="section-desc">จำนวนสินค้าที่ออกต่อสัปดาห์ (รวม quantity)</div>
@@ -307,10 +300,9 @@
  
     <div class="grid-2">
       <div class="section"><div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>Top 5 Products</div><div class="section-desc">Highest line-item count</div><div class="chart-panel"><div class="chart-box" style="height:270px;"><canvas id="chart_top5"></canvas></div></div></div>
-      <div class="section"><div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>Out-of-Stock Rate</div><div class="section-desc">Target ≥ 99%</div><div class="chart-panel"><div class="chart-box" style="height:270px;"><canvas id="chart_oos"></canvas></div></div></div>
+      <div class="section"><div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>Out-of-Stock Rate</div><div class="section-desc">Target ≥ 99% · รวม "ไม่ทราบสถานะ" เป็นตัวหารด้วย</div><div class="chart-panel"><div class="chart-box" style="height:270px;"><canvas id="chart_oos"></canvas></div></div></div>
     </div>
  
-    <!-- Remark Team table only (tab2) -->
     <div class="section">
       <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>Order Detail</div>
       <div class="section-desc">All orders · with Remark Team notes first, then most recent · left blank when not noted</div>
@@ -460,7 +452,6 @@ const PAGE_SIZE = 100;
 const MONTH_ORDER = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
 const RING_CIRC = 565.48;
  
-// Platform sources that count as "Platform" (not walk-in)
 const PLATFORM_SOURCES = ['shopee','lazada','tiktok shop','line oa'];
  
 const COLMAP = {
@@ -604,8 +595,6 @@ async function loadData(){
 function mapRows(rawRows){
   return rawRows.map(r => {
     const out = {};
-    // Build a trimmed/case-insensitive lookup once per row as a fallback in case the sheet's
-    // header text has slightly different spacing/wording than expected (e.g. a missing "หรือไม่").
     const rNorm = {};
     Object.keys(r).forEach(k => { rNorm[k.trim().toLowerCase()] = r[k]; });
     for(const [th, key] of Object.entries(COLMAP)){
@@ -621,12 +610,10 @@ function mapRows(rawRows){
 function mapRows3(rawRows){
   return rawRows.map(r => {
     const out = {};
-    // Build case-insensitive key map once per row
     const rLower = {};
     Object.keys(r).forEach(k => { rLower[k.trim().toLowerCase()] = r[k]; });
     for(const [th, key] of Object.entries(COLMAP3)){
       if(out[key]) continue;
-      // Try exact match first, then case-insensitive
       let val = r[th];
       if(val === undefined) val = rLower[th.trim().toLowerCase()];
       out[key] = (val !== undefined ? val : '').toString().trim();
@@ -650,23 +637,15 @@ function classify(status){
   const s = status.trim();
   if(s === 'ใช่') return 'ontime';
   if(s === 'ไม่ใช่' || s === 'ไม่') return 'late';
-  // Negation-aware check FIRST: free-text remarks like "ส่งไม่เสร็จในวันที่กำหนด" contain
-  // positive-sounding keywords ("เสร็จในวัน") inside a NEGATIVE sentence. Without this check,
-  // such rows would be misclassified as on-time just because the keyword substring matched.
   if(s.includes('ไม่')) return 'late';
   if(s.includes('ก่อน')) return 'early';
   if(s.includes('วันถัดไป') || s.includes('ไม่ตรง') || s.includes('ช้า')) return 'late';
-  // "ส่งให้วันที่ 2/3/..." = delivered on day N (N>=2) — i.e. N-1 days late. Day 1 alone (no
-  // number, or "วันที่ 1") is on-time and is handled by the ontime check below.
   const dayMatch = s.match(/วันที่\s*(\d+)/);
   if(dayMatch && Number(dayMatch[1]) >= 2) return 'late';
   if(s.includes('ให้ในวัน') || s.includes('เสร็จในวัน')) return 'ontime';
   return 'unknown';
 }
 function combineStatus(packCls, whCls){
-  // "Late" wins if either signal says late — a delayed WH→PK handoff (whStatus) means the
-  // order was already behind schedule even if the packing-completion field (packStatus)
-  // separately says the pack itself finished within its own day.
   if(packCls === 'late' || whCls === 'late') return 'late';
   if(packCls === 'ontime' || packCls === 'early') return packCls;
   if(whCls === 'ontime' || whCls === 'early') return whCls;
@@ -678,7 +657,6 @@ function isPending(deliveryStatus){
   return deliveryStatus.toLowerCase().includes('pending');
 }
  
-// Check if source is a platform
 function isPlatformSource(source){
   if(!source) return false;
   const s = source.toLowerCase().trim();
@@ -692,12 +670,6 @@ function switchTab(tab){
   document.querySelector('.tab-btn[data-tab="' + tab + '"]').classList.add('active');
 }
  
-// Capture the currently active tab and export it as two A4-sized PNGs (top section / bottom
-// section). The split point is chosen at the nearest section boundary to the halfway mark —
-// never mid-chart or mid-table — so each page ends on a clean break. Both pages are bundled
-// into a single .zip download: downloading two PNGs back-to-back via separate link clicks gets
-// silently blocked by Chrome/Safari's "site wants to download multiple files" protection after
-// the first file, which is why only one page was coming through before.
 async function saveTabAsPNG(){
   const btn = document.getElementById('saveImgBtn');
   const activeTab = document.querySelector('.tab-page.active');
@@ -708,18 +680,13 @@ async function saveTabAsPNG(){
   btn.disabled = true;
  
   try{
-    const scale = 2; // render the tab's DOM at 2x scale for crisp text/lines
+    const scale = 2;
     const captured = await html2canvas(activeTab, {
       backgroundColor: '#F6F2E7',
       scale,
       useCORS: true
     });
  
-    // --- Find a content-aware split point -----------------------------------------------
-    // Collect the top/bottom of every top-level content block (hero, filter row, stat cards,
-    // each .section, footer) in captured-canvas pixel coordinates, then pick whichever block's
-    // TOP edge sits closest to the halfway mark. Splitting at a block's top edge guarantees the
-    // break falls between sections rather than through the middle of a chart or table.
     const containerRect = activeTab.getBoundingClientRect();
     const blockSelectors = '.hero, .filter-row, .stat-grid, .section, .footer-note';
     const blockTops = [...activeTab.querySelectorAll(blockSelectors)]
@@ -732,7 +699,6 @@ async function saveTabAsPNG(){
  
     const totalHeight = captured.height;
     const idealSplit = totalHeight / 2;
-    // Keep the break within a sane middle range (25%–75%) so neither page ends up near-empty
     const minY = totalHeight * 0.25;
     const maxY = totalHeight * 0.75;
  
@@ -743,9 +709,8 @@ async function saveTabAsPNG(){
       const diff = Math.abs(top - idealSplit);
       if(diff < bestDiff){ bestDiff = diff; splitY = Math.round(top); }
     });
-    if(splitY <= 0 || splitY >= totalHeight) splitY = Math.round(idealSplit); // safety fallback
+    if(splitY <= 0 || splitY >= totalHeight) splitY = Math.round(idealSplit);
  
-    // --- Render each half onto its own A4-sized page (200 DPI: 1654 x 2339 px portrait) ---
     const A4_W = 1654, A4_H = 2339;
     const margin = 40;
     const availW = A4_W - margin*2;
@@ -772,7 +737,6 @@ async function saveTabAsPNG(){
       return a4;
     });
  
-    // --- Bundle into one .zip so the browser only ever triggers ONE download -------------
     if(typeof JSZip !== 'undefined'){
       const zip = new JSZip();
       for(let i = 0; i < pages.length; i++){
@@ -786,8 +750,6 @@ async function saveTabAsPNG(){
       link.click();
       URL.revokeObjectURL(link.href);
     } else {
-      // Fallback if JSZip didn't load for some reason: download pages individually with a
-      // longer delay between clicks (still may be blocked by the browser after the first file).
       for(let i = 0; i < pages.length; i++){
         const link = document.createElement('a');
         link.download = 'TDFB_' + activeTab.id + '_' + dateStr + '_part' + (i+1) + '.png';
@@ -869,7 +831,6 @@ function renderTab3(){
  
   renderRemark3Chart(needRows);
  
-  // รายการที่ต้องเติม — ตัดเฉพาะรายการที่ Remark ระบุว่า "ไม่มีโควต้า" ออก (ไม่ใช่กรองจากตัวเลข QUOTA)
   const tbody = document.getElementById('tab3_body');
   const sorted = [...needRows]
     .filter(r => !(r.remark3||'').includes('ไม่มีโควต้า'))
@@ -891,7 +852,6 @@ function renderTab3(){
     )).join('');
   }
  
-  // รวมทั้งหมด
   const tbodyAll = document.getElementById('tab3_all_body');
   const allSorted = [...rows].sort((a,b) => {
     const sa = Number(String(a.score||'0').replace(/,/g,'')) || 0;
@@ -923,7 +883,6 @@ function renderTab3(){
     }).join('');
   }
  
-  // Remark detail table (ใต้ chart)
   const tbodyDetail = document.getElementById('tab3_remark_detail_body');
   const detailSorted = [...needRows].sort((a,b) => {
     const qa = Number(String(a.qtyNeeded||'0').replace(/,/g,'')) || 0;
@@ -1057,7 +1016,6 @@ function renderTab1(){
   document.getElementById('m1_pending').textContent = pendingOrders.toLocaleString('en-US');
  
   const uniqueCustomers = new Set(orderRows.map(r=>r.customer).filter(Boolean)).size;
-  // Fix: use isPlatformSource to correctly classify platform vs walk-in
   const platformOrders = orderRows.filter(r => isPlatformSource(r.source)).length;
   const walkInOrders = totalOrders - platformOrders;
   const normalOrders = orderRows.filter(r => r.urgent === 'ส่งปกติ').length;
@@ -1088,7 +1046,7 @@ function renderTab1RemarkTable(rows){
     .sort((a,b) => {
       const aHas = a.remarkTeam && a.remarkTeam.trim() ? 1 : 0;
       const bHas = b.remarkTeam && b.remarkTeam.trim() ? 1 : 0;
-      if(aHas !== bHas) return bHas - aHas; // rows with a Remark Team note come first
+      if(aHas !== bHas) return bHas - aHas;
       const da = parseDate(a.createDate), db = parseDate(b.createDate);
       return (db?db.getTime():0) - (da?da.getTime():0);
     });
@@ -1218,16 +1176,26 @@ function getTab2Rows(){
   );
 }
  
+/*
+  FIX (2026-08-05): เดิมตัวหารของ % (denom) คำนวณจาก onTime+early+late ซึ่งนับเฉพาะแถวที่ whYesNo === 'ใช่'
+  (pctRows) เท่านั้น ทำให้แถวที่ whYesNo ว่าง/ไม่ระบุ ถูกตัดออกจากทั้งเศษและส่วนไปเลย พอบังเอิญว่าแถวที่เหลือ
+  ทุกแถวเป็น on-time หมด ก็เลยได้ 100% ทั้งที่ totalLines (Line Items) มากกว่าจำนวนที่เอามาคิด %
+  แก้โดยให้ตัวหารอ้างอิงจาก totalLines (ทุกแถวหลัง filter) แทน และเพิ่มตัวเลข "ไม่ทราบสถานะ" ให้เห็นชัดเจน
+*/
 function renderTab2(){
   const rows = getTab2Rows();
   const totalLines = rows.length;
-  // Only count rows where Column L (จัดส่งให้ในวันที่ต้องการหรือไม่) = "ใช่" toward the % calc
+ 
   const pctRows = rows.filter(r => (r.whYesNo || '').trim() === 'ใช่');
   const onTime = pctRows.filter(r => classify(r.whStatus)==='ontime').length;
-  const early = pctRows.filter(r => classify(r.whStatus)==='early').length;
-  const late = pctRows.filter(r => classify(r.whStatus)==='late').length;
+  const early  = pctRows.filter(r => classify(r.whStatus)==='early').length;
+  const late   = pctRows.filter(r => classify(r.whStatus)==='late').length;
+  const unknownRows = totalLines - pctRows.length; // แถวที่ whYesNo ไม่ใช่ "ใช่" (ว่าง/ไม่ระบุ/อื่นๆ)
+ 
   const uniqueOrders = new Set(rows.map(r=>r.orderRef)).size;
-  const denom = (onTime+early+late) || 1;
+ 
+  // ✅ FIX: ตัวหารใช้ totalLines (ทุกแถวหลังกรอง) แทน (onTime+early+late) เดิม
+  const denom = totalLines || 1;
   const oosPct = Math.round(((onTime+early)/denom)*10000)/100;
  
   setHero('hero_tab2', 'hero_tab2_ring', oosPct);
@@ -1236,23 +1204,19 @@ function renderTab2(){
   document.getElementById('m2_ontime').textContent = onTime.toLocaleString('en-US');
   document.getElementById('m2_early').textContent = early.toLocaleString('en-US');
   document.getElementById('m2_late').textContent = late.toLocaleString('en-US');
+  document.getElementById('m2_unknown').textContent = unknownRows.toLocaleString('en-US');
   document.getElementById('m2_order').textContent = uniqueOrders.toLocaleString('en-US');
  
   renderWeekly2Chart(rows);
   renderTop5Chart(rows);
-  renderOosChart(onTime, early, late);
+  renderOosChart(onTime, early, late, unknownRows);
   renderTab2RemarkTable(rows);
  
   document.getElementById('tab2_footer').textContent =
-    totalLines.toLocaleString('en-US') + ' line items from ' + uniqueOrders.toLocaleString('en-US') + ' orders · updated ' + new Date().toLocaleString('en-GB');
+    totalLines.toLocaleString('en-US') + ' line items from ' + uniqueOrders.toLocaleString('en-US') + ' orders · ไม่ทราบสถานะ ' + unknownRows.toLocaleString('en-US') + ' รายการ · updated ' + new Date().toLocaleString('en-GB');
 }
  
 function renderWeekly2Chart(rows){
-  // Changed: instead of counting line items (row count) per week, sum the actual product
-  // quantity shipped (Order Line) per week, and show that number on each point of the line
-  // (this data-label plugin was previously never enabled for this chart, which is why no
-  // numbers ever appeared here — separate from the "Weekly Order Volume" chart on tab 1,
-  // which already had it enabled).
   const qtyByWeek = {};
   rows.forEach(r => {
     if(!r.week) return;
@@ -1277,7 +1241,6 @@ function renderWeekly2Chart(rows){
 }
  
 function renderTop5Chart(rows){
-  // Fix: filter out empty/unspecified products, sum actual qty shipped (Order Line) per product
   const counts = {};
   rows.forEach(r => {
     const p = (r.product || '').trim();
@@ -1286,7 +1249,6 @@ function renderTop5Chart(rows){
     counts[p] = (counts[p]||0) + qty;
   });
   const entries = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,5);
-  // If all are empty, show a note
   if(entries.length === 0){
     const ctx = document.getElementById('chart_top5');
     if(charts.top5) charts.top5.destroy();
@@ -1311,16 +1273,16 @@ function renderTop5Chart(rows){
   });
 }
  
-function renderOosChart(onTime, early, late){
-  const total = onTime+early+late || 1;
+function renderOosChart(onTime, early, late, unknownRows){
+  const total = onTime+early+late+(unknownRows||0) || 1;
   const pct = arr => arr.map(v => Math.round((v/total)*1000)/10);
-  const [onP, earP, lateP] = pct([onTime, early, late]);
+  const [onP, earP, lateP, unkP] = pct([onTime, early, late, unknownRows||0]);
   const ctx = document.getElementById('chart_oos');
   if(charts.oos) charts.oos.destroy();
   charts.oos = new Chart(ctx, {
     type:'bar',
-    data:{ labels:['On time','Early','Late'], datasets:[
-      { data:[onP, earP, lateP], backgroundColor:['#7A9A3F','#4C6B26','#A6432E'], borderRadius:6, maxBarThickness:46 }
+    data:{ labels:['On time','Early','Late','ไม่ทราบสถานะ'], datasets:[
+      { data:[onP, earP, lateP, unkP], backgroundColor:['#7A9A3F','#4C6B26','#A6432E','#8C9482'], borderRadius:6, maxBarThickness:46 }
     ]},
     options: percentChartOptions({ dataLabels:true, target:99 })
   });
@@ -1331,7 +1293,7 @@ function renderTab2RemarkTable(rows){
     .sort((a,b) => {
       const aHas = a.remarkTeam && a.remarkTeam.trim() ? 1 : 0;
       const bHas = b.remarkTeam && b.remarkTeam.trim() ? 1 : 0;
-      if(aHas !== bHas) return bHas - aHas; // rows with a Remark Team note come first
+      if(aHas !== bHas) return bHas - aHas;
       const da = parseDate(a.createDate), db = parseDate(b.createDate);
       return (db?db.getTime():0) - (da?da.getTime():0);
     });
@@ -1397,8 +1359,7 @@ function escapeHtml(s){
 function renderTab4(){
   if(!ALL_ROWS.length && !ALL_ROWS_3.length){ return; }
  
-  // --- Build avg weekly demand (qty) per product from order data — used for Stock vs Demand / deficit calc ---
-  const demandByProductWeek = {}; // product -> { week -> qty }
+  const demandByProductWeek = {};
   const allWeeks = new Set();
   ALL_ROWS.forEach(r => {
     const p = (r.product||'').trim();
@@ -1409,10 +1370,9 @@ function renderTab4(){
     allWeeks.add(r.week);
   });
  
-  // --- Build weekly order count (distinct Order Reference) — used for Demand Trend & Forecast chart ---
-  const ordersByWeek = {}; // week -> Set of order reference
-  const datesByWeek = {}; // week -> array of Date (raw) — a single bad row shouldn't skew the whole week's range
-  const ordersByDate = {}; // 'YYYY-MM-DD' -> Set of order reference — used to learn the Double Day spike size from history
+  const ordersByWeek = {};
+  const datesByWeek = {};
+  const ordersByDate = {};
   ALL_ROWS.forEach(r => {
     if(!r.week) return;
     const orderKey = (r.orderRef||'').trim();
@@ -1432,9 +1392,7 @@ function renderTab4(){
     }
   });
  
-  // Build each week's date range from the MEDIAN date, not raw min/max — a stray mis-tagged
-  // row (wrong week, wrong year, typo'd date) can otherwise stretch a week's range to months.
-  const weekDateRange = {}; // week -> {min:Date, max:Date}
+  const weekDateRange = {};
   Object.entries(datesByWeek).forEach(([w, dates]) => {
     dates.sort((a,b) => a-b);
     const median = dates[Math.floor(dates.length/2)];
@@ -1446,15 +1404,12 @@ function renderTab4(){
   const weekList = [...allWeeks].sort((a,b) => Number(a)-Number(b));
   const numWeeks = weekList.length || 1;
  
- 
-  // Avg weekly demand per product
   const avgDemand = {};
   Object.entries(demandByProductWeek).forEach(([product, weekData]) => {
     const total = Object.values(weekData).reduce((s,v) => s+v, 0);
     avgDemand[product] = total / numWeeks;
   });
  
-  // --- Cross-reference with stock data ---
   const forecastRows = ALL_ROWS_3.map(r => {
     const stock = Number(String(r.wh300||'0').replace(/,/g,'')) || 0;
     const demand = avgDemand[r.product] || 0;
@@ -1462,7 +1417,6 @@ function renderTab4(){
     return { ...r, stock, demand, weeksLeft };
   }).filter(r => r.demand > 0 || r.stock > 0);
  
-  // Sort: critical first
   forecastRows.sort((a,b) => {
     if(a.weeksLeft === null && b.weeksLeft === null) return 0;
     if(a.weeksLeft === null) return 1;
@@ -1470,7 +1424,6 @@ function renderTab4(){
     return a.weeksLeft - b.weeksLeft;
   });
  
-  // --- Stat cards ---
   const critical = forecastRows.filter(r => r.weeksLeft !== null && r.weeksLeft < 2).length;
   const warning  = forecastRows.filter(r => r.weeksLeft !== null && r.weeksLeft >= 2 && r.weeksLeft < 4).length;
   const ok       = forecastRows.filter(r => r.weeksLeft === null || r.weeksLeft >= 4).length;
@@ -1479,7 +1432,6 @@ function renderTab4(){
   document.getElementById('m4_ok').textContent       = ok;
   document.getElementById('m4_total').textContent    = forecastRows.length;
  
-  // --- Charts ---
   renderDemandForecastChart(weekList, ordersByWeek, weekDateRange, ordersByDate);
   renderForecast1wChart(forecastRows);
   renderForecast4wChart(forecastRows);
@@ -1493,7 +1445,6 @@ function renderTab4(){
 }
  
 let lastDoubleDayInfo = { multiplier:null, samples:0 };
-// "Double Day" campaign dates: 1.1, 2.2, 3.3 ... 9.9, 10.10, 11.11, 12.12 (day-of-month === month number)
 function isDoubleDay(d){
   return d.getDate() === (d.getMonth()+1);
 }
@@ -1509,8 +1460,6 @@ function countDoubleDaysInRange(start, end){
   return count;
 }
  
-// Learn the actual Double Day spike multiplier from history: for every past Double Day found in
-// the data, compare that day's order count to the average of the surrounding 7 "normal" days.
 function learnDoubleDayMultiplier(ordersByDate){
   const dateKeys = Object.keys(ordersByDate).sort();
   if(!dateKeys.length) return { multiplier: null, samples: 0 };
@@ -1539,15 +1488,12 @@ function formatDateShort(d){
 }
  
 function renderDemandForecastChart(weekList, ordersByWeek, weekDateRange, ordersByDate){
-  // Weekly total demand — number of orders (distinct Order Reference), not product quantity
   const historical = weekList.map(w => (ordersByWeek[w] ? ordersByWeek[w].size : 0));
  
-  // Moving average of last 4 weeks as forecast
   const lastN = Math.min(4, weekList.length);
   const recent = historical.slice(-lastN);
   const avg4 = recent.reduce((s,v)=>s+v,0) / (lastN||1);
  
-  // Linear trend (simple least-squares slope)
   const n = historical.length;
   let slope = 0;
   if(n >= 2){
@@ -1562,27 +1508,21 @@ function renderDemandForecastChart(weekList, ordersByWeek, weekDateRange, orders
   const lastWeekNum = Number(weekList[weekList.length-1]) || weekList.length;
   const forecastLabels = [1,2,3,4].map(i => 'W'+(lastWeekNum+i)+'*');
  
-  // Learn the Double Day spike size from history instead of guessing a fixed multiplier
   const { multiplier: learnedMultiplier, samples: ddSamples } = learnDoubleDayMultiplier(ordersByDate);
-  const DOUBLE_DAY_BOOST = learnedMultiplier || 1; // if no Double Day found in history yet, don't boost
+  const DOUBLE_DAY_BOOST = learnedMultiplier || 1;
   lastDoubleDayInfo = { multiplier: learnedMultiplier, samples: ddSamples };
  
-  // Project each future week's calendar date range from the last known week, then check for Double Days
   const lastRange = weekDateRange ? weekDateRange[weekList[weekList.length-1]] : null;
   const lastKnownDate = lastRange ? lastRange.max : new Date();
   const dailyBaseline = avg4 / 7;
-  const doubleDayHits = []; // weeks (historical or forecast) that contain a Double Day
+  const doubleDayHits = [];
  
-  // Check historical weeks for Double Days using their real date ranges.
-  // Guard: only trust the range if it's a plausible single week (<=10 days) — a wider span
-  // usually means bad/outlier date data for that week bucket, which would otherwise cause
-  // false Double Day matches across many unrelated weeks.
   const MAX_PLAUSIBLE_WEEK_SPAN_DAYS = 10;
   weekList.forEach(w => {
     const r = weekDateRange ? weekDateRange[w] : null;
     if(!r) return;
     const spanDays = (r.max - r.min) / 86400000;
-    if(spanDays > MAX_PLAUSIBLE_WEEK_SPAN_DAYS) return; // untrustworthy range — skip
+    if(spanDays > MAX_PLAUSIBLE_WEEK_SPAN_DAYS) return;
     if(countDoubleDaysInRange(r.min, r.max) > 0) doubleDayHits.push('W'+w);
   });
  
@@ -1600,7 +1540,6 @@ function renderDemandForecastChart(weekList, ordersByWeek, weekDateRange, orders
     return Math.max(0, Math.round(val));
   });
  
-  // Date range per point: real dates for historical weeks, projected dates for forecast weeks
   const historicalRangeLabels = weekList.map(w => {
     const r = weekDateRange ? weekDateRange[w] : null;
     return r ? (formatDateShort(r.min) + ' – ' + formatDateShort(r.max)) : '';
@@ -1609,8 +1548,7 @@ function renderDemandForecastChart(weekList, ordersByWeek, weekDateRange, orders
  
   const labels = [...weekList.map(w=>'W'+w), ...forecastLabels];
  
-  // Single continuous line: historical + forecast in one dataset, color/style split at the boundary
-  const boundaryIndex = historical.length - 1; // last actual-data index
+  const boundaryIndex = historical.length - 1;
   const fullData = [...historical, ...forecastData];
  
   const ctx = document.getElementById('chart_forecast_demand');
@@ -1666,7 +1604,7 @@ function buildForecastItems(forecastRows, weeks){
     .map(r => {
       const demandN  = Math.round(r.demand * weeks);
       const deficitN = Math.max(0, demandN - r.stock);
-      const coveredN = Math.min(r.stock, demandN); // portion of demand covered by current stock
+      const coveredN = Math.min(r.stock, demandN);
       return { ...r, demandN, deficitN, coveredN };
     })
     .sort((a,b) => b.demandN - a.demandN || b.deficitN - a.deficitN)
