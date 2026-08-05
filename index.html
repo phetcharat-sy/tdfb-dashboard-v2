@@ -168,7 +168,7 @@
     </div>
     <div class="meta-right">
       Last updated<br><span id="lastUpdated">—</span>
-      <div style="font-size:9.5px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-05-v9-fix-classify-songnaiwan-ontime</div>
+      <div style="font-size:9.5px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-05-v10-fix-orderline-comma-parsing</div>
       <div>
         <button class="btn-plain" id="refreshBtn" onclick="loadData()">Refresh</button>
         <button class="btn-plain" id="saveImgBtn" onclick="saveTabAsPNG()" style="margin-left:14px;">Save as PNG (A4)</button>
@@ -629,6 +629,17 @@ function parseDate(s){
   if(!s) return null;
   const d = new Date(s.replace(' ', 'T'));
   return isNaN(d.getTime()) ? null : d;
+}
+ 
+// FIX: Number('1,200') === NaN in JS, so any comma-formatted or blank value in the "Order Line"
+// column was silently becoming 0 (via the old `Number(r.orderLine) || 0`), undercounting the true
+// total quantity in the Weekly Line Items chart, Top 5 Products chart, and Forecast demand calc.
+// This strips thousands-separators/whitespace before parsing so those values are counted correctly.
+function parseQty(val){
+  if(val === undefined || val === null || val === '') return 0;
+  const cleaned = String(val).replace(/,/g,'').trim();
+  const n = Number(cleaned);
+  return Number.isFinite(n) ? n : 0;
 }
  
 function classify(status){
@@ -1230,7 +1241,7 @@ function renderWeekly2Chart(rows){
   const qtyByWeek = {};
   rows.forEach(r => {
     if(!r.week) return;
-    const qty = Number(r.orderLine) || 0;
+    const qty = parseQty(r.orderLine);
     qtyByWeek[r.week] = (qtyByWeek[r.week] || 0) + qty;
   });
   const labels = Object.keys(qtyByWeek).sort((a,b)=>Number(a)-Number(b));
@@ -1255,7 +1266,7 @@ function renderTop5Chart(rows){
   rows.forEach(r => {
     const p = (r.product || '').trim();
     if(!p || p.toLowerCase() === 'unspecified') return;
-    const qty = Number(r.orderLine) || 0;
+    const qty = parseQty(r.orderLine);
     counts[p] = (counts[p]||0) + qty;
   });
   const entries = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,5);
@@ -1374,7 +1385,7 @@ function renderTab4(){
   ALL_ROWS.forEach(r => {
     const p = (r.product||'').trim();
     if(!p || !r.week) return;
-    const qty = Number(r.orderLine) || 0;
+    const qty = parseQty(r.orderLine);
     if(!demandByProductWeek[p]) demandByProductWeek[p] = {};
     demandByProductWeek[p][r.week] = (demandByProductWeek[p][r.week]||0) + qty;
     allWeeks.add(r.week);
