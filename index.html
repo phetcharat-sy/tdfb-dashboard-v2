@@ -9,6 +9,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
   :root{
     --paper:#F6F2E7; --panel:#FFFDF5; --ink:#1F2E1A; --ink-soft:#4E5C46; --ink-faint:#8C9482;
@@ -173,7 +174,7 @@
     </div>
     <div class="meta-right">
       Last updated<br><span id="lastUpdated">—</span>
-      <div style="font-size:9.5px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-04-v4-whstatus-fix</div>
+      <div style="font-size:9.5px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-05-v6-png-section-split-zip</div>
       <div>
         <button class="btn-plain" id="refreshBtn" onclick="loadData()">Refresh</button>
         <button class="btn-plain" id="saveImgBtn" onclick="saveTabAsPNG()" style="margin-left:14px;">Save as PNG (A4)</button>
@@ -297,10 +298,10 @@
       <div class="stat-card"><div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 3h6v3H9z"/><path d="M9 11h6M9 15h4"/></svg></div><div class="stat-label">Orders</div><div class="stat-value" id="m2_order">—</div></div>
     </div>
  
-    <!-- Weekly chart for tab2 -->
+    <!-- Weekly chart for tab2 — now shows total quantity of products dispatched per week -->
     <div class="section">
       <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>Weekly Line Items</div>
-      <div class="section-desc">Line items per week</div>
+      <div class="section-desc">จำนวนสินค้าที่ออกต่อสัปดาห์ (รวม quantity)</div>
       <div class="chart-panel"><div class="chart-box" style="height:270px;"><canvas id="chart_weekly2"></canvas></div></div>
     </div>
  
@@ -691,8 +692,12 @@ function switchTab(tab){
   document.querySelector('.tab-btn[data-tab="' + tab + '"]').classList.add('active');
 }
  
-// Capture the currently active tab and export it as two A4-sized PNGs (top half / bottom half),
-// so each page shows content at a bigger, more readable scale instead of one tiny full-page shot.
+// Capture the currently active tab and export it as two A4-sized PNGs (top section / bottom
+// section). The split point is chosen at the nearest section boundary to the halfway mark —
+// never mid-chart or mid-table — so each page ends on a clean break. Both pages are bundled
+// into a single .zip download: downloading two PNGs back-to-back via separate link clicks gets
+// silently blocked by Chrome/Safari's "site wants to download multiple files" protection after
+// the first file, which is why only one page was coming through before.
 async function saveTabAsPNG(){
   const btn = document.getElementById('saveImgBtn');
   const activeTab = document.querySelector('.tab-page.active');
@@ -703,47 +708,93 @@ async function saveTabAsPNG(){
   btn.disabled = true;
  
   try{
-    // Render the tab's DOM at 2x scale for crisp text/lines
+    const scale = 2; // render the tab's DOM at 2x scale for crisp text/lines
     const captured = await html2canvas(activeTab, {
       backgroundColor: '#F6F2E7',
-      scale: 2,
+      scale,
       useCORS: true
     });
  
-    // A4 at 200 DPI: 1654 x 2339 px (portrait)
+    // --- Find a content-aware split point -----------------------------------------------
+    // Collect the top/bottom of every top-level content block (hero, filter row, stat cards,
+    // each .section, footer) in captured-canvas pixel coordinates, then pick whichever block's
+    // TOP edge sits closest to the halfway mark. Splitting at a block's top edge guarantees the
+    // break falls between sections rather than through the middle of a chart or table.
+    const containerRect = activeTab.getBoundingClientRect();
+    const blockSelectors = '.hero, .filter-row, .stat-grid, .section, .footer-note';
+    const blockTops = [...activeTab.querySelectorAll(blockSelectors)]
+      .filter(el => el.offsetHeight > 0)
+      .map(el => {
+        const r = el.getBoundingClientRect();
+        return (r.top - containerRect.top) * scale;
+      })
+      .sort((a,b) => a-b);
+ 
+    const totalHeight = captured.height;
+    const idealSplit = totalHeight / 2;
+    // Keep the break within a sane middle range (25%–75%) so neither page ends up near-empty
+    const minY = totalHeight * 0.25;
+    const maxY = totalHeight * 0.75;
+ 
+    let splitY = Math.round(idealSplit);
+    let bestDiff = Infinity;
+    blockTops.forEach(top => {
+      if(top < minY || top > maxY) return;
+      const diff = Math.abs(top - idealSplit);
+      if(diff < bestDiff){ bestDiff = diff; splitY = Math.round(top); }
+    });
+    if(splitY <= 0 || splitY >= totalHeight) splitY = Math.round(idealSplit); // safety fallback
+ 
+    // --- Render each half onto its own A4-sized page (200 DPI: 1654 x 2339 px portrait) ---
     const A4_W = 1654, A4_H = 2339;
     const margin = 40;
     const availW = A4_W - margin*2;
     const availH = A4_H - margin*2;
- 
-    const halfH = Math.ceil(captured.height / 2);
     const dateStr = new Date().toISOString().slice(0,10);
  
-    for(let part = 0; part < 2; part++){
-      const srcY = part * halfH;
-      const srcH = Math.min(halfH, captured.height - srcY);
-      if(srcH <= 0) continue;
+    const ranges = [
+      { srcY: 0, srcH: splitY },
+      { srcY: splitY, srcH: totalHeight - splitY }
+    ].filter(r => r.srcH > 0);
  
+    const pages = ranges.map(({ srcY, srcH }) => {
       const a4 = document.createElement('canvas');
       a4.width = A4_W; a4.height = A4_H;
       const ctx = a4.getContext('2d');
       ctx.fillStyle = '#F6F2E7';
       ctx.fillRect(0, 0, A4_W, A4_H);
- 
-      // Fit this half's width/height to the A4 page — since it's half the content, it scales up bigger
-      const scale = Math.min(availW / captured.width, availH / srcH);
-      const drawW = captured.width * scale;
-      const drawH = srcH * scale;
+      const s = Math.min(availW / captured.width, availH / srcH);
+      const drawW = captured.width * s;
+      const drawH = srcH * s;
       const dx = (A4_W - drawW) / 2;
       const dy = margin;
       ctx.drawImage(captured, 0, srcY, captured.width, srcH, dx, dy, drawW, drawH);
+      return a4;
+    });
  
+    // --- Bundle into one .zip so the browser only ever triggers ONE download -------------
+    if(typeof JSZip !== 'undefined'){
+      const zip = new JSZip();
+      for(let i = 0; i < pages.length; i++){
+        const blob = await new Promise(res => pages[i].toBlob(res, 'image/png'));
+        zip.file('TDFB_' + activeTab.id + '_' + dateStr + '_part' + (i+1) + '.png', blob);
+      }
+      const zipBlob = await zip.generateAsync({ type:'blob' });
       const link = document.createElement('a');
-      link.download = 'TDFB_' + activeTab.id + '_' + dateStr + '_part' + (part+1) + '.png';
-      link.href = a4.toDataURL('image/png');
+      link.download = 'TDFB_' + activeTab.id + '_' + dateStr + '.zip';
+      link.href = URL.createObjectURL(zipBlob);
       link.click();
-      // small delay so the browser doesn't drop the second download
-      await new Promise(res => setTimeout(res, 300));
+      URL.revokeObjectURL(link.href);
+    } else {
+      // Fallback if JSZip didn't load for some reason: download pages individually with a
+      // longer delay between clicks (still may be blocked by the browser after the first file).
+      for(let i = 0; i < pages.length; i++){
+        const link = document.createElement('a');
+        link.download = 'TDFB_' + activeTab.id + '_' + dateStr + '_part' + (i+1) + '.png';
+        link.href = pages[i].toDataURL('image/png');
+        link.click();
+        await new Promise(res => setTimeout(res, 600));
+      }
     }
   } catch(err){
     console.error('Save as PNG failed:', err);
@@ -1197,19 +1248,31 @@ function renderTab2(){
 }
  
 function renderWeekly2Chart(rows){
-  const counts = {};
-  rows.forEach(r => { if(r.week){ counts[r.week] = (counts[r.week]||0)+1; } });
-  const labels = Object.keys(counts).sort((a,b)=>Number(a)-Number(b));
-  const data = labels.map(l=>counts[l]);
+  // Changed: instead of counting line items (row count) per week, sum the actual product
+  // quantity shipped (Order Line) per week, and show that number on each point of the line
+  // (this data-label plugin was previously never enabled for this chart, which is why no
+  // numbers ever appeared here — separate from the "Weekly Order Volume" chart on tab 1,
+  // which already had it enabled).
+  const qtyByWeek = {};
+  rows.forEach(r => {
+    if(!r.week) return;
+    const qty = Number(r.orderLine) || 0;
+    qtyByWeek[r.week] = (qtyByWeek[r.week] || 0) + qty;
+  });
+  const labels = Object.keys(qtyByWeek).sort((a,b)=>Number(a)-Number(b));
+  const data = labels.map(l => qtyByWeek[l]);
   const ctx = document.getElementById('chart_weekly2');
   if(charts.weekly2) charts.weekly2.destroy();
+  const opts = baseChartOptions({ legend:false });
+  opts.plugins.lineDataLabels = { display:true };
+  opts.layout = { padding:{ top:20 } };
   charts.weekly2 = new Chart(ctx, {
     type:'line',
     data:{ labels: labels.map(l=>'W'+l), datasets:[{
-      label:'Line Items', data, borderColor:'#4C6B26', backgroundColor:'rgba(76,107,38,0.12)',
+      label:'จำนวนสินค้าที่ออก (ชิ้น)', data, borderColor:'#4C6B26', backgroundColor:'rgba(76,107,38,0.12)',
       pointBackgroundColor:'#4C6B26', pointRadius:2.5, tension:0.3, fill:true, borderWidth:2
     }]},
-    options: baseChartOptions({ legend:false })
+    options: opts
   });
 }
  
