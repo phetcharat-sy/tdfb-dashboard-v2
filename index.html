@@ -168,7 +168,7 @@
     </div>
     <div class="meta-right">
       Last updated<br><span id="lastUpdated">—</span>
-      <div style="font-size:9.5px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-05-v10-fix-orderline-comma-parsing</div>
+      <div style="font-size:9.5px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-05-v12-oos-pct-from-whstatus-qty-from-orderline</div>
       <div>
         <button class="btn-plain" id="refreshBtn" onclick="loadData()">Refresh</button>
         <button class="btn-plain" id="saveImgBtn" onclick="saveTabAsPNG()" style="margin-left:14px;">Save as PNG (A4)</button>
@@ -284,7 +284,7 @@
     </div>
  
     <div class="stat-grid">
-      <div class="stat-card"><div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg></div><div class="stat-label">Line Items</div><div class="stat-value" id="m2_product">—</div></div>
+      <div class="stat-card"><div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg></div><div class="stat-label">Line Items (Order Line)</div><div class="stat-value" id="m2_product">—</div></div>
       <div class="stat-card"><div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12l2.5 2.5L16 9"/></svg></div><div class="stat-label">On-Time Dispatch</div><div class="stat-value c-matcha" id="m2_ontime">—</div></div>
       <div class="stat-card"><div class="stat-icon i-bamboo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 16V8"/><path d="M8 12l4-4 4 4"/></svg></div><div class="stat-label">จัดส่งก่อนกำหนด</div><div class="stat-value c-bamboo" id="m2_early">—</div></div>
       <div class="stat-card"><div class="stat-icon i-azuki"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l10 18H2L12 3z"/><path d="M12 9v5"/><path d="M12 17h.01"/></svg></div><div class="stat-label">จัดส่งล่าช้า</div><div class="stat-value c-azuki" id="m2_late">—</div></div>
@@ -299,7 +299,7 @@
  
     <div class="grid-2">
       <div class="section"><div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>Top 5 Products</div><div class="section-desc">Highest line-item count</div><div class="chart-panel"><div class="chart-box" style="height:270px;"><canvas id="chart_top5"></canvas></div></div></div>
-      <div class="section"><div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>Out-of-Stock Rate</div><div class="section-desc">Target ≥ 99% · ค่าว่าง/ไม่ระบุใน whYesNo นับเป็น Late</div><div class="chart-panel"><div class="chart-box" style="height:270px;"><canvas id="chart_oos"></canvas></div></div></div>
+      <div class="section"><div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>Out-of-Stock Rate</div><div class="section-desc">Target ≥ 99% · % คิดจาก WH ส่งของให้ PK ภายในกี่วันที่ต้องส่ง (ว่าง/ไม่ระบุ = Late)</div><div class="chart-panel"><div class="chart-box" style="height:270px;"><canvas id="chart_oos"></canvas></div></div></div>
     </div>
  
     <div class="section">
@@ -1199,42 +1199,53 @@ function getTab2Rows(){
   late เสมอ (ไม่ใช่สถานะ "ไม่ทราบ" แยกต่างหาก) — v1 เคยตัดกลุ่มนี้ออกจากทั้งเศษ/ส่วนไปเลย (100% หลอก),
   ส่วน v2-draft ตัดออกมาเป็น "ไม่ทราบสถานะ" ต่างหาก แต่ที่ถูกต้องคือให้ไหลไปรวมกับ late เพราะเป็น late จริง
 */
+/*
+  FIX (2026-08-05, v3): เปลี่ยนจากการนับ "จำนวนแถว" (row count) มาเป็นการรวมค่าจากคอลัมน์ "Order Line"
+  (quantity) แทน สำหรับทุกสถิติใน tab2 — Line Items / On-Time Dispatch / จัดส่งก่อนกำหนด / จัดส่งล่าช้า
+  ทั้งหมดนี้ตอนนี้ใช้ parseQty(r.orderLine) เป็นฐาน ให้สอดคล้องกับกราฟ Weekly Line Items ที่ใช้ Order Line
+  อยู่แล้ว (ก่อนหน้านี้ตัวเลขไม่ตรงกันเพราะ stat card นับแถว แต่กราฟรวม quantity)
+*/
+/*
+  FIX (2026-08-05, v4): เปลี่ยนแหล่งตัดสิน on-time/early/late ให้มาจากคอลัมน์ whStatus
+  ("WH ส่งของให้ PK ภายในกี่วันที่ต้องส่ง") ผ่าน classify() โดยตรง แทนที่จะพึ่ง whYesNo เป็นตัวเกต
+  ส่วน "จำนวนสินค้า" ยังคงถ่วงน้ำหนักด้วย Order Line (quantity) เหมือนเดิม
+  - classify() → 'ontime' : ส่งในวัน
+  - classify() → 'early'  : ส่งก่อนวัน
+  - classify() → 'late' หรือ 'unknown' (ค่าว่าง/ไม่ระบุ/ข้อความอื่นที่จับไม่ได้) : ถือเป็น late ทั้งหมด
+*/
 function renderTab2(){
   const rows = getTab2Rows();
-  const totalLines = rows.length;
  
-  let onTime = 0, early = 0, late = 0;
+  let totalQty = 0, onTimeQty = 0, earlyQty = 0, lateQty = 0;
   rows.forEach(r => {
-    const yn = (r.whYesNo || '').trim();
-    if(yn === 'ใช่'){
-      const cls = classify(r.whStatus);
-      if(cls === 'early') early++;
-      else onTime++; // whYesNo ยืนยันว่าส่งตรงวันแล้ว ให้นับเป็น on time
-    } else {
-      late++; // "ไม่ใช่" หรือค่าว่าง/ไม่ระบุ → ส่งไม่ตรงวันที่ต้องการ = late
-    }
+    const qty = parseQty(r.orderLine);
+    totalQty += qty;
+    const cls = classify(r.whStatus);
+    if(cls === 'ontime') onTimeQty += qty;
+    else if(cls === 'early') earlyQty += qty;
+    else lateQty += qty; // 'late' หรือ 'unknown' (ว่าง/ไม่ระบุ) → นับเป็น late
   });
  
   const uniqueOrders = new Set(rows.map(r=>r.orderRef)).size;
  
-  const denom = totalLines || 1;
-  const oosPct = Math.round(((onTime+early)/denom)*10000)/100;
+  const denom = totalQty || 1;
+  const oosPct = Math.round(((onTimeQty+earlyQty)/denom)*10000)/100;
  
   setHero('hero_tab2', 'hero_tab2_ring', oosPct);
  
-  document.getElementById('m2_product').textContent = totalLines.toLocaleString('en-US');
-  document.getElementById('m2_ontime').textContent = onTime.toLocaleString('en-US');
-  document.getElementById('m2_early').textContent = early.toLocaleString('en-US');
-  document.getElementById('m2_late').textContent = late.toLocaleString('en-US');
+  document.getElementById('m2_product').textContent = totalQty.toLocaleString('en-US');
+  document.getElementById('m2_ontime').textContent = onTimeQty.toLocaleString('en-US');
+  document.getElementById('m2_early').textContent = earlyQty.toLocaleString('en-US');
+  document.getElementById('m2_late').textContent = lateQty.toLocaleString('en-US');
   document.getElementById('m2_order').textContent = uniqueOrders.toLocaleString('en-US');
  
   renderWeekly2Chart(rows);
   renderTop5Chart(rows);
-  renderOosChart(onTime, early, late);
+  renderOosChart(onTimeQty, earlyQty, lateQty);
   renderTab2RemarkTable(rows);
  
   document.getElementById('tab2_footer').textContent =
-    totalLines.toLocaleString('en-US') + ' line items from ' + uniqueOrders.toLocaleString('en-US') + ' orders · updated ' + new Date().toLocaleString('en-GB');
+    totalQty.toLocaleString('en-US') + ' units (' + rows.length.toLocaleString('en-US') + ' line items) from ' + uniqueOrders.toLocaleString('en-US') + ' orders · updated ' + new Date().toLocaleString('en-GB');
 }
  
 function renderWeekly2Chart(rows){
