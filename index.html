@@ -28,7 +28,7 @@
     background-size: auto, auto, 420px 420px;
     color:var(--ink);font-family:'IBM Plex Sans Thai',sans-serif;min-height:100vh;
   }
-  .wrap{max-width:1180px;margin:0 auto;padding:48px 28px 80px;}
+  .wrap{max-width:none;width:100%;margin:0 auto;padding:48px clamp(24px,3vw,64px) 80px;}
  
   .brand-header{display:flex;align-items:center;gap:14px;margin-bottom:16px;}
   .brand-logo{flex-shrink:0;}
@@ -168,10 +168,10 @@
     </div>
     <div class="meta-right">
       Last updated<br><span id="lastUpdated">—</span>
-      <div style="font-size:9.5px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-05-v13-add-weekly-daily-order-qty-forecast</div>
+      <div style="font-size:9.5px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-05-v15-sort-need-first-then-score</div>
       <div>
         <button class="btn-plain" id="refreshBtn" onclick="loadData()">Refresh</button>
-        <button class="btn-plain" id="saveImgBtn" onclick="saveTabAsPNG()" style="margin-left:14px;">Save as PNG (A4)</button>
+        <button class="btn-plain" id="saveImgBtn" onclick="saveTabAsPNG()" style="margin-left:14px;">Save as PNG (แนวนอน, คมชัด)</button>
       </div>
     </div>
   </div>
@@ -236,7 +236,7 @@
  
     <div class="section">
       <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>Order Detail</div>
-      <div class="section-desc">All orders · with Remark Team notes first, then most recent · left blank when not noted</div>
+      <div class="section-desc">แสดงเฉพาะรายการที่ไม่ใช่ "ส่งในวัน" (ก่อนกำหนด/ล่าช้า/ไม่ระบุ) · เรียง Remark Team notes ก่อน แล้วตามด้วยล่าสุด</div>
       <div class="table-panel">
         <div class="table-scroll remark-scroll">
           <table class="data-table">
@@ -304,7 +304,7 @@
  
     <div class="section">
       <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>Order Detail</div>
-      <div class="section-desc">All orders · with Remark Team notes first, then most recent · left blank when not noted</div>
+      <div class="section-desc">แสดงเฉพาะรายการที่ไม่ใช่ "ส่งในวัน" (ก่อนกำหนด/ล่าช้า/ไม่ระบุ) · เรียง Remark Team notes ก่อน แล้วตามด้วยล่าสุด</div>
       <div class="table-panel">
         <div class="table-scroll remark-scroll">
           <table class="data-table">
@@ -369,7 +369,7 @@
  
     <div class="section">
       <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>รวมทั้งหมด</div>
-      <div class="section-desc">ทุกสินค้า — ต้องเติมและไม่ต้องเติม</div>
+      <div class="section-desc">ทุกสินค้า — เรียง "ต้องเติม" ก่อน แล้วเรียงตามคะแนนขายดีมาก→น้อยในแต่ละกลุ่ม</div>
       <div class="table-panel" style="overflow-x:auto;">
         <div class="table-scroll remark-scroll">
           <table class="data-table" style="min-width:900px;">
@@ -721,64 +721,92 @@ async function saveTabAsPNG(){
   btn.disabled = true;
  
   try{
-    const scale = 2;
+    // FIX: bumped from 2 → 3. The old flow then squeezed this capture down into a small fixed
+    // A4-portrait canvas (1654×2339px), which threw away most of that resolution and made text
+    // look soft. Capturing sharper up front matters less now that we no longer downscale below.
+    const scale = 3;
     const captured = await html2canvas(activeTab, {
       backgroundColor: '#F6F2E7',
       scale,
       useCORS: true
     });
  
+    // --- Landscape, multi-page, content-aware split ------------------------------------------
+    // Instead of a fixed A4-portrait target (which forced a resize down and blurred everything),
+    // each page keeps the FULL native captured width and is only as tall as needed to roughly
+    // match a landscape (wider-than-tall) page proportion — so pages come out landscape-oriented
+    // and every pixel is drawn at 1:1 from the capture (no re-sampling → no extra blur).
+    const LANDSCAPE_ASPECT = 1.5; // width:height ratio target for each exported page
+    const idealSliceHeight = captured.width / LANDSCAPE_ASPECT;
+    const totalHeight = captured.height;
+    const roughPageCount = Math.max(1, Math.round(totalHeight / idealSliceHeight));
+ 
+    // Collect content-block boundaries (top edges) in captured-canvas pixel coordinates, so page
+    // breaks land between sections rather than mid-chart/mid-table.
     const containerRect = activeTab.getBoundingClientRect();
     const blockSelectors = '.hero, .filter-row, .stat-grid, .section, .footer-note';
     const blockTops = [...activeTab.querySelectorAll(blockSelectors)]
       .filter(el => el.offsetHeight > 0)
-      .map(el => {
-        const r = el.getBoundingClientRect();
-        return (r.top - containerRect.top) * scale;
-      })
+      .map(el => (el.getBoundingClientRect().top - containerRect.top) * scale)
       .sort((a,b) => a-b);
  
-    const totalHeight = captured.height;
-    const idealSplit = totalHeight / 2;
-    const minY = totalHeight * 0.25;
-    const maxY = totalHeight * 0.75;
+    const splitPoints = [0];
+    for(let i = 1; i < roughPageCount; i++){
+      const idealY = i * idealSliceHeight;
+      let best = idealY, bestDiff = Infinity;
+      blockTops.forEach(top => {
+        if(top <= splitPoints[splitPoints.length-1] + idealSliceHeight * 0.15) return; // keep moving forward
+        const diff = Math.abs(top - idealY);
+        if(diff < bestDiff){ bestDiff = diff; best = top; }
+      });
+      if(best > splitPoints[splitPoints.length-1] && best < totalHeight){
+        splitPoints.push(Math.round(best));
+      }
+    }
+    splitPoints.push(totalHeight);
  
-    let splitY = Math.round(idealSplit);
-    let bestDiff = Infinity;
-    blockTops.forEach(top => {
-      if(top < minY || top > maxY) return;
-      const diff = Math.abs(top - idealSplit);
-      if(diff < bestDiff){ bestDiff = diff; splitY = Math.round(top); }
-    });
-    if(splitY <= 0 || splitY >= totalHeight) splitY = Math.round(idealSplit);
+    // Merge any sliver slices (too short vs. the ideal page height) into the previous one so we
+    // don't end up with a near-empty extra page at the tail.
+    const MIN_SLICE_RATIO = 0.35;
+    const cleaned = [splitPoints[0]];
+    for(let i = 1; i < splitPoints.length; i++){
+      const sliceH = splitPoints[i] - cleaned[cleaned.length-1];
+      if(sliceH < idealSliceHeight * MIN_SLICE_RATIO && i !== splitPoints.length - 1) continue;
+      cleaned.push(splitPoints[i]);
+    }
+    if(cleaned[cleaned.length-1] !== totalHeight) cleaned.push(totalHeight);
  
-    const A4_W = 1654, A4_H = 2339;
-    const margin = 40;
-    const availW = A4_W - margin*2;
-    const availH = A4_H - margin*2;
+    const ranges = [];
+    for(let i = 0; i < cleaned.length - 1; i++){
+      const srcY = cleaned[i];
+      const srcH = cleaned[i+1] - cleaned[i];
+      if(srcH > 0) ranges.push({ srcY, srcH });
+    }
+ 
+    // --- Draw each slice at its NATIVE captured resolution (1:1, no downscale) ---------------
+    const MARGIN = Math.round(20 * scale);
     const dateStr = new Date().toISOString().slice(0,10);
  
-    const ranges = [
-      { srcY: 0, srcH: splitY },
-      { srcY: splitY, srcH: totalHeight - splitY }
-    ].filter(r => r.srcH > 0);
- 
     const pages = ranges.map(({ srcY, srcH }) => {
-      const a4 = document.createElement('canvas');
-      a4.width = A4_W; a4.height = A4_H;
-      const ctx = a4.getContext('2d');
+      const pageCanvas = document.createElement('canvas');
+      pageCanvas.width = captured.width + MARGIN*2;
+      pageCanvas.height = srcH + MARGIN*2;
+      const ctx = pageCanvas.getContext('2d');
       ctx.fillStyle = '#F6F2E7';
-      ctx.fillRect(0, 0, A4_W, A4_H);
-      const s = Math.min(availW / captured.width, availH / srcH);
-      const drawW = captured.width * s;
-      const drawH = srcH * s;
-      const dx = (A4_W - drawW) / 2;
-      const dy = margin;
-      ctx.drawImage(captured, 0, srcY, captured.width, srcH, dx, dy, drawW, drawH);
-      return a4;
+      ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+      ctx.drawImage(captured, 0, srcY, captured.width, srcH, MARGIN, MARGIN, captured.width, srcH);
+      return pageCanvas;
     });
  
-    if(typeof JSZip !== 'undefined'){
+    // --- Export: single PNG if it fits on one page, otherwise a .zip of landscape pages ------
+    if(pages.length === 1){
+      const blob = await new Promise(res => pages[0].toBlob(res, 'image/png'));
+      const link = document.createElement('a');
+      link.download = 'TDFB_' + activeTab.id + '_' + dateStr + '.png';
+      link.href = URL.createObjectURL(blob);
+      link.click();
+      URL.revokeObjectURL(link.href);
+    } else if(typeof JSZip !== 'undefined'){
       const zip = new JSZip();
       for(let i = 0; i < pages.length; i++){
         const blob = await new Promise(res => pages[i].toBlob(res, 'image/png'));
@@ -894,7 +922,12 @@ function renderTab3(){
   }
  
   const tbodyAll = document.getElementById('tab3_all_body');
+  const isNeed = r => (r.needStock||'').includes('ต้องเติม') && !(r.needStock||'').includes('ไม่ต้อง');
+  // ตามคำขอ: เรียง "ต้องเติม" ขึ้นก่อนเสมอ แล้วค่อยเรียงตามคะแนนขายดีมาก→น้อยภายในกลุ่มนั้นๆ
   const allSorted = [...rows].sort((a,b) => {
+    const aNeed = isNeed(a) ? 1 : 0;
+    const bNeed = isNeed(b) ? 1 : 0;
+    if(aNeed !== bNeed) return bNeed - aNeed;
     const sa = Number(String(a.score||'0').replace(/,/g,'')) || 0;
     const sb = Number(String(b.score||'0').replace(/,/g,'')) || 0;
     return sb - sa;
@@ -902,7 +935,6 @@ function renderTab3(){
   if(allSorted.length === 0){
     tbodyAll.innerHTML = '<tr><td colspan="12"><div class="empty-state">ไม่มีข้อมูล</div></td></tr>';
   } else {
-    const isNeed = r => (r.needStock||'').includes('ต้องเติม') && !(r.needStock||'').includes('ไม่ต้อง');
     tbodyAll.innerHTML = allSorted.map(r => {
       const need = isNeed(r);
       const statusHtml = need
@@ -1083,7 +1115,9 @@ function renderTab1(){
 }
  
 function renderTab1RemarkTable(rows){
-  const sortedRows = [...rows]
+  // ตามคำขอ: Order Detail แสดงเฉพาะรายการที่ "ไม่ใช่ ส่งในวัน" (early / late / ไม่ระบุ) เท่านั้น
+  const exceptionRows = rows.filter(r => classify(r.whStatus) !== 'ontime');
+  const sortedRows = [...exceptionRows]
     .sort((a,b) => {
       const aHas = a.remarkTeam && a.remarkTeam.trim() ? 1 : 0;
       const bHas = b.remarkTeam && b.remarkTeam.trim() ? 1 : 0;
@@ -1099,7 +1133,7 @@ function renderTab1RemarkTable(rows){
   });
   const tbody = document.getElementById('tab1_remark_body');
   if(dedupedRows.length === 0){
-    tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state">No orders found</div></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state">ไม่มีรายการที่ผิดปกติ (ทุกออเดอร์ส่งในวัน)</div></td></tr>';
     return;
   }
   tbody.innerHTML = dedupedRows.map(r => (
@@ -1345,7 +1379,9 @@ function renderOosChart(onTime, early, late){
 }
  
 function renderTab2RemarkTable(rows){
-  const sortedRows = [...rows]
+  // ตามคำขอ: Order Detail แสดงเฉพาะรายการที่ "ไม่ใช่ ส่งในวัน" (early / late / ไม่ระบุ) เท่านั้น
+  const exceptionRows = rows.filter(r => classify(r.whStatus) !== 'ontime');
+  const sortedRows = [...exceptionRows]
     .sort((a,b) => {
       const aHas = a.remarkTeam && a.remarkTeam.trim() ? 1 : 0;
       const bHas = b.remarkTeam && b.remarkTeam.trim() ? 1 : 0;
@@ -1361,7 +1397,7 @@ function renderTab2RemarkTable(rows){
   });
   const tbody = document.getElementById('tab2_remark_body');
   if(dedupedRows.length === 0){
-    tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state">No orders found</div></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state">ไม่มีรายการที่ผิดปกติ (ทุกออเดอร์ส่งในวัน)</div></td></tr>';
     return;
   }
   tbody.innerHTML = dedupedRows.map(r => (
