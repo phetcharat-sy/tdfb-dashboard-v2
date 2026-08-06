@@ -168,7 +168,7 @@
     </div>
     <div class="meta-right">
       Last updated<br><span id="lastUpdated">—</span>
-      <div style="font-size:9.5px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-05-v16-exclude-box-shippingfee-products</div>
+      <div style="font-size:9.5px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-05-v17-exclude-coupon-discount-productcard-docs</div>
       <div>
         <button class="btn-plain" id="refreshBtn" onclick="loadData()">Refresh</button>
         <button class="btn-plain" id="saveImgBtn" onclick="saveTabAsPNG()" style="margin-left:14px;">Save as PNG (แนวนอน, คมชัด)</button>
@@ -615,10 +615,10 @@ async function loadData(){
   }
 }
  
-// สินค้าที่ชื่อขึ้นต้นด้วย "Box" หรือ "Shipping Fee" ไม่ใช่สินค้าจริง (เป็นค่ากล่อง/ค่าส่ง) —
+// สินค้าที่ชื่อขึ้นต้นด้วยคำเหล่านี้ ไม่ใช่สินค้าจริง (กล่อง/ค่าส่ง/คูปอง/ส่วนลด/บัตรของขวัญ/เอกสาร) —
 // กรองออกตั้งแต่จุดโหลดข้อมูล เพื่อไม่ให้หลุดไปนับ/แสดงที่ไหนเลยในแดชบอร์ด (Order Detail, Top 5
 // Products, Replenishment, Forecast ฯลฯ ล้วนอ่านจาก ALL_ROWS / ALL_ROWS_3 ที่กรองแล้วนี้)
-const EXCLUDED_PRODUCT_PREFIXES = ['box', 'shipping fee'];
+const EXCLUDED_PRODUCT_PREFIXES = ['box', 'shipping fee', 'coupon', 'discount', 'product card', 'เอกสาร'];
 function isExcludedProductName(name){
   const n = (name || '').trim().toLowerCase();
   if(!n) return false;
