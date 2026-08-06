@@ -168,7 +168,7 @@
     </div>
     <div class="meta-right">
       Last updated<br><span id="lastUpdated">—</span>
-      <div style="font-size:9.5px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-05-v28-doubleday-markers-tab1-tab2-methodology-notes</div>
+      <div style="font-size:9.5px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-05-v31-daily-forecast-skip-blank-days-not-zero-fill</div>
       <div>
         <button class="btn-plain" id="refreshBtn" onclick="loadData()">Refresh</button>
         <button class="btn-plain" id="saveImgBtn" onclick="saveTabAsPNG()" style="margin-left:14px;">Save as PNG (แนวนอน, คมชัด)</button>
@@ -431,7 +431,7 @@
  
     <div class="section">
       <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>พยากรณ์รายวัน (Daily Forecast)</div>
-      <div class="section-desc">ยอดจริงย้อนหลัง 21 วันติดกัน (นับตามวันที่ต้องการจัดส่ง, วันไม่มีข้อมูล = 0) + ประมาณการ 7 วันข้างหน้า</div>
+      <div class="section-desc">ยอดจริง 21 วันล่าสุดที่มีข้อมูล (นับตามวันที่ต้องการจัดส่ง, วันที่ไม่มีข้อมูลจะไม่ถูกนับ) + ประมาณการ 7 วันข้างหน้า</div>
       <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-faint);background:var(--panel);border:1px solid var(--hairline);border-radius:10px;padding:10px 14px;margin-bottom:16px;line-height:1.7;">
         <b style="color:var(--ink-soft);">วิธีคิด:</b> Holt's Exponential Smoothing (Level + Trend สองตัวปรับตัวแบบ exponential ทีละวัน)<br>
         <code>Level(t) = 0.3 × ค่าจริง(t) + 0.7 × (Level(t-1) + Trend(t-1))</code><br>
@@ -709,7 +709,7 @@ function formatDateFull(d){
 // expectedDelivery for tab4), figures out which "Week" labels contain a Double Day (1.1, 2.2, ...,
 // 12.12) so tab1/tab2's weekly charts can highlight those points the same way the Forecast tab
 // already does. Reuses the same median±3-day range + implausible-span guard as the Forecast tab.
-function findDoubleDayWeeks(rows, dateGetter){
+function buildWeekInfo(rows, dateGetter){
   const datesByWeek = {};
   rows.forEach(r => {
     if(!r.week) return;
@@ -719,16 +719,27 @@ function findDoubleDayWeeks(rows, dateGetter){
     datesByWeek[r.week].push(d);
   });
   const MAX_PLAUSIBLE_WEEK_SPAN_DAYS = 10;
-  const ddWeeks = new Set();
+  const info = {}; // week -> { min, max, isDoubleDay, rangeLabel }
   Object.entries(datesByWeek).forEach(([w, dates]) => {
     dates.sort((a,b) => a-b);
     const median = dates[Math.floor(dates.length/2)];
     const min = new Date(median); min.setDate(median.getDate()-3);
     const max = new Date(median); max.setDate(median.getDate()+3);
     const spanDays = (max-min) / 86400000;
-    if(spanDays > MAX_PLAUSIBLE_WEEK_SPAN_DAYS) return; // untrustworthy range — skip
-    if(countDoubleDaysInRange(min, max) > 0) ddWeeks.add(w);
+    const trustworthy = spanDays <= MAX_PLAUSIBLE_WEEK_SPAN_DAYS;
+    info[w] = {
+      min, max,
+      isDoubleDay: trustworthy && countDoubleDaysInRange(min, max) > 0,
+      rangeLabel: trustworthy ? (formatDateShort(min) + ' – ' + formatDateShort(max)) : ''
+    };
   });
+  return info;
+}
+// Backward-compatible wrapper: just the set of week labels that contain a Double Day.
+function findDoubleDayWeeks(rows, dateGetter){
+  const info = buildWeekInfo(rows, dateGetter);
+  const ddWeeks = new Set();
+  Object.entries(info).forEach(([w, v]) => { if(v.isDoubleDay) ddWeeks.add(w); });
   return ddWeeks;
 }
  
@@ -1241,7 +1252,7 @@ function renderWeeklyChart(orderRows){
   orderRows.forEach(r => { if(r.week){ counts[r.week] = (counts[r.week]||0)+1; } });
   const labels = Object.keys(counts).sort((a,b)=>Number(a)-Number(b));
   const data = labels.map(l=>counts[l]);
-  const ddWeeks = findDoubleDayWeeks(orderRows, r=>r.createDate);
+  const weekInfo = buildWeekInfo(orderRows, r=>r.createDate);
   const ctx = document.getElementById('chart_weekly');
   if(charts.weekly) charts.weekly.destroy();
   const opts = baseChartOptions({ legend:false });
@@ -1250,9 +1261,15 @@ function renderWeeklyChart(orderRows){
   opts.plugins.tooltip = {
     ...tooltipStyle(),
     callbacks: {
+      title: c => {
+        const w = labels[c[0].dataIndex];
+        const info = weekInfo[w];
+        return info && info.rangeLabel ? 'W' + w + ' (' + info.rangeLabel + ')' : 'W' + w;
+      },
       label: c => {
+        const w = labels[c.dataIndex];
         const base = 'Orders: ' + c.formattedValue;
-        return ddWeeks.has(labels[c.dataIndex]) ? [base, '⚡ Double Day week'] : base;
+        return (weekInfo[w] && weekInfo[w].isDoubleDay) ? [base, '⚡ Double Day week'] : base;
       }
     }
   };
@@ -1260,8 +1277,8 @@ function renderWeeklyChart(orderRows){
     type:'line',
     data:{ labels: labels.map(l=>'W'+l), datasets:[{
       label:'Orders', data, borderColor:'#7A9A3F', backgroundColor:'rgba(122,154,63,0.12)',
-      pointBackgroundColor: (c) => ddWeeks.has(labels[c.dataIndex]) ? '#A6432E' : '#7A9A3F',
-      pointRadius: (c) => ddWeeks.has(labels[c.dataIndex]) ? 6 : 2.5,
+      pointBackgroundColor: (c) => (weekInfo[labels[c.dataIndex]] && weekInfo[labels[c.dataIndex]].isDoubleDay) ? '#A6432E' : '#7A9A3F',
+      pointRadius: (c) => (weekInfo[labels[c.dataIndex]] && weekInfo[labels[c.dataIndex]].isDoubleDay) ? 6 : 2.5,
       tension:0.3, fill:true, borderWidth:2
     }]},
     options: opts
@@ -1420,7 +1437,7 @@ function renderWeekly2Chart(rows){
   });
   const labels = Object.keys(qtyByWeek).sort((a,b)=>Number(a)-Number(b));
   const data = labels.map(l => qtyByWeek[l]);
-  const ddWeeks = findDoubleDayWeeks(rows, r=>r.createDate);
+  const weekInfo = buildWeekInfo(rows, r=>r.createDate);
   const ctx = document.getElementById('chart_weekly2');
   if(charts.weekly2) charts.weekly2.destroy();
   const opts = baseChartOptions({ legend:false });
@@ -1429,9 +1446,15 @@ function renderWeekly2Chart(rows){
   opts.plugins.tooltip = {
     ...tooltipStyle(),
     callbacks: {
+      title: c => {
+        const w = labels[c[0].dataIndex];
+        const info = weekInfo[w];
+        return info && info.rangeLabel ? 'W' + w + ' (' + info.rangeLabel + ')' : 'W' + w;
+      },
       label: c => {
+        const w = labels[c.dataIndex];
         const base = 'จำนวนสินค้าที่ออก (ชิ้น): ' + c.formattedValue;
-        return ddWeeks.has(labels[c.dataIndex]) ? [base, '⚡ Double Day week'] : base;
+        return (weekInfo[w] && weekInfo[w].isDoubleDay) ? [base, '⚡ Double Day week'] : base;
       }
     }
   };
@@ -1439,8 +1462,8 @@ function renderWeekly2Chart(rows){
     type:'line',
     data:{ labels: labels.map(l=>'W'+l), datasets:[{
       label:'จำนวนสินค้าที่ออก (ชิ้น)', data, borderColor:'#4C6B26', backgroundColor:'rgba(76,107,38,0.12)',
-      pointBackgroundColor: (c) => ddWeeks.has(labels[c.dataIndex]) ? '#A6432E' : '#4C6B26',
-      pointRadius: (c) => ddWeeks.has(labels[c.dataIndex]) ? 6 : 2.5,
+      pointBackgroundColor: (c) => (weekInfo[labels[c.dataIndex]] && weekInfo[labels[c.dataIndex]].isDoubleDay) ? '#A6432E' : '#4C6B26',
+      pointRadius: (c) => (weekInfo[labels[c.dataIndex]] && weekInfo[labels[c.dataIndex]].isDoubleDay) ? 6 : 2.5,
       tension:0.3, fill:true, borderWidth:2
     }]},
     options: opts
@@ -1599,10 +1622,22 @@ function renderTab4(){
         ordersByWeek[r.week].add(orderKey);
       }
       qtyByWeekTotal[r.week] = (qtyByWeekTotal[r.week] || 0) + lineQty;
+ 
+      // FIX: the calendar date range shown for each week (and used for Double Day detection) was
+      // being built from "วันที่ต้องการจัดส่ง" (expectedDelivery), which is sparse — many weeks had
+      // NO row with a valid expectedDelivery at all, so their range/Double Day check silently came
+      // back empty (no dates shown, no red dot, even when that week clearly contains a Double
+      // Day). Using "วันที่ลง Odoo" (createDate) instead — the same dense, reliable field tab1/
+      // tab2 already use for this exact purpose — fixes both.
+      const weekRangeDate = parseDate(r.createDate);
+      if(weekRangeDate){
+        if(!datesByWeek[r.week]) datesByWeek[r.week] = [];
+        datesByWeek[r.week].push(weekRangeDate);
+      }
     }
  
     // Daily: grouped by "วันที่ต้องการจัดส่ง" (expectedDelivery) only. Blank/unparseable dates are
-    // excluded from the daily charts entirely, but do NOT affect the weekly counts above.
+    // excluded from the daily charts entirely, but do NOT affect the weekly counts/date-range above.
     const d = parseDate(r.expectedDelivery);
     if(d){
       const dateKey = toDateKey(d);
@@ -1611,11 +1646,6 @@ function renderTab4(){
         ordersByDate[dateKey].add(orderKey);
       }
       qtyByDate[dateKey] = (qtyByDate[dateKey] || 0) + lineQty;
- 
-      if(r.week){
-        if(!datesByWeek[r.week]) datesByWeek[r.week] = [];
-        datesByWeek[r.week].push(d);
-      }
     }
   });
  
@@ -1836,20 +1866,18 @@ function computeWeeklyForecastSeries(weekList, valueByWeek, weekDateRange, ddInf
 // instead of a flat moving-average + separate linear-regression slope.
 function computeDailyForecastSeries(valueByDateKey){
   const todayKey = toDateKey(new Date());
-  const pastKeys = Object.keys(valueByDateKey).filter(k => k <= todayKey);
+  const pastKeys = Object.keys(valueByDateKey).filter(k => k <= todayKey).sort();
   if(!pastKeys.length) return null;
  
   const HIST_DAYS = 21, FORECAST_DAYS = 7;
-  const lastDateKey = pastKeys.sort()[pastKeys.length-1];
+  // FIX (per user request): blank/no-data days should NOT be counted at all — not even as 0 —
+  // since that would still pull the smoothed level/trend toward zero. Only days that genuinely
+  // have a value in the source data are included in the historical series; if that leaves gaps
+  // in the calendar, the x-axis simply skips those days (accepted tradeoff vs. faking zeros).
+  const recentKeys = pastKeys.slice(-HIST_DAYS);
+  const historical = recentKeys.map(k => valueByDateKey[k]);
+  const lastDateKey = pastKeys[pastKeys.length-1];
   const lastDate = new Date(lastDateKey + 'T00:00:00');
- 
-  // Build the continuous window of the last HIST_DAYS calendar days (oldest → newest).
-  const recentKeys = [];
-  for(let i = HIST_DAYS - 1; i >= 0; i--){
-    const d = new Date(lastDate); d.setDate(lastDate.getDate() - i);
-    recentKeys.push(toDateKey(d));
-  }
-  const historical = recentKeys.map(k => valueByDateKey[k] || 0);
  
   // --- Holt's linear exponential smoothing: level (ALPHA) + trend (BETA) ---
   const ALPHA = 0.3, BETA = 0.15;
