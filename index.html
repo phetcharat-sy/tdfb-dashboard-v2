@@ -168,7 +168,7 @@
     </div>
     <div class="meta-right">
       Last updated<br><span id="lastUpdated">—</span>
-      <div style="font-size:9.5px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-05-v23-reorder-orderref-filter-last</div>
+      <div style="font-size:9.5px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-05-v25-exclude-blank-expecteddelivery-everywhere</div>
       <div>
         <button class="btn-plain" id="refreshBtn" onclick="loadData()">Refresh</button>
         <button class="btn-plain" id="saveImgBtn" onclick="saveTabAsPNG()" style="margin-left:14px;">Save as PNG (แนวนอน, คมชัด)</button>
@@ -1510,6 +1510,11 @@ function renderTab4(){
   ALL_ROWS.forEach(r => {
     const p = (r.product||'').trim();
     if(!p || !r.week) return;
+    // FIX (per user request): rows with a blank/invalid "วันที่ต้องการจัดส่ง" must not be counted
+    // anywhere in the Forecast tab — previously this loop only checked product+week, so blank
+    // expectedDelivery rows still leaked into avgDemand (and therefore Stock Depletion Forecast /
+    // Stock vs Demand charts).
+    if(!parseDate(r.expectedDelivery)) return;
     const qty = parseQty(r.orderLine);
     if(!demandByProductWeek[p]) demandByProductWeek[p] = {};
     demandByProductWeek[p][r.week] = (demandByProductWeek[p][r.week]||0) + qty;
@@ -1524,25 +1529,20 @@ function renderTab4(){
   ALL_ROWS.forEach(r => {
     const orderKey = (r.orderRef||'').trim();
     const lineQty = parseQty(r.orderLine);
-    // FIX (per user request): the Forecast tab's daily/weekly date basis is now
-    // "วันที่ต้องการจัดส่ง" (expectedDelivery) instead of "วันที่ลง Odoo" (createDate) — the
-    // person confirmed the daily quantity/order charts should reflect the requested delivery
-    // date, not the date the order was entered into Odoo.
+    // The Forecast tab's date basis is "วันที่ต้องการจัดส่ง" (expectedDelivery), not "วันที่ลง
+    // Odoo" (createDate). FIX (per user request): if this field is blank/unparseable, the row is
+    // now excluded entirely from every Forecast tab aggregate (daily AND weekly) — previously
+    // ordersByWeek/qtyByWeekTotal counted the row anyway as long as the Week column was filled,
+    // even when expectedDelivery itself was blank.
     const d = parseDate(r.expectedDelivery);
+    if(!d) return;
  
-    // FIX: daily aggregation only needs a valid date — it must NOT be skipped just because the
-    // Week column is blank for that row. Previously this whole loop started with
-    // `if(!r.week) return;`, which silently dropped such rows from ordersByDate/qtyByDate too,
-    // making the "actual" (non-forecast) portion of the Daily Forecast charts undercount real
-    // orders/quantity on any day where some rows had no Week tag.
-    if(d){
-      const dateKey = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-      if(orderKey){
-        if(!ordersByDate[dateKey]) ordersByDate[dateKey] = new Set();
-        ordersByDate[dateKey].add(orderKey);
-      }
-      qtyByDate[dateKey] = (qtyByDate[dateKey] || 0) + lineQty;
+    const dateKey = toDateKey(d);
+    if(orderKey){
+      if(!ordersByDate[dateKey]) ordersByDate[dateKey] = new Set();
+      ordersByDate[dateKey].add(orderKey);
     }
+    qtyByDate[dateKey] = (qtyByDate[dateKey] || 0) + lineQty;
  
     // Weekly aggregation still requires the Week column (used for the weekly forecast charts).
     if(!r.week) return;
@@ -1551,10 +1551,8 @@ function renderTab4(){
       ordersByWeek[r.week].add(orderKey);
     }
     qtyByWeekTotal[r.week] = (qtyByWeekTotal[r.week] || 0) + lineQty;
-    if(d){
-      if(!datesByWeek[r.week]) datesByWeek[r.week] = [];
-      datesByWeek[r.week].push(d);
-    }
+    if(!datesByWeek[r.week]) datesByWeek[r.week] = [];
+    datesByWeek[r.week].push(d);
   });
  
   const weekDateRange = {};
@@ -1765,7 +1763,14 @@ function computeWeeklyForecastSeries(weekList, valueByWeek, weekDateRange, ddInf
 // Double Day boost) for any daily numeric metric. Uses the last 21 actual days as the historical
 // window shown on the chart (or fewer if less history is available).
 function computeDailyForecastSeries(valueByDateKey){
-  const dateKeys = Object.keys(valueByDateKey).sort();
+  // FIX: "วันที่ต้องการจัดส่ง" can include far-future pre-order dates (e.g. requested delivery
+  // in October while today is only early August). Sorting ALL date keys and taking the "last 21"
+  // previously could pull in these future pre-orders and treat them as if they were recent actual
+  // days — producing a chart that jumps across months and mislabels future bookings as history.
+  // Now we only treat dates up to and including TODAY as actual history, and always forecast the
+  // next 7 days forward from today (or the latest real day found), never from a future date.
+  const todayKey = toDateKey(new Date());
+  const dateKeys = Object.keys(valueByDateKey).filter(k => k <= todayKey).sort();
   if(!dateKeys.length) return null;
  
   const HIST_DAYS = 21, FORECAST_DAYS = 7, MA_WINDOW = 7;
@@ -1787,7 +1792,12 @@ function computeDailyForecastSeries(valueByDateKey){
     slope = den !== 0 ? num/den : 0;
   }
  
-  const { multiplier: learnedMultiplier, samples: ddSamples } = learnDoubleDayMultiplierByValue(valueByDateKey);
+  // Double Day learning should also only look at past/actual data — a future pre-order spike
+  // isn't a validated real-world pattern yet, and comparing it against other future dates in the
+  // same "preceding week" window would be an unreliable, apples-to-oranges comparison.
+  const pastOnlyValues = {};
+  dateKeys.forEach(k => { pastOnlyValues[k] = valueByDateKey[k]; });
+  const { multiplier: learnedMultiplier, samples: ddSamples } = learnDoubleDayMultiplierByValue(pastOnlyValues);
   const DOUBLE_DAY_BOOST = learnedMultiplier || 1;
  
   const lastDateKey = dateKeys[dateKeys.length-1];
