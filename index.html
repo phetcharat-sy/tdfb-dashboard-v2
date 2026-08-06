@@ -168,7 +168,7 @@
     </div>
     <div class="meta-right">
       Last updated<br><span id="lastUpdated">—</span>
-      <div style="font-size:9.5px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-05-v25-exclude-blank-expecteddelivery-everywhere</div>
+      <div style="font-size:9.5px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-05-v26-separate-weekly-week-col-daily-expecteddelivery</div>
       <div>
         <button class="btn-plain" id="refreshBtn" onclick="loadData()">Refresh</button>
         <button class="btn-plain" id="saveImgBtn" onclick="saveTabAsPNG()" style="margin-left:14px;">Save as PNG (แนวนอน, คมชัด)</button>
@@ -1505,16 +1505,14 @@ function escapeHtml(s){
 function renderTab4(){
   if(!ALL_ROWS.length && !ALL_ROWS_3.length){ return; }
  
+  // Weekly aggregation is grouped strictly by the "Week" column — independent of whether
+  // "วันที่ต้องการจัดส่ง" is filled in. (Reverted from v25, which had mistakenly also required a
+  // valid expectedDelivery here, causing some weeks to undercount to near-zero orders.)
   const demandByProductWeek = {};
   const allWeeks = new Set();
   ALL_ROWS.forEach(r => {
     const p = (r.product||'').trim();
     if(!p || !r.week) return;
-    // FIX (per user request): rows with a blank/invalid "วันที่ต้องการจัดส่ง" must not be counted
-    // anywhere in the Forecast tab — previously this loop only checked product+week, so blank
-    // expectedDelivery rows still leaked into avgDemand (and therefore Stock Depletion Forecast /
-    // Stock vs Demand charts).
-    if(!parseDate(r.expectedDelivery)) return;
     const qty = parseQty(r.orderLine);
     if(!demandByProductWeek[p]) demandByProductWeek[p] = {};
     demandByProductWeek[p][r.week] = (demandByProductWeek[p][r.week]||0) + qty;
@@ -1529,30 +1527,33 @@ function renderTab4(){
   ALL_ROWS.forEach(r => {
     const orderKey = (r.orderRef||'').trim();
     const lineQty = parseQty(r.orderLine);
-    // The Forecast tab's date basis is "วันที่ต้องการจัดส่ง" (expectedDelivery), not "วันที่ลง
-    // Odoo" (createDate). FIX (per user request): if this field is blank/unparseable, the row is
-    // now excluded entirely from every Forecast tab aggregate (daily AND weekly) — previously
-    // ordersByWeek/qtyByWeekTotal counted the row anyway as long as the Week column was filled,
-    // even when expectedDelivery itself was blank.
+ 
+    // Weekly: grouped by "Week" column only. No date requirement — every row with a Week value
+    // counts, matching "By week ก็เอามาจาก Week" as the sole basis.
+    if(r.week){
+      if(orderKey){
+        if(!ordersByWeek[r.week]) ordersByWeek[r.week] = new Set();
+        ordersByWeek[r.week].add(orderKey);
+      }
+      qtyByWeekTotal[r.week] = (qtyByWeekTotal[r.week] || 0) + lineQty;
+    }
+ 
+    // Daily: grouped by "วันที่ต้องการจัดส่ง" (expectedDelivery) only. Blank/unparseable dates are
+    // excluded from the daily charts entirely, but do NOT affect the weekly counts above.
     const d = parseDate(r.expectedDelivery);
-    if(!d) return;
+    if(d){
+      const dateKey = toDateKey(d);
+      if(orderKey){
+        if(!ordersByDate[dateKey]) ordersByDate[dateKey] = new Set();
+        ordersByDate[dateKey].add(orderKey);
+      }
+      qtyByDate[dateKey] = (qtyByDate[dateKey] || 0) + lineQty;
  
-    const dateKey = toDateKey(d);
-    if(orderKey){
-      if(!ordersByDate[dateKey]) ordersByDate[dateKey] = new Set();
-      ordersByDate[dateKey].add(orderKey);
+      if(r.week){
+        if(!datesByWeek[r.week]) datesByWeek[r.week] = [];
+        datesByWeek[r.week].push(d);
+      }
     }
-    qtyByDate[dateKey] = (qtyByDate[dateKey] || 0) + lineQty;
- 
-    // Weekly aggregation still requires the Week column (used for the weekly forecast charts).
-    if(!r.week) return;
-    if(orderKey){
-      if(!ordersByWeek[r.week]) ordersByWeek[r.week] = new Set();
-      ordersByWeek[r.week].add(orderKey);
-    }
-    qtyByWeekTotal[r.week] = (qtyByWeekTotal[r.week] || 0) + lineQty;
-    if(!datesByWeek[r.week]) datesByWeek[r.week] = [];
-    datesByWeek[r.week].push(d);
   });
  
   const weekDateRange = {};
