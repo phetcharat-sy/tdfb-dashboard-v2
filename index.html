@@ -168,7 +168,7 @@
     </div>
     <div class="meta-right">
       Last updated<br><span id="lastUpdated">—</span>
-      <div style="font-size:9.5px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-05-v26-separate-weekly-week-col-daily-expecteddelivery</div>
+      <div style="font-size:9.5px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-05-v28-doubleday-markers-tab1-tab2-methodology-notes</div>
       <div>
         <button class="btn-plain" id="refreshBtn" onclick="loadData()">Refresh</button>
         <button class="btn-plain" id="saveImgBtn" onclick="saveTabAsPNG()" style="margin-left:14px;">Save as PNG (แนวนอน, คมชัด)</button>
@@ -235,7 +235,7 @@
  
     <div class="section">
       <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>Weekly Order Volume</div>
-      <div class="section-desc">Unique orders per week</div>
+      <div class="section-desc">Unique orders per week · จุดสีแดง = สัปดาห์ที่มี Double Day (1.1, 2.2, ... 12.12)</div>
       <div class="chart-panel"><div class="chart-box" style="height:270px;"><canvas id="chart_weekly"></canvas></div></div>
     </div>
  
@@ -305,7 +305,7 @@
  
     <div class="section">
       <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>Weekly Line Items</div>
-      <div class="section-desc">จำนวนสินค้าที่ออกต่อสัปดาห์ (รวม quantity)</div>
+      <div class="section-desc">จำนวนสินค้าที่ออกต่อสัปดาห์ (รวม quantity) · จุดสีแดง = สัปดาห์ที่มี Double Day (1.1, 2.2, ... 12.12)</div>
       <div class="chart-panel"><div class="chart-box" style="height:270px;"><canvas id="chart_weekly2"></canvas></div></div>
     </div>
  
@@ -411,7 +411,12 @@
  
     <div class="section">
       <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>พยากรณ์รายสัปดาห์ (Weekly Forecast)</div>
-      <div class="section-desc">ยอดจริงรายสัปดาห์ (นับตามวันที่ต้องการจัดส่ง) + ประมาณการ 4 สัปดาห์ข้างหน้า (moving average + trend)</div>
+      <div class="section-desc">ยอดจริงรายสัปดาห์ (นับตามวันที่ต้องการจัดส่ง) + ประมาณการ 4 สัปดาห์ข้างหน้า</div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-faint);background:var(--panel);border:1px solid var(--hairline);border-radius:10px;padding:10px 14px;margin-bottom:16px;line-height:1.7;">
+        <b style="color:var(--ink-soft);">วิธีคิด:</b> Moving average (ค่าเฉลี่ย 4 สัปดาห์ล่าสุด) + Linear trend (ความชันจากข้อมูลทั้งหมด)<br>
+        <code>พยากรณ์(สัปดาห์ที่ h ข้างหน้า) = avg4 + slope × h</code><br>
+        + Double Day boost: ถ้าสัปดาห์นั้นมีวันที่ตรงกับ Double Day (1.1, 2.2, ... 12.12) จะบวกเพิ่มตามอัตราที่เรียนรู้จากประวัติ (สูงสุด 3 เท่า, ต้องมีตัวอย่างในอดีต ≥ 2 ครั้งถึงจะเชื่อถือได้)
+      </div>
       <div class="grid-2">
         <div class="chart-panel">
           <div style="font-size:12px;color:var(--ink-soft);font-weight:600;margin-bottom:8px;">จำนวนออเดอร์ / สัปดาห์</div>
@@ -426,7 +431,14 @@
  
     <div class="section">
       <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>พยากรณ์รายวัน (Daily Forecast)</div>
-      <div class="section-desc">ยอดจริงย้อนหลัง 21 วัน (นับตามวันที่ต้องการจัดส่ง) + ประมาณการ 7 วันข้างหน้า (moving average + trend)</div>
+      <div class="section-desc">ยอดจริงย้อนหลัง 21 วันติดกัน (นับตามวันที่ต้องการจัดส่ง, วันไม่มีข้อมูล = 0) + ประมาณการ 7 วันข้างหน้า</div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-faint);background:var(--panel);border:1px solid var(--hairline);border-radius:10px;padding:10px 14px;margin-bottom:16px;line-height:1.7;">
+        <b style="color:var(--ink-soft);">วิธีคิด:</b> Holt's Exponential Smoothing (Level + Trend สองตัวปรับตัวแบบ exponential ทีละวัน)<br>
+        <code>Level(t) = 0.3 × ค่าจริง(t) + 0.7 × (Level(t-1) + Trend(t-1))</code><br>
+        <code>Trend(t) = 0.15 × (Level(t) − Level(t-1)) + 0.85 × Trend(t-1)</code><br>
+        <code>พยากรณ์(h วันข้างหน้า) = Level(วันล่าสุด) + Trend(วันล่าสุด) × h</code><br>
+        + Double Day boost แบบเดียวกับรายสัปดาห์ แต่คูณเฉพาะวันนั้นวันเดียว (ไม่กระจายทั้งสัปดาห์)
+      </div>
       <div class="grid-2">
         <div class="chart-panel">
           <div style="font-size:12px;color:var(--ink-soft);font-weight:600;margin-bottom:8px;">จำนวนออเดอร์ / วัน</div>
@@ -691,6 +703,33 @@ function formatDateFull(d){
   if(!d) return '';
   const months = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
   return d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
+}
+ 
+// Given a set of rows and a getter for which date field to use (createDate for tab1/tab2,
+// expectedDelivery for tab4), figures out which "Week" labels contain a Double Day (1.1, 2.2, ...,
+// 12.12) so tab1/tab2's weekly charts can highlight those points the same way the Forecast tab
+// already does. Reuses the same median±3-day range + implausible-span guard as the Forecast tab.
+function findDoubleDayWeeks(rows, dateGetter){
+  const datesByWeek = {};
+  rows.forEach(r => {
+    if(!r.week) return;
+    const d = parseDate(dateGetter(r));
+    if(!d) return;
+    if(!datesByWeek[r.week]) datesByWeek[r.week] = [];
+    datesByWeek[r.week].push(d);
+  });
+  const MAX_PLAUSIBLE_WEEK_SPAN_DAYS = 10;
+  const ddWeeks = new Set();
+  Object.entries(datesByWeek).forEach(([w, dates]) => {
+    dates.sort((a,b) => a-b);
+    const median = dates[Math.floor(dates.length/2)];
+    const min = new Date(median); min.setDate(median.getDate()-3);
+    const max = new Date(median); max.setDate(median.getDate()+3);
+    const spanDays = (max-min) / 86400000;
+    if(spanDays > MAX_PLAUSIBLE_WEEK_SPAN_DAYS) return; // untrustworthy range — skip
+    if(countDoubleDaysInRange(min, max) > 0) ddWeeks.add(w);
+  });
+  return ddWeeks;
 }
  
 // FIX: Number('1,200') === NaN in JS, so any comma-formatted or blank value in the "Order Line"
@@ -1202,16 +1241,28 @@ function renderWeeklyChart(orderRows){
   orderRows.forEach(r => { if(r.week){ counts[r.week] = (counts[r.week]||0)+1; } });
   const labels = Object.keys(counts).sort((a,b)=>Number(a)-Number(b));
   const data = labels.map(l=>counts[l]);
+  const ddWeeks = findDoubleDayWeeks(orderRows, r=>r.createDate);
   const ctx = document.getElementById('chart_weekly');
   if(charts.weekly) charts.weekly.destroy();
   const opts = baseChartOptions({ legend:false });
   opts.plugins.lineDataLabels = { display:true };
   opts.layout = { padding:{ top:20 } };
+  opts.plugins.tooltip = {
+    ...tooltipStyle(),
+    callbacks: {
+      label: c => {
+        const base = 'Orders: ' + c.formattedValue;
+        return ddWeeks.has(labels[c.dataIndex]) ? [base, '⚡ Double Day week'] : base;
+      }
+    }
+  };
   charts.weekly = new Chart(ctx, {
     type:'line',
     data:{ labels: labels.map(l=>'W'+l), datasets:[{
       label:'Orders', data, borderColor:'#7A9A3F', backgroundColor:'rgba(122,154,63,0.12)',
-      pointBackgroundColor:'#7A9A3F', pointRadius:2.5, tension:0.3, fill:true, borderWidth:2
+      pointBackgroundColor: (c) => ddWeeks.has(labels[c.dataIndex]) ? '#A6432E' : '#7A9A3F',
+      pointRadius: (c) => ddWeeks.has(labels[c.dataIndex]) ? 6 : 2.5,
+      tension:0.3, fill:true, borderWidth:2
     }]},
     options: opts
   });
@@ -1369,16 +1420,28 @@ function renderWeekly2Chart(rows){
   });
   const labels = Object.keys(qtyByWeek).sort((a,b)=>Number(a)-Number(b));
   const data = labels.map(l => qtyByWeek[l]);
+  const ddWeeks = findDoubleDayWeeks(rows, r=>r.createDate);
   const ctx = document.getElementById('chart_weekly2');
   if(charts.weekly2) charts.weekly2.destroy();
   const opts = baseChartOptions({ legend:false });
   opts.plugins.lineDataLabels = { display:true };
   opts.layout = { padding:{ top:20 } };
+  opts.plugins.tooltip = {
+    ...tooltipStyle(),
+    callbacks: {
+      label: c => {
+        const base = 'จำนวนสินค้าที่ออก (ชิ้น): ' + c.formattedValue;
+        return ddWeeks.has(labels[c.dataIndex]) ? [base, '⚡ Double Day week'] : base;
+      }
+    }
+  };
   charts.weekly2 = new Chart(ctx, {
     type:'line',
     data:{ labels: labels.map(l=>'W'+l), datasets:[{
       label:'จำนวนสินค้าที่ออก (ชิ้น)', data, borderColor:'#4C6B26', backgroundColor:'rgba(76,107,38,0.12)',
-      pointBackgroundColor:'#4C6B26', pointRadius:2.5, tension:0.3, fill:true, borderWidth:2
+      pointBackgroundColor: (c) => ddWeeks.has(labels[c.dataIndex]) ? '#A6432E' : '#4C6B26',
+      pointRadius: (c) => ddWeeks.has(labels[c.dataIndex]) ? 6 : 2.5,
+      tension:0.3, fill:true, borderWidth:2
     }]},
     options: opts
   });
@@ -1763,46 +1826,48 @@ function computeWeeklyForecastSeries(weekList, valueByWeek, weekDateRange, ddInf
 // Builds a 7-day-ahead forecast series (moving average of last 7 days + linear trend + learned
 // Double Day boost) for any daily numeric metric. Uses the last 21 actual days as the historical
 // window shown on the chart (or fewer if less history is available).
+// FIX: previously this picked the "last 21 date KEYS that happen to have data", which — when
+// "วันที่ต้องการจัดส่ง" is sparse (e.g. only filled for the first few days of each month) — meant
+// the x-axis silently skipped straight from day 7 of one month to day 1 of the next, making the
+// chart look like it was jumping across months. Now the historical window is always 21
+// CONSECUTIVE calendar days ending on the latest real date found, with 0 filled in for any day
+// that has no data — the axis is always continuous and honest about which days had no orders.
+// Forecasting is now done with Holt's linear (double) exponential smoothing (level + trend)
+// instead of a flat moving-average + separate linear-regression slope.
 function computeDailyForecastSeries(valueByDateKey){
-  // FIX: "วันที่ต้องการจัดส่ง" can include far-future pre-order dates (e.g. requested delivery
-  // in October while today is only early August). Sorting ALL date keys and taking the "last 21"
-  // previously could pull in these future pre-orders and treat them as if they were recent actual
-  // days — producing a chart that jumps across months and mislabels future bookings as history.
-  // Now we only treat dates up to and including TODAY as actual history, and always forecast the
-  // next 7 days forward from today (or the latest real day found), never from a future date.
   const todayKey = toDateKey(new Date());
-  const dateKeys = Object.keys(valueByDateKey).filter(k => k <= todayKey).sort();
-  if(!dateKeys.length) return null;
+  const pastKeys = Object.keys(valueByDateKey).filter(k => k <= todayKey);
+  if(!pastKeys.length) return null;
  
-  const HIST_DAYS = 21, FORECAST_DAYS = 7, MA_WINDOW = 7;
-  const recentKeys = dateKeys.slice(-HIST_DAYS);
+  const HIST_DAYS = 21, FORECAST_DAYS = 7;
+  const lastDateKey = pastKeys.sort()[pastKeys.length-1];
+  const lastDate = new Date(lastDateKey + 'T00:00:00');
+ 
+  // Build the continuous window of the last HIST_DAYS calendar days (oldest → newest).
+  const recentKeys = [];
+  for(let i = HIST_DAYS - 1; i >= 0; i--){
+    const d = new Date(lastDate); d.setDate(lastDate.getDate() - i);
+    recentKeys.push(toDateKey(d));
+  }
   const historical = recentKeys.map(k => valueByDateKey[k] || 0);
  
-  const lastN = Math.min(MA_WINDOW, historical.length);
-  const recentVals = historical.slice(-lastN);
-  const avg = recentVals.reduce((s,v)=>s+v,0) / (lastN||1);
- 
-  const n = historical.length;
-  let slope = 0;
-  if(n >= 2){
-    const xs = historical.map((_,i)=>i);
-    const xMean = xs.reduce((s,v)=>s+v,0)/n;
-    const yMean = historical.reduce((s,v)=>s+v,0)/n;
-    const num = xs.reduce((s,xi,i) => s + (xi-xMean)*(historical[i]-yMean), 0);
-    const den = xs.reduce((s,xi) => s + (xi-xMean)**2, 0);
-    slope = den !== 0 ? num/den : 0;
+  // --- Holt's linear exponential smoothing: level (ALPHA) + trend (BETA) ---
+  const ALPHA = 0.3, BETA = 0.15;
+  let level = historical[0];
+  let trend = historical.length > 1 ? (historical[1] - historical[0]) : 0;
+  for(let i = 1; i < historical.length; i++){
+    const value = historical[i];
+    const prevLevel = level;
+    level = ALPHA*value + (1-ALPHA)*(level + trend);
+    trend = BETA*(level - prevLevel) + (1-BETA)*trend;
   }
  
-  // Double Day learning should also only look at past/actual data — a future pre-order spike
-  // isn't a validated real-world pattern yet, and comparing it against other future dates in the
-  // same "preceding week" window would be an unreliable, apples-to-oranges comparison.
+  // Double Day learning still only looks at past/actual data (whatever days genuinely have
+  // values in the source data — sparse or not — for a fair historical ratio).
   const pastOnlyValues = {};
-  dateKeys.forEach(k => { pastOnlyValues[k] = valueByDateKey[k]; });
+  pastKeys.forEach(k => { pastOnlyValues[k] = valueByDateKey[k]; });
   const { multiplier: learnedMultiplier, samples: ddSamples } = learnDoubleDayMultiplierByValue(pastOnlyValues);
   const DOUBLE_DAY_BOOST = learnedMultiplier || 1;
- 
-  const lastDateKey = dateKeys[dateKeys.length-1];
-  const lastDate = new Date(lastDateKey + 'T00:00:00');
  
   const doubleDayHits = [];
   recentKeys.forEach((k,i) => {
@@ -1814,7 +1879,7 @@ function computeDailyForecastSeries(valueByDateKey){
   const forecastLabels = [];
   for(let i=1;i<=FORECAST_DAYS;i++){
     const d = new Date(lastDate); d.setDate(lastDate.getDate()+i);
-    let val = Math.max(0, avg + slope*i);
+    let val = Math.max(0, level + trend*i);
     const isDD = isDoubleDay(d);
     if(isDD && DOUBLE_DAY_BOOST > 1) val *= DOUBLE_DAY_BOOST;
     forecastData.push(Math.max(0, Math.round(val)));
