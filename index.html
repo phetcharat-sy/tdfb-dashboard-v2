@@ -168,7 +168,7 @@
     </div>
     <div class="meta-right">
       Last updated<br><span id="lastUpdated">—</span>
-      <div style="font-size:9.5px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-05-v22-add-shipping-channel-filters-tab1</div>
+      <div style="font-size:9.5px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-05-v23-reorder-orderref-filter-last</div>
       <div>
         <button class="btn-plain" id="refreshBtn" onclick="loadData()">Refresh</button>
         <button class="btn-plain" id="saveImgBtn" onclick="saveTabAsPNG()" style="margin-left:14px;">Save as PNG (แนวนอน, คมชัด)</button>
@@ -205,7 +205,6 @@
       <div class="filter-field"><label>Month</label><select id="f1_month" onchange="onFilterChange()"><option value="">All</option></select></div>
       <div class="filter-field"><label>Week</label><select id="f1_week" onchange="onFilterChange()"><option value="">All</option></select></div>
       <div class="filter-field"><label>Day</label><select id="f1_day" onchange="onFilterChange()"><option value="">All</option></select></div>
-      <div class="filter-field"><label>Order Reference</label><input type="text" id="f1_orderRef" placeholder="Search order..." oninput="onFilterChange()"></div>
       <div class="filter-field"><label>Shipping</label>
         <select id="f1_urgent" onchange="onFilterChange()">
           <option value="">All</option><option value="normal">ส่งปกติ</option><option value="urgent">ส่งด่วน</option>
@@ -216,6 +215,7 @@
           <option value="">All</option><option value="platform">Platform</option><option value="walkin">Walk-in</option>
         </select>
       </div>
+      <div class="filter-field"><label>Order Reference</label><input type="text" id="f1_orderRef" placeholder="Search order..." oninput="onFilterChange()"></div>
       <button class="filter-clear" onclick="clearFilters()">Clear filters</button>
     </div>
  
