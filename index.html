@@ -168,7 +168,7 @@
     </div>
     <div class="meta-right">
       Last updated<br><span id="lastUpdated">—</span>
-      <div style="font-size:9.5px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-05-v12-oos-pct-from-whstatus-qty-from-orderline</div>
+      <div style="font-size:9.5px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-05-v13-add-weekly-daily-order-qty-forecast</div>
       <div>
         <button class="btn-plain" id="refreshBtn" onclick="loadData()">Refresh</button>
         <button class="btn-plain" id="saveImgBtn" onclick="saveTabAsPNG()" style="margin-left:14px;">Save as PNG (A4)</button>
@@ -398,9 +398,33 @@
     </div>
  
     <div class="section">
-      <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>Demand Trend &amp; Forecast</div>
-      <div class="section-desc">ยอด order จริงรายสัปดาห์ + ประมาณการ 4 สัปดาห์ข้างหน้า (moving average)</div>
-      <div class="chart-panel"><div class="chart-box" style="height:300px;"><canvas id="chart_forecast_demand"></canvas></div></div>
+      <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>พยากรณ์รายสัปดาห์ (Weekly Forecast)</div>
+      <div class="section-desc">ยอดจริงรายสัปดาห์ + ประมาณการ 4 สัปดาห์ข้างหน้า (moving average + trend)</div>
+      <div class="grid-2">
+        <div class="chart-panel">
+          <div style="font-size:12px;color:var(--ink-soft);font-weight:600;margin-bottom:8px;">จำนวนออเดอร์ / สัปดาห์</div>
+          <div class="chart-box" style="height:280px;"><canvas id="chart_forecast_weekly_orders"></canvas></div>
+        </div>
+        <div class="chart-panel">
+          <div style="font-size:12px;color:var(--ink-soft);font-weight:600;margin-bottom:8px;">จำนวนสินค้า (ชิ้น) / สัปดาห์</div>
+          <div class="chart-box" style="height:280px;"><canvas id="chart_forecast_weekly_qty"></canvas></div>
+        </div>
+      </div>
+    </div>
+ 
+    <div class="section">
+      <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>พยากรณ์รายวัน (Daily Forecast)</div>
+      <div class="section-desc">ยอดจริงย้อนหลัง 21 วัน + ประมาณการ 7 วันข้างหน้า (moving average + trend)</div>
+      <div class="grid-2">
+        <div class="chart-panel">
+          <div style="font-size:12px;color:var(--ink-soft);font-weight:600;margin-bottom:8px;">จำนวนออเดอร์ / วัน</div>
+          <div class="chart-box" style="height:280px;"><canvas id="chart_forecast_daily_orders"></canvas></div>
+        </div>
+        <div class="chart-panel">
+          <div style="font-size:12px;color:var(--ink-soft);font-weight:600;margin-bottom:8px;">จำนวนสินค้า (ชิ้น) / วัน</div>
+          <div class="chart-box" style="height:280px;"><canvas id="chart_forecast_daily_qty"></canvas></div>
+        </div>
+      </div>
     </div>
  
     <div class="section">
@@ -1403,24 +1427,29 @@ function renderTab4(){
   });
  
   const ordersByWeek = {};
+  const qtyByWeekTotal = {};
   const datesByWeek = {};
   const ordersByDate = {};
+  const qtyByDate = {};
   ALL_ROWS.forEach(r => {
     if(!r.week) return;
     const orderKey = (r.orderRef||'').trim();
+    const lineQty = parseQty(r.orderLine);
     if(orderKey){
       if(!ordersByWeek[r.week]) ordersByWeek[r.week] = new Set();
       ordersByWeek[r.week].add(orderKey);
     }
+    qtyByWeekTotal[r.week] = (qtyByWeekTotal[r.week] || 0) + lineQty;
     const d = parseDate(r.createDate);
     if(d){
       if(!datesByWeek[r.week]) datesByWeek[r.week] = [];
       datesByWeek[r.week].push(d);
+      const dateKey = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
       if(orderKey){
-        const dateKey = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
         if(!ordersByDate[dateKey]) ordersByDate[dateKey] = new Set();
         ordersByDate[dateKey].add(orderKey);
       }
+      qtyByDate[dateKey] = (qtyByDate[dateKey] || 0) + lineQty;
     }
   });
  
@@ -1464,7 +1493,28 @@ function renderTab4(){
   document.getElementById('m4_ok').textContent       = ok;
   document.getElementById('m4_total').textContent    = forecastRows.length;
  
-  renderDemandForecastChart(weekList, ordersByWeek, weekDateRange, ordersByDate);
+  // Weekly: orders forecast (double-day multiplier learned from order counts per day)
+  const weeklyOrdersDD = learnDoubleDayMultiplierByValue(mapSetToSize(ordersByDate));
+  const weeklyOrdersSeries = computeWeeklyForecastSeries(
+    weekList, weekList.reduce((acc,w)=>{ acc[w] = ordersByWeek[w] ? ordersByWeek[w].size : 0; return acc; }, {}),
+    weekDateRange, weeklyOrdersDD
+  );
+  renderTrendLineChart('chart_forecast_weekly_orders', 'forecastWeeklyOrders', weeklyOrdersSeries, 'จำนวนออเดอร์');
+  lastDoubleDayInfo = { multiplier: weeklyOrdersDD.multiplier, samples: weeklyOrdersDD.samples };
+ 
+  // Weekly: quantity forecast (double-day multiplier learned from quantity per day)
+  const weeklyQtyDD = learnDoubleDayMultiplierByValue(qtyByDate);
+  const weeklyQtySeries = computeWeeklyForecastSeries(weekList, qtyByWeekTotal, weekDateRange, weeklyQtyDD);
+  renderTrendLineChart('chart_forecast_weekly_qty', 'forecastWeeklyQty', weeklyQtySeries, 'จำนวนสินค้า (ชิ้น)');
+ 
+  // Daily: orders forecast
+  const dailyOrdersSeries = computeDailyForecastSeries(mapSetToSize(ordersByDate));
+  if(dailyOrdersSeries) renderTrendLineChart('chart_forecast_daily_orders', 'forecastDailyOrders', dailyOrdersSeries, 'จำนวนออเดอร์');
+ 
+  // Daily: quantity forecast
+  const dailyQtySeries = computeDailyForecastSeries(qtyByDate);
+  if(dailyQtySeries) renderTrendLineChart('chart_forecast_daily_qty', 'forecastDailyQty', dailyQtySeries, 'จำนวนสินค้า (ชิ้น)');
+ 
   renderForecast1wChart(forecastRows);
   renderForecast4wChart(forecastRows);
   renderForecastTable(forecastRows);
@@ -1492,21 +1542,31 @@ function countDoubleDaysInRange(start, end){
   return count;
 }
  
-function learnDoubleDayMultiplier(ordersByDate){
-  const dateKeys = Object.keys(ordersByDate).sort();
+// Converts a dateKey -> Set map (e.g. ordersByDate) into a dateKey -> count map, so the same
+// generic double-day learner / forecast helpers can work for both order counts and quantities.
+function mapSetToSize(setByDateKey){
+  const out = {};
+  Object.entries(setByDateKey).forEach(([k,v]) => { out[k] = v.size; });
+  return out;
+}
+ 
+// Generic version of the double-day learner: works on any dateKey -> numeric value map
+// (order counts or summed quantities), instead of being hardcoded to Sets of order refs.
+function learnDoubleDayMultiplierByValue(valueByDateKey){
+  const dateKeys = Object.keys(valueByDateKey).sort();
   if(!dateKeys.length) return { multiplier: null, samples: 0 };
   const ratios = [];
   dateKeys.forEach(key => {
     const d = new Date(key + 'T00:00:00');
     if(!isDoubleDay(d)) return;
-    const ddCount = ordersByDate[key].size;
+    const ddVal = valueByDateKey[key];
     let sum = 0, n = 0;
     for(let offset = 1; offset <= 7; offset++){
       const prev = new Date(d); prev.setDate(d.getDate() - offset);
       const prevKey = prev.getFullYear()+'-'+String(prev.getMonth()+1).padStart(2,'0')+'-'+String(prev.getDate()).padStart(2,'0');
-      if(ordersByDate[prevKey]){ sum += ordersByDate[prevKey].size; n++; }
+      if(valueByDateKey[prevKey] !== undefined){ sum += valueByDateKey[prevKey]; n++; }
     }
-    if(n > 0 && sum > 0) ratios.push(ddCount / (sum/n));
+    if(n > 0 && sum > 0) ratios.push(ddVal / (sum/n));
   });
   if(!ratios.length) return { multiplier: null, samples: 0 };
   const avgRatio = ratios.reduce((s,v)=>s+v,0) / ratios.length;
@@ -1519,8 +1579,12 @@ function formatDateShort(d){
   return d.getDate() + ' ' + months[d.getMonth()];
 }
  
-function renderDemandForecastChart(weekList, ordersByWeek, weekDateRange, ordersByDate){
-  const historical = weekList.map(w => (ordersByWeek[w] ? ordersByWeek[w].size : 0));
+// Builds a 4-week-ahead forecast series (moving average + linear trend + learned Double Day
+// boost) for any weekly numeric metric (order counts, quantity, etc). `ddInfo` is precomputed by
+// the caller via learnDoubleDayMultiplierByValue() on whichever daily series is most relevant
+// (order-count dates for the orders chart, quantity dates for the qty chart).
+function computeWeeklyForecastSeries(weekList, valueByWeek, weekDateRange, ddInfo){
+  const historical = weekList.map(w => valueByWeek[w] || 0);
  
   const lastN = Math.min(4, weekList.length);
   const recent = historical.slice(-lastN);
@@ -1540,9 +1604,8 @@ function renderDemandForecastChart(weekList, ordersByWeek, weekDateRange, orders
   const lastWeekNum = Number(weekList[weekList.length-1]) || weekList.length;
   const forecastLabels = [1,2,3,4].map(i => 'W'+(lastWeekNum+i)+'*');
  
-  const { multiplier: learnedMultiplier, samples: ddSamples } = learnDoubleDayMultiplier(ordersByDate);
-  const DOUBLE_DAY_BOOST = learnedMultiplier || 1;
-  lastDoubleDayInfo = { multiplier: learnedMultiplier, samples: ddSamples };
+  const DOUBLE_DAY_BOOST = (ddInfo && ddInfo.multiplier) || 1;
+  const ddSamples = (ddInfo && ddInfo.samples) || 0;
  
   const lastRange = weekDateRange ? weekDateRange[weekList[weekList.length-1]] : null;
   const lastKnownDate = lastRange ? lastRange.max : new Date();
@@ -1577,15 +1640,78 @@ function renderDemandForecastChart(weekList, ordersByWeek, weekDateRange, orders
     return r ? (formatDateShort(r.min) + ' – ' + formatDateShort(r.max)) : '';
   });
   const allRangeLabels = [...historicalRangeLabels, ...forecastRangeLabels];
- 
   const labels = [...weekList.map(w=>'W'+w), ...forecastLabels];
  
+  return { labels, historical, forecastData, allRangeLabels, doubleDayHits, DOUBLE_DAY_BOOST, ddSamples };
+}
+ 
+// Builds a 7-day-ahead forecast series (moving average of last 7 days + linear trend + learned
+// Double Day boost) for any daily numeric metric. Uses the last 21 actual days as the historical
+// window shown on the chart (or fewer if less history is available).
+function computeDailyForecastSeries(valueByDateKey){
+  const dateKeys = Object.keys(valueByDateKey).sort();
+  if(!dateKeys.length) return null;
+ 
+  const HIST_DAYS = 21, FORECAST_DAYS = 7, MA_WINDOW = 7;
+  const recentKeys = dateKeys.slice(-HIST_DAYS);
+  const historical = recentKeys.map(k => valueByDateKey[k] || 0);
+ 
+  const lastN = Math.min(MA_WINDOW, historical.length);
+  const recentVals = historical.slice(-lastN);
+  const avg = recentVals.reduce((s,v)=>s+v,0) / (lastN||1);
+ 
+  const n = historical.length;
+  let slope = 0;
+  if(n >= 2){
+    const xs = historical.map((_,i)=>i);
+    const xMean = xs.reduce((s,v)=>s+v,0)/n;
+    const yMean = historical.reduce((s,v)=>s+v,0)/n;
+    const num = xs.reduce((s,xi,i) => s + (xi-xMean)*(historical[i]-yMean), 0);
+    const den = xs.reduce((s,xi) => s + (xi-xMean)**2, 0);
+    slope = den !== 0 ? num/den : 0;
+  }
+ 
+  const { multiplier: learnedMultiplier, samples: ddSamples } = learnDoubleDayMultiplierByValue(valueByDateKey);
+  const DOUBLE_DAY_BOOST = learnedMultiplier || 1;
+ 
+  const lastDateKey = dateKeys[dateKeys.length-1];
+  const lastDate = new Date(lastDateKey + 'T00:00:00');
+ 
+  const doubleDayHits = [];
+  recentKeys.forEach((k,i) => {
+    const d = new Date(k + 'T00:00:00');
+    if(isDoubleDay(d)) doubleDayHits.push(i);
+  });
+ 
+  const forecastData = [];
+  const forecastLabels = [];
+  for(let i=1;i<=FORECAST_DAYS;i++){
+    const d = new Date(lastDate); d.setDate(lastDate.getDate()+i);
+    let val = Math.max(0, avg + slope*i);
+    const isDD = isDoubleDay(d);
+    if(isDD && DOUBLE_DAY_BOOST > 1) val *= DOUBLE_DAY_BOOST;
+    forecastData.push(Math.max(0, Math.round(val)));
+    forecastLabels.push(formatDateShort(d) + '*');
+    if(isDD) doubleDayHits.push(historical.length + i - 1);
+  }
+ 
+  const historicalLabels = recentKeys.map(k => formatDateShort(new Date(k+'T00:00:00')));
+  const labels = [...historicalLabels, ...forecastLabels];
+ 
+  return { labels, historical, forecastData, allRangeLabels: labels, doubleDayHits, DOUBLE_DAY_BOOST, ddSamples };
+}
+ 
+// Shared renderer for all 4 forecast line charts (weekly/daily × orders/qty). `series` comes from
+// computeWeeklyForecastSeries() or computeDailyForecastSeries() — same shape either way.
+function renderTrendLineChart(canvasId, chartKey, series, seriesLabel){
+  const { labels, historical, forecastData, allRangeLabels, doubleDayHits, DOUBLE_DAY_BOOST, ddSamples } = series;
   const boundaryIndex = historical.length - 1;
   const fullData = [...historical, ...forecastData];
  
-  const ctx = document.getElementById('chart_forecast_demand');
-  if(charts.forecastDemand) charts.forecastDemand.destroy();
-  const opts = baseChartOptions({ legend:true });
+  const ctx = document.getElementById(canvasId);
+  if(!ctx) return;
+  if(charts[chartKey]) charts[chartKey].destroy();
+  const opts = baseChartOptions({ legend:false });
   opts.plugins.lineDataLabels = { display:true };
   opts.layout = { padding:{ top:20 } };
   opts.plugins.tooltip = {
@@ -1593,32 +1719,31 @@ function renderDemandForecastChart(weekList, ordersByWeek, weekDateRange, orders
     callbacks:{
       title: items => {
         const idx = items[0].dataIndex;
-        const range = allRangeLabels[idx];
-        return range ? labels[idx] + ' (' + range + ')' : labels[idx];
+        const range = allRangeLabels ? allRangeLabels[idx] : null;
+        return (range && range !== labels[idx]) ? labels[idx] + ' (' + range + ')' : labels[idx];
       },
       label: ctx => {
-        const isDD = doubleDayHits.includes(labels[ctx.dataIndex]);
-        const base = ctx.dataset.label + ': ' + Number(ctx.raw).toLocaleString('en-US');
+        const isDD = doubleDayHits.includes(ctx.dataIndex);
+        const base = seriesLabel + ': ' + Number(ctx.raw).toLocaleString('en-US');
         if(!isDD) return base;
         const isForecastPoint = ctx.dataIndex > boundaryIndex;
         if(isForecastPoint && DOUBLE_DAY_BOOST > 1){
-          const multText = DOUBLE_DAY_BOOST.toFixed(1);
-          return [base, '⚡ มี Double Day ในสัปดาห์นี้ (คูณ x' + multText + ' เฉพาะวันนั้น, อ้างอิงจากข้อมูลย้อนหลัง ' + ddSamples + ' ครั้ง)'];
+          return [base, '⚡ Double Day (คูณ x' + DOUBLE_DAY_BOOST.toFixed(1) + ', เรียนรู้จาก ' + ddSamples + ' ครั้งในอดีต)'];
         }
-        return [base, '⚡ สัปดาห์นี้มี Double Day (ยอดออเดอร์จริงพุ่งจากแคมเปญ)'];
+        return [base, '⚡ วันนี้เป็น Double Day (ยอดจริงพุ่งจากแคมเปญ)'];
       }
     }
   };
-  charts.forecastDemand = new Chart(ctx, {
+  charts[chartKey] = new Chart(ctx, {
     type:'line',
     data:{ labels, datasets:[
       {
-        label:'จำนวนออเดอร์ (Orders): actual → forecast',
+        label: seriesLabel + ': actual → forecast',
         data: fullData,
         borderColor:'#7A9A3F',
         backgroundColor:'rgba(122,154,63,0.10)',
-        pointBackgroundColor: c => doubleDayHits.includes(labels[c.dataIndex]) ? '#A6432E' : (c.dataIndex <= boundaryIndex ? '#7A9A3F' : '#C89B4A'),
-        pointRadius: c => doubleDayHits.includes(labels[c.dataIndex]) ? 6 : (c.dataIndex <= boundaryIndex ? 3 : 4),
+        pointBackgroundColor: c => doubleDayHits.includes(c.dataIndex) ? '#A6432E' : (c.dataIndex <= boundaryIndex ? '#7A9A3F' : '#C89B4A'),
+        pointRadius: c => doubleDayHits.includes(c.dataIndex) ? 6 : (c.dataIndex <= boundaryIndex ? 3 : 4),
         tension:0.3, fill:true, borderWidth:2,
         segment:{
           borderColor: c => c.p0DataIndex >= boundaryIndex ? '#C89B4A' : '#7A9A3F',
@@ -1629,6 +1754,7 @@ function renderDemandForecastChart(weekList, ordersByWeek, weekDateRange, orders
     options: opts
   });
 }
+ 
  
 function buildForecastItems(forecastRows, weeks){
   return forecastRows
