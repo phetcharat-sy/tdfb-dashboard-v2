@@ -168,7 +168,7 @@
     </div>
     <div class="meta-right">
       Last updated<br><span id="lastUpdated">—</span>
-      <div style="font-size:9.5px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-05-v20-forecast-uses-expecteddelivery-date</div>
+      <div style="font-size:9.5px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-05-v21-add-day-filter-tab1-tab2</div>
       <div>
         <button class="btn-plain" id="refreshBtn" onclick="loadData()">Refresh</button>
         <button class="btn-plain" id="saveImgBtn" onclick="saveTabAsPNG()" style="margin-left:14px;">Save as PNG (แนวนอน, คมชัด)</button>
@@ -204,6 +204,7 @@
     <div class="filter-row">
       <div class="filter-field"><label>Month</label><select id="f1_month" onchange="onFilterChange()"><option value="">All</option></select></div>
       <div class="filter-field"><label>Week</label><select id="f1_week" onchange="onFilterChange()"><option value="">All</option></select></div>
+      <div class="filter-field"><label>Day</label><select id="f1_day" onchange="onFilterChange()"><option value="">All</option></select></div>
       <div class="filter-field"><label>Order Reference</label><input type="text" id="f1_orderRef" placeholder="Search order..." oninput="onFilterChange()"></div>
       <button class="filter-clear" onclick="clearFilters()">Clear filters</button>
     </div>
@@ -273,6 +274,7 @@
     <div class="filter-row">
       <div class="filter-field"><label>Month</label><select id="f2_month" onchange="onFilterChange()"><option value="">All</option></select></div>
       <div class="filter-field"><label>Week</label><select id="f2_week" onchange="onFilterChange()"><option value="">All</option></select></div>
+      <div class="filter-field"><label>Day</label><select id="f2_day" onchange="onFilterChange()"><option value="">All</option></select></div>
       <div class="filter-field"><label>WH → PK Status</label>
         <select id="f2_whstatus" onchange="onFilterChange()">
           <option value="">All</option><option value="ontime">On time</option>
@@ -496,7 +498,7 @@ const COLMAP3 = {
 let ALL_ROWS = [];
 let ALL_ROWS_3 = [];
 let charts = {};
-let filters = { month1:'', week1:'', orderRef:'', month2:'', week2:'', whstatus:'', product:'' };
+let filters = { month1:'', week1:'', day1:'', orderRef:'', month2:'', week2:'', day2:'', whstatus:'', product:'' };
 let filters3 = { status:'', product:'' };
  
 const percentDataLabelsPlugin = {
@@ -663,6 +665,22 @@ function parseDate(s){
   if(!s) return null;
   const d = new Date(s.replace(' ', 'T'));
   return isNaN(d.getTime()) ? null : d;
+}
+ 
+// Shared YYYY-MM-DD key builder (zero-padded so it also sorts correctly as a plain string).
+function toDateKey(d){
+  if(!d) return '';
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+// Day filter (tab1/tab2) is based on "วันที่ลง Odoo" (createDate) — the same field these two tabs
+// already use for sorting/latest-order display, distinct from the Forecast tab's expectedDelivery.
+function rowDayKey(r){
+  return toDateKey(parseDate(r.createDate));
+}
+function formatDateFull(d){
+  if(!d) return '';
+  const months = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  return d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
 }
  
 // FIX: Number('1,200') === NaN in JS, so any comma-formatted or blank value in the "Order Line"
@@ -849,6 +867,7 @@ async function saveTabAsPNG(){
 function populateFilterOptions(){
   const months = [...new Set(ALL_ROWS.map(r=>r.month).filter(Boolean))].sort((a,b)=> MONTH_ORDER.indexOf(a) - MONTH_ORDER.indexOf(b));
   const weeks = [...new Set(ALL_ROWS.map(r=>r.week).filter(Boolean))].sort((a,b)=> Number(a)-Number(b));
+  const dayKeys = [...new Set(ALL_ROWS.map(r=>rowDayKey(r)).filter(Boolean))].sort();
   ['f1_month','f2_month'].forEach(id=>{
     const el = document.getElementById(id);
     el.innerHTML = '<option value="">All</option>' + months.map(m=>'<option value="'+escapeHtml(m)+'">'+escapeHtml(m)+'</option>').join('');
@@ -857,23 +876,32 @@ function populateFilterOptions(){
     const el = document.getElementById(id);
     el.innerHTML = '<option value="">All</option>' + weeks.map(w=>'<option value="'+escapeHtml(w)+'">Week '+escapeHtml(w)+'</option>').join('');
   });
+  ['f1_day','f2_day'].forEach(id=>{
+    const el = document.getElementById(id);
+    el.innerHTML = '<option value="">All</option>' + dayKeys.map(k=>{
+      const label = formatDateFull(new Date(k + 'T00:00:00'));
+      return '<option value="'+escapeHtml(k)+'">'+escapeHtml(label)+'</option>';
+    }).join('');
+  });
 }
  
 function onFilterChange(){
   filters.month1 = document.getElementById('f1_month').value;
   filters.week1 = document.getElementById('f1_week').value;
+  filters.day1 = document.getElementById('f1_day').value;
   filters.orderRef = document.getElementById('f1_orderRef').value;
   filters.month2 = document.getElementById('f2_month').value;
   filters.week2 = document.getElementById('f2_week').value;
+  filters.day2 = document.getElementById('f2_day').value;
   filters.whstatus = document.getElementById('f2_whstatus').value;
   filters.product = document.getElementById('f2_product').value;
   renderAll();
 }
  
 function clearFilters(){
-  ['f1_month','f1_week','f2_month','f2_week','f2_whstatus'].forEach(id=>document.getElementById(id).value='');
+  ['f1_month','f1_week','f1_day','f2_month','f2_week','f2_day','f2_whstatus'].forEach(id=>document.getElementById(id).value='');
   ['f1_orderRef','f2_product'].forEach(id=>document.getElementById(id).value='');
-  filters = { month1:'', week1:'', orderRef:'', month2:'', week2:'', whstatus:'', product:'' };
+  filters = { month1:'', week1:'', day1:'', orderRef:'', month2:'', week2:'', day2:'', whstatus:'', product:'' };
   renderAll();
 }
  
@@ -1076,6 +1104,7 @@ function getTab1Rows(){
   return ALL_ROWS.filter(r =>
     (!filters.month1 || r.month === filters.month1) &&
     (!filters.week1 || r.week === filters.week1) &&
+    (!filters.day1 || rowDayKey(r) === filters.day1) &&
     (!filters.orderRef || r.orderRef.toLowerCase().includes(filters.orderRef.toLowerCase()))
   );
 }
@@ -1256,6 +1285,7 @@ function getTab2Rows(){
   return ALL_ROWS.filter(r =>
     (!filters.month2 || r.month === filters.month2) &&
     (!filters.week2 || r.week === filters.week2) &&
+    (!filters.day2 || rowDayKey(r) === filters.day2) &&
     (!filters.whstatus || classify(r.whStatus) === filters.whstatus) &&
     (!filters.product || r.product.toLowerCase().includes(filters.product.toLowerCase()))
   );
