@@ -168,7 +168,7 @@
     </div>
     <div class="meta-right">
       Last updated<br><span id="lastUpdated">—</span>
-      <div style="font-size:11px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-05-v37-monthly-forecast-expecteddelivery-exclude-partial-month</div>
+      <div style="font-size:11px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-05-v38-daily-forecast-with-interval-display</div>
       <div>
         <button class="btn-plain" id="refreshBtn" onclick="loadData()">Refresh</button>
         <button class="btn-plain" id="saveImgBtn" onclick="saveTabAsPNG()" style="margin-left:14px;">Save as PNG (แนวนอน, คมชัด)</button>
@@ -430,23 +430,23 @@
     </div>
  
     <div class="section">
-      <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>พยากรณ์รายเดือน (Monthly Forecast)</div>
-      <div class="section-desc">ยอดจริงตั้งแต่ ม.ค. 2569 ถึงเดือนที่ผ่านมาล่าสุด (นับตามวันที่ต้องการจัดส่ง, รวมเป็นรายเดือน) + ประมาณการเดือนปัจจุบันและ 2 เดือนถัดไป</div>
+      <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>พยากรณ์รายวัน (Daily Forecast)</div>
+      <div class="section-desc">ยอดจริงตั้งแต่ ม.ค. 2569 ถึงวันล่าสุด (นับตามวันที่ต้องการจัดส่ง) + ประมาณการ 7 วันข้างหน้า — แสดงผลทุก 5 วัน (คำนวณจริงทุกวัน แค่ไม่โชว์ทุกจุดกันรก)</div>
       <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--ink-faint);background:var(--panel);border:1px solid var(--hairline);border-radius:10px;padding:12px 16px;margin-bottom:16px;line-height:1.8;">
-        <b style="color:var(--ink-soft);">วิธีคิด:</b> Holt's Exponential Smoothing (Level + Trend สองตัวปรับตัวแบบ exponential ทีละเดือน)<br>
-        <code>Level(t) = 0.3 × ยอดจริงเดือน(t) + 0.7 × (Level(t-1) + Trend(t-1))</code><br>
+        <b style="color:var(--ink-soft);">วิธีคิด:</b> Holt's Exponential Smoothing (Level + Trend สองตัวปรับตัวแบบ exponential ทีละวัน — คำนวณจากทุกวันจริง ไม่ข้าม)<br>
+        <code>Level(t) = 0.3 × ค่าจริง(t) + 0.7 × (Level(t-1) + Trend(t-1))</code><br>
         <code>Trend(t) = 0.15 × (Level(t) − Level(t-1)) + 0.85 × Trend(t-1)</code><br>
-        <code>พยากรณ์(h เดือนข้างหน้า) = Level(เดือนล่าสุด) + Trend(เดือนล่าสุด) × h</code><br>
-        (ไม่มี Double Day boost ในมุมมองรายเดือน เพราะทุกเดือนมี Double Day ของตัวเองอยู่แล้ว เช่น ส.ค. มี 8.8 — ผลกระทบถูกรวมอยู่ในยอดเดือนนั้นตามจริง)<br>
-        (เดือนปัจจุบันที่ยังไม่จบเดือน จะไม่ถูกนับเป็นข้อมูลจริงในการหา Level/Trend แต่จะโผล่เป็นค่าพยากรณ์ตัวแรกแทน เพื่อไม่ให้ยอดที่ยังไม่ครบเดือนไปทำให้ trend เพี้ยน)
+        <code>พยากรณ์(h วันข้างหน้า) = Level(วันล่าสุด) + Trend(วันล่าสุด) × h</code><br>
+        + Double Day boost: ถ้าวันที่พยากรณ์ตรงกับ Double Day จะคูณตามอัตราที่เรียนรู้จากประวัติ (สูงสุด 3 เท่า, ต้องมีตัวอย่างในอดีต ≥ 2 ครั้งถึงจะเชื่อถือได้)<br>
+        <i>หมายเหตุ: กราฟแสดงจุดทุก 5 วัน (เพื่อไม่ให้รกเกินไป) แต่ตัวเลข Level/Trend คำนวณจากข้อมูลทุกวันจริงเสมอ ไม่ได้ข้าม</i>
       </div>
       <div class="grid-2">
         <div class="chart-panel">
-          <div style="font-size:14px;color:var(--ink-soft);font-weight:600;margin-bottom:8px;">จำนวนออเดอร์ / เดือน</div>
+          <div style="font-size:14px;color:var(--ink-soft);font-weight:600;margin-bottom:8px;">จำนวนออเดอร์ / วัน</div>
           <div class="chart-box" style="height:280px;"><canvas id="chart_forecast_daily_orders"></canvas></div>
         </div>
         <div class="chart-panel">
-          <div style="font-size:14px;color:var(--ink-soft);font-weight:600;margin-bottom:8px;">จำนวนสินค้า (ชิ้น) / เดือน</div>
+          <div style="font-size:14px;color:var(--ink-soft);font-weight:600;margin-bottom:8px;">จำนวนสินค้า (ชิ้น) / วัน</div>
           <div class="chart-box" style="height:280px;"><canvas id="chart_forecast_daily_qty"></canvas></div>
         </div>
       </div>
@@ -1725,13 +1725,13 @@ function renderTab4(){
   const weeklyQtySeries = computeWeeklyForecastSeries(weekList, qtyByWeekTotal, weekDateRange, weeklyQtyDD);
   renderTrendLineChart('chart_forecast_weekly_qty', 'forecastWeeklyQty', weeklyQtySeries, 'จำนวนสินค้า (ชิ้น)');
  
-  // Monthly: orders forecast (was daily — too many points caused visual clutter)
-  const monthlyOrdersSeries = computeMonthlyForecastSeries(mapSetToSize(ordersByDate));
-  if(monthlyOrdersSeries) renderTrendLineChart('chart_forecast_daily_orders', 'forecastMonthlyOrders', monthlyOrdersSeries, 'จำนวนออเดอร์');
+  // Daily: orders forecast (Holt's smoothing fit on full daily data, displayed every 5th day)
+  const dailyOrdersSeries = computeDailyForecastSeries(mapSetToSize(ordersByDate));
+  if(dailyOrdersSeries) renderTrendLineChart('chart_forecast_daily_orders', 'forecastDailyOrders', dailyOrdersSeries, 'จำนวนออเดอร์');
  
-  // Monthly: quantity forecast
-  const monthlyQtySeries = computeMonthlyForecastSeries(qtyByDate);
-  if(monthlyQtySeries) renderTrendLineChart('chart_forecast_daily_qty', 'forecastMonthlyQty', monthlyQtySeries, 'จำนวนสินค้า (ชิ้น)');
+  // Daily: quantity forecast
+  const dailyQtySeries = computeDailyForecastSeries(qtyByDate);
+  if(dailyQtySeries) renderTrendLineChart('chart_forecast_daily_qty', 'forecastDailyQty', dailyQtySeries, 'จำนวนสินค้า (ชิ้น)');
  
   renderForecast1wChart(forecastRows);
   renderForecast4wChart(forecastRows);
@@ -1891,64 +1891,81 @@ function computeWeeklyForecastSeries(weekList, valueByWeek, weekDateRange, ddInf
 // (createDate-based, dense/complete) but shows a much more readable trend. Double Day boosting is
 // dropped at this granularity — every calendar month contains exactly one Double Day (1.1, 2.2,
 // ... 8.8, etc.), so it's no longer a distinguishing signal the way it is at daily/weekly zoom.
-function computeMonthlyForecastSeries(valueByDateKey){
+// Restores the daily-granularity Holt's Exponential Smoothing model (per user request — they
+// want day-by-day forecasting, not monthly), while solving the earlier visual-clutter complaint
+// differently this time: the smoothing itself still fits on EVERY single day (full accuracy), but
+// the chart only DISPLAYS every DISPLAY_INTERVAL-th historical day (plus always the most recent
+// day) to keep the x-axis readable. The 7-day forecast still shows every individual day, since
+// that's a short window where daily detail is genuinely useful.
+function computeDailyForecastSeries(valueByDateKey){
   const todayKey = toDateKey(new Date());
-  const currentMonthKey = todayKey.slice(0,7);
-  // FIX: only count 2026-01 onward — a stray data point from before then (e.g. a single test/
-  // leftover order) was skewing Holt's trend badly, since it created a huge fake jump right at
-  // the start of the series.
   const HIST_START_KEY = '2026-01-01';
-  const pastKeys = Object.keys(valueByDateKey).filter(k => k >= HIST_START_KEY && k <= todayKey);
+  const pastKeys = Object.keys(valueByDateKey).filter(k => k >= HIST_START_KEY && k <= todayKey).sort();
   if(!pastKeys.length) return null;
  
-  const monthTotals = {};
-  pastKeys.forEach(k => {
-    const monthKey = k.slice(0,7); // 'YYYY-MM'
-    monthTotals[monthKey] = (monthTotals[monthKey] || 0) + (valueByDateKey[k] || 0);
-  });
-  // FIX: the current calendar month is still in progress (e.g. only 6 of 31 days recorded so
-  // far), so its total looks like a sudden sharp drop next to fully-completed months — feeding
-  // that into Holt's smoothing as if it were a real data point badly distorts the trend. Drop it
-  // from the historical/fitting series; the forecast will start from the current month instead.
-  delete monthTotals[currentMonthKey];
-  const monthKeys = Object.keys(monthTotals).sort();
-  if(!monthKeys.length) return null;
-  const historical = monthKeys.map(k => monthTotals[k]);
+  const FORECAST_DAYS = 7;
+  const lastDateKey = pastKeys[pastKeys.length-1];
+  const lastDate = new Date(lastDateKey + 'T00:00:00');
+  const startDate = new Date(HIST_START_KEY + 'T00:00:00');
+  const totalDays = Math.round((lastDate - startDate) / 86400000) + 1;
+  const allDayKeys = [];
+  for(let i = 0; i < totalDays; i++){
+    const d = new Date(startDate); d.setDate(startDate.getDate() + i);
+    allDayKeys.push(toDateKey(d));
+  }
+  const allDayValues = allDayKeys.map(k => valueByDateKey[k] || 0);
  
-  const FORECAST_MONTHS = 3;
+  // --- Holt's linear exponential smoothing, fit on the FULL daily series ---
   const ALPHA = 0.3, BETA = 0.15;
-  let level = historical[0];
-  let trend = historical.length > 1 ? (historical[1] - historical[0]) : 0;
-  for(let i = 1; i < historical.length; i++){
-    const value = historical[i];
+  let level = allDayValues[0];
+  let trend = allDayValues.length > 1 ? (allDayValues[1] - allDayValues[0]) : 0;
+  for(let i = 1; i < allDayValues.length; i++){
+    const value = allDayValues[i];
     const prevLevel = level;
     level = ALPHA*value + (1-ALPHA)*(level + trend);
     trend = BETA*(level - prevLevel) + (1-BETA)*trend;
   }
  
-  const monthNamesTh = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
-  const historicalLabels = monthKeys.map(k => {
-    const [y, m] = k.split('-').map(Number);
-    return monthNamesTh[m-1] + ' ' + y;
+  const pastOnlyValues = {};
+  pastKeys.forEach(k => { pastOnlyValues[k] = valueByDateKey[k]; });
+  const { multiplier: learnedMultiplier, samples: ddSamples } = learnDoubleDayMultiplierByValue(pastOnlyValues);
+  const DOUBLE_DAY_BOOST = learnedMultiplier || 1;
+ 
+  // --- Downsample for display only: every 5th day, always including the most recent day ---
+  const DISPLAY_INTERVAL = 5;
+  const displayIdx = [];
+  for(let i = 0; i < allDayKeys.length; i += DISPLAY_INTERVAL) displayIdx.push(i);
+  if(displayIdx[displayIdx.length-1] !== allDayKeys.length-1) displayIdx.push(allDayKeys.length-1);
+ 
+  const recentKeys = displayIdx.map(i => allDayKeys[i]);
+  const historical = displayIdx.map(i => allDayValues[i]);
+ 
+  const doubleDayHits = [];
+  recentKeys.forEach((k,i) => {
+    const d = new Date(k + 'T00:00:00');
+    if(isDoubleDay(d)) doubleDayHits.push(i);
   });
  
-  const [lastY, lastM] = monthKeys[monthKeys.length-1].split('-').map(Number); // lastM is 1-indexed
-  const forecastLabels = [];
   const forecastData = [];
-  for(let i = 1; i <= FORECAST_MONTHS; i++){
-    let mIdx = (lastM - 1) + i; // 0-indexed month
-    const y = lastY + Math.floor(mIdx / 12);
-    const m = ((mIdx % 12) + 12) % 12;
-    forecastLabels.push(monthNamesTh[m] + ' ' + y + '*');
-    forecastData.push(Math.max(0, Math.round(level + trend*i)));
+  const forecastLabels = [];
+  for(let i=1;i<=FORECAST_DAYS;i++){
+    const d = new Date(lastDate); d.setDate(lastDate.getDate()+i);
+    let val = Math.max(0, level + trend*i);
+    const isDD = isDoubleDay(d);
+    if(isDD && DOUBLE_DAY_BOOST > 1) val *= DOUBLE_DAY_BOOST;
+    forecastData.push(Math.max(0, Math.round(val)));
+    forecastLabels.push(formatDateShort(d) + '*');
+    if(isDD) doubleDayHits.push(historical.length + i - 1);
   }
  
+  const historicalLabels = recentKeys.map(k => formatDateShort(new Date(k+'T00:00:00')));
   const labels = [...historicalLabels, ...forecastLabels];
-  return { labels, historical, forecastData, allRangeLabels: labels, doubleDayHits: [], DOUBLE_DAY_BOOST: 1, ddSamples: 0 };
+ 
+  return { labels, historical, forecastData, allRangeLabels: labels, doubleDayHits, DOUBLE_DAY_BOOST, ddSamples };
 }
  
 // Shared renderer for all 4 forecast line charts (weekly/monthly × orders/qty). `series` comes
-// from computeWeeklyForecastSeries() or computeMonthlyForecastSeries() — same shape either way.
+// from computeWeeklyForecastSeries() or computeDailyForecastSeries() — same shape either way.
 function renderTrendLineChart(canvasId, chartKey, series, seriesLabel){
   const { labels, historical, forecastData, allRangeLabels, doubleDayHits, DOUBLE_DAY_BOOST, ddSamples } = series;
   const boundaryIndex = historical.length - 1;
