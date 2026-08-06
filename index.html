@@ -168,7 +168,7 @@
     </div>
     <div class="meta-right">
       Last updated<br><span id="lastUpdated">—</span>
-      <div style="font-size:9.5px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-05-v17-exclude-coupon-discount-productcard-docs</div>
+      <div style="font-size:9.5px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-05-v19-fix-daily-agg-not-gated-by-week-field</div>
       <div>
         <button class="btn-plain" id="refreshBtn" onclick="loadData()">Refresh</button>
         <button class="btn-plain" id="saveImgBtn" onclick="saveTabAsPNG()" style="margin-left:14px;">Save as PNG (แนวนอน, คมชัด)</button>
@@ -1478,24 +1478,34 @@ function renderTab4(){
   const ordersByDate = {};
   const qtyByDate = {};
   ALL_ROWS.forEach(r => {
-    if(!r.week) return;
     const orderKey = (r.orderRef||'').trim();
     const lineQty = parseQty(r.orderLine);
-    if(orderKey){
-      if(!ordersByWeek[r.week]) ordersByWeek[r.week] = new Set();
-      ordersByWeek[r.week].add(orderKey);
-    }
-    qtyByWeekTotal[r.week] = (qtyByWeekTotal[r.week] || 0) + lineQty;
     const d = parseDate(r.createDate);
+ 
+    // FIX: daily aggregation only needs a valid date — it must NOT be skipped just because the
+    // Week column is blank for that row. Previously this whole loop started with
+    // `if(!r.week) return;`, which silently dropped such rows from ordersByDate/qtyByDate too,
+    // making the "actual" (non-forecast) portion of the Daily Forecast charts undercount real
+    // orders/quantity on any day where some rows had no Week tag.
     if(d){
-      if(!datesByWeek[r.week]) datesByWeek[r.week] = [];
-      datesByWeek[r.week].push(d);
       const dateKey = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
       if(orderKey){
         if(!ordersByDate[dateKey]) ordersByDate[dateKey] = new Set();
         ordersByDate[dateKey].add(orderKey);
       }
       qtyByDate[dateKey] = (qtyByDate[dateKey] || 0) + lineQty;
+    }
+ 
+    // Weekly aggregation still requires the Week column (used for the weekly forecast charts).
+    if(!r.week) return;
+    if(orderKey){
+      if(!ordersByWeek[r.week]) ordersByWeek[r.week] = new Set();
+      ordersByWeek[r.week].add(orderKey);
+    }
+    qtyByWeekTotal[r.week] = (qtyByWeekTotal[r.week] || 0) + lineQty;
+    if(d){
+      if(!datesByWeek[r.week]) datesByWeek[r.week] = [];
+      datesByWeek[r.week].push(d);
     }
   });
  
@@ -1565,9 +1575,11 @@ function renderTab4(){
   renderForecast4wChart(forecastRows);
   renderForecastTable(forecastRows);
  
-  const ddNote = lastDoubleDayInfo.samples > 0
+  const ddNote = lastDoubleDayInfo.multiplier
     ? (' · Double Day boost ×' + lastDoubleDayInfo.multiplier.toFixed(1) + ' (เรียนรู้จาก ' + lastDoubleDayInfo.samples + ' ครั้งในอดีต)')
-    : ' · ยังไม่พบข้อมูล Double Day ในอดีต (ไม่มีการ boost)';
+    : (lastDoubleDayInfo.samples > 0
+        ? (' · พบ Double Day ในอดีตแค่ ' + lastDoubleDayInfo.samples + ' ครั้ง (ยังน้อยเกินไปที่จะเชื่อถือได้ — ไม่มีการ boost)')
+        : ' · ยังไม่พบข้อมูล Double Day ในอดีต (ไม่มีการ boost)');
   document.getElementById('tab4_footer').textContent =
     forecastRows.length + ' products · ' + numWeeks + ' weeks of history' + ddNote + ' · updated ' + new Date().toLocaleString('en-GB');
 }
@@ -1598,6 +1610,15 @@ function mapSetToSize(setByDateKey){
  
 // Generic version of the double-day learner: works on any dateKey -> numeric value map
 // (order counts or summed quantities), instead of being hardcoded to Sets of order refs.
+// FIX: with only 1-2 historical Double Days to learn from, a single unusually spiky sample could
+// push the learned multiplier to an extreme value (e.g. 8-10x), producing an unrealistic single-
+// day spike in the forecast that snaps back the next day. Two guards added:
+//   1. Require at least MIN_SAMPLES historical Double Days before trusting the learned ratio at
+//      all — with fewer, fall back to no boost (1x) rather than extrapolate from noise.
+//   2. Cap the averaged ratio at MAX_MULTIPLIER so even a valid-but-extreme sample can't blow up
+//      the forecast disproportionately to everything else on the chart.
+const DOUBLE_DAY_MIN_SAMPLES = 2;
+const DOUBLE_DAY_MAX_MULTIPLIER = 3;
 function learnDoubleDayMultiplierByValue(valueByDateKey){
   const dateKeys = Object.keys(valueByDateKey).sort();
   if(!dateKeys.length) return { multiplier: null, samples: 0 };
@@ -1614,9 +1635,10 @@ function learnDoubleDayMultiplierByValue(valueByDateKey){
     }
     if(n > 0 && sum > 0) ratios.push(ddVal / (sum/n));
   });
-  if(!ratios.length) return { multiplier: null, samples: 0 };
+  if(ratios.length < DOUBLE_DAY_MIN_SAMPLES) return { multiplier: null, samples: ratios.length };
   const avgRatio = ratios.reduce((s,v)=>s+v,0) / ratios.length;
-  return { multiplier: avgRatio, samples: ratios.length };
+  const cappedRatio = Math.min(avgRatio, DOUBLE_DAY_MAX_MULTIPLIER);
+  return { multiplier: cappedRatio, samples: ratios.length };
 }
  
 function formatDateShort(d){
