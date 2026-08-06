@@ -168,7 +168,7 @@
     </div>
     <div class="meta-right">
       Last updated<br><span id="lastUpdated">—</span>
-      <div style="font-size:11px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-05-v36-monthly-forecast-instead-of-daily</div>
+      <div style="font-size:11px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-05-v37-monthly-forecast-expecteddelivery-exclude-partial-month</div>
       <div>
         <button class="btn-plain" id="refreshBtn" onclick="loadData()">Refresh</button>
         <button class="btn-plain" id="saveImgBtn" onclick="saveTabAsPNG()" style="margin-left:14px;">Save as PNG (แนวนอน, คมชัด)</button>
@@ -431,13 +431,14 @@
  
     <div class="section">
       <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>พยากรณ์รายเดือน (Monthly Forecast)</div>
-      <div class="section-desc">ยอดจริงตั้งแต่ ม.ค. 2569 ถึงเดือนล่าสุด (นับตามวันที่ลง Odoo, รวมเป็นรายเดือน) + ประมาณการ 3 เดือนข้างหน้า</div>
+      <div class="section-desc">ยอดจริงตั้งแต่ ม.ค. 2569 ถึงเดือนที่ผ่านมาล่าสุด (นับตามวันที่ต้องการจัดส่ง, รวมเป็นรายเดือน) + ประมาณการเดือนปัจจุบันและ 2 เดือนถัดไป</div>
       <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--ink-faint);background:var(--panel);border:1px solid var(--hairline);border-radius:10px;padding:12px 16px;margin-bottom:16px;line-height:1.8;">
         <b style="color:var(--ink-soft);">วิธีคิด:</b> Holt's Exponential Smoothing (Level + Trend สองตัวปรับตัวแบบ exponential ทีละเดือน)<br>
         <code>Level(t) = 0.3 × ยอดจริงเดือน(t) + 0.7 × (Level(t-1) + Trend(t-1))</code><br>
         <code>Trend(t) = 0.15 × (Level(t) − Level(t-1)) + 0.85 × Trend(t-1)</code><br>
         <code>พยากรณ์(h เดือนข้างหน้า) = Level(เดือนล่าสุด) + Trend(เดือนล่าสุด) × h</code><br>
-        (ไม่มี Double Day boost ในมุมมองรายเดือน เพราะทุกเดือนมี Double Day ของตัวเองอยู่แล้ว เช่น ส.ค. มี 8.8 — ผลกระทบถูกรวมอยู่ในยอดเดือนนั้นตามจริง)
+        (ไม่มี Double Day boost ในมุมมองรายเดือน เพราะทุกเดือนมี Double Day ของตัวเองอยู่แล้ว เช่น ส.ค. มี 8.8 — ผลกระทบถูกรวมอยู่ในยอดเดือนนั้นตามจริง)<br>
+        (เดือนปัจจุบันที่ยังไม่จบเดือน จะไม่ถูกนับเป็นข้อมูลจริงในการหา Level/Trend แต่จะโผล่เป็นค่าพยากรณ์ตัวแรกแทน เพื่อไม่ให้ยอดที่ยังไม่ครบเดือนไปทำให้ trend เพี้ยน)
       </div>
       <div class="grid-2">
         <div class="chart-panel">
@@ -1656,10 +1657,10 @@ function renderTab4(){
       }
     }
  
-    // Daily: switched from "วันที่ต้องการจัดส่ง" to "วันที่ลง Odoo" (createDate) per user decision —
-    // expectedDelivery is too sparse (many rows blank), which kept producing chart gaps/jumps.
-    // createDate has continuous, complete coverage across the whole history.
-    const d = parseDate(r.createDate);
+    // Monthly Forecast: switched back to "วันที่ต้องการจัดส่ง" (expectedDelivery) per user
+    // confirmation — now that the DD/MM/YYYY parsing bug is fixed (v34), this field should parse
+    // correctly and reflect the daily order coverage the person says genuinely exists.
+    const d = parseDate(r.expectedDelivery);
     if(d){
       const dateKey = toDateKey(d);
       if(orderKey){
@@ -1892,7 +1893,12 @@ function computeWeeklyForecastSeries(weekList, valueByWeek, weekDateRange, ddInf
 // ... 8.8, etc.), so it's no longer a distinguishing signal the way it is at daily/weekly zoom.
 function computeMonthlyForecastSeries(valueByDateKey){
   const todayKey = toDateKey(new Date());
-  const pastKeys = Object.keys(valueByDateKey).filter(k => k <= todayKey);
+  const currentMonthKey = todayKey.slice(0,7);
+  // FIX: only count 2026-01 onward — a stray data point from before then (e.g. a single test/
+  // leftover order) was skewing Holt's trend badly, since it created a huge fake jump right at
+  // the start of the series.
+  const HIST_START_KEY = '2026-01-01';
+  const pastKeys = Object.keys(valueByDateKey).filter(k => k >= HIST_START_KEY && k <= todayKey);
   if(!pastKeys.length) return null;
  
   const monthTotals = {};
@@ -1900,7 +1906,13 @@ function computeMonthlyForecastSeries(valueByDateKey){
     const monthKey = k.slice(0,7); // 'YYYY-MM'
     monthTotals[monthKey] = (monthTotals[monthKey] || 0) + (valueByDateKey[k] || 0);
   });
+  // FIX: the current calendar month is still in progress (e.g. only 6 of 31 days recorded so
+  // far), so its total looks like a sudden sharp drop next to fully-completed months — feeding
+  // that into Holt's smoothing as if it were a real data point badly distorts the trend. Drop it
+  // from the historical/fitting series; the forecast will start from the current month instead.
+  delete monthTotals[currentMonthKey];
   const monthKeys = Object.keys(monthTotals).sort();
+  if(!monthKeys.length) return null;
   const historical = monthKeys.map(k => monthTotals[k]);
  
   const FORECAST_MONTHS = 3;
