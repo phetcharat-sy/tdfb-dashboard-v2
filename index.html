@@ -168,7 +168,7 @@
     </div>
     <div class="meta-right">
       Last updated<br><span id="lastUpdated">—</span>
-      <div style="font-size:9.5px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-05-v31-daily-forecast-skip-blank-days-not-zero-fill</div>
+      <div style="font-size:9.5px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-05-v34-fix-critical-ddmmyyyy-date-parsing-bug</div>
       <div>
         <button class="btn-plain" id="refreshBtn" onclick="loadData()">Refresh</button>
         <button class="btn-plain" id="saveImgBtn" onclick="saveTabAsPNG()" style="margin-left:14px;">Save as PNG (แนวนอน, คมชัด)</button>
@@ -431,7 +431,7 @@
  
     <div class="section">
       <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>พยากรณ์รายวัน (Daily Forecast)</div>
-      <div class="section-desc">ยอดจริง 21 วันล่าสุดที่มีข้อมูล (นับตามวันที่ต้องการจัดส่ง, วันที่ไม่มีข้อมูลจะไม่ถูกนับ) + ประมาณการ 7 วันข้างหน้า</div>
+      <div class="section-desc">ยอดจริงตั้งแต่ 1 ม.ค. 2569 ถึงวันล่าสุด (นับตามวันที่ลง Odoo) + ประมาณการ 7 วันข้างหน้า</div>
       <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-faint);background:var(--panel);border:1px solid var(--hairline);border-radius:10px;padding:10px 14px;margin-bottom:16px;line-height:1.7;">
         <b style="color:var(--ink-soft);">วิธีคิด:</b> Holt's Exponential Smoothing (Level + Trend สองตัวปรับตัวแบบ exponential ทีละวัน)<br>
         <code>Level(t) = 0.3 × ค่าจริง(t) + 0.7 × (Level(t-1) + Trend(t-1))</code><br>
@@ -683,9 +683,29 @@ function mapRows3(rawRows){
   }).filter(r => r.product && !isExcludedProductName(r.product));
 }
  
+// FIX: JS's native Date constructor assumes MM/DD/YYYY for slash-separated date strings. But
+// "วันที่ต้องการจัดส่ง" (and possibly other date columns) are stored as DD/MM/YYYY — e.g.
+// "21/01/2026". That silently broke in TWO ways: any day >12 (13–31) is not a valid month, so
+// `new Date(...)` returned Invalid Date and the row was dropped entirely; any day <=12 parsed
+// "successfully" but with month and day SWAPPED (e.g. "05/01/2026" became May 1 instead of Jan
+// 5) — a wrong date with no error, silently corrupting every date-based chart/filter that used
+// it. This was the real cause of the "sparse"/jumping dates seen throughout the Forecast tab —
+// not missing data, but almost all of it being misread. Now explicitly parsed as DD/MM/YYYY
+// first; only falls back to the original ISO-ish parsing for any other format (e.g. createDate's
+// "YYYY-MM-DD HH:mm:ss").
 function parseDate(s){
   if(!s) return null;
-  const d = new Date(s.replace(' ', 'T'));
+  const str = s.trim();
+  const dmy = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:[ T](\d{1,2}):(\d{2})(?::(\d{2}))?)?$/);
+  if(dmy){
+    const [, dd, mm, yyyy, hh, mi, ss] = dmy;
+    const d = new Date(
+      Number(yyyy), Number(mm)-1, Number(dd),
+      hh?Number(hh):0, mi?Number(mi):0, ss?Number(ss):0
+    );
+    return isNaN(d.getTime()) ? null : d;
+  }
+  const d = new Date(str.replace(' ', 'T'));
   return isNaN(d.getTime()) ? null : d;
 }
  
@@ -1636,9 +1656,10 @@ function renderTab4(){
       }
     }
  
-    // Daily: grouped by "วันที่ต้องการจัดส่ง" (expectedDelivery) only. Blank/unparseable dates are
-    // excluded from the daily charts entirely, but do NOT affect the weekly counts/date-range above.
-    const d = parseDate(r.expectedDelivery);
+    // Daily: switched from "วันที่ต้องการจัดส่ง" to "วันที่ลง Odoo" (createDate) per user decision —
+    // expectedDelivery is too sparse (many rows blank), which kept producing chart gaps/jumps.
+    // createDate has continuous, complete coverage across the whole history.
+    const d = parseDate(r.createDate);
     if(d){
       const dateKey = toDateKey(d);
       if(orderKey){
@@ -1821,12 +1842,12 @@ function computeWeeklyForecastSeries(weekList, valueByWeek, weekDateRange, ddInf
   const doubleDayHits = [];
  
   const MAX_PLAUSIBLE_WEEK_SPAN_DAYS = 10;
-  weekList.forEach(w => {
+  weekList.forEach((w, idx) => {
     const r = weekDateRange ? weekDateRange[w] : null;
     if(!r) return;
     const spanDays = (r.max - r.min) / 86400000;
     if(spanDays > MAX_PLAUSIBLE_WEEK_SPAN_DAYS) return;
-    if(countDoubleDaysInRange(r.min, r.max) > 0) doubleDayHits.push('W'+w);
+    if(countDoubleDaysInRange(r.min, r.max) > 0) doubleDayHits.push(idx);
   });
  
   const forecastRangeLabels = [];
@@ -1838,7 +1859,7 @@ function computeWeeklyForecastSeries(weekList, valueByWeek, weekDateRange, ddInf
     const ddCount = countDoubleDaysInRange(start, end);
     if(ddCount > 0){
       if(DOUBLE_DAY_BOOST > 1) val += dailyBaseline * (DOUBLE_DAY_BOOST - 1) * ddCount;
-      doubleDayHits.push('W'+(lastWeekNum+i));
+      doubleDayHits.push(weekList.length + i - 1);
     }
     return Math.max(0, Math.round(val));
   });
@@ -1866,18 +1887,28 @@ function computeWeeklyForecastSeries(weekList, valueByWeek, weekDateRange, ddInf
 // instead of a flat moving-average + separate linear-regression slope.
 function computeDailyForecastSeries(valueByDateKey){
   const todayKey = toDateKey(new Date());
-  const pastKeys = Object.keys(valueByDateKey).filter(k => k <= todayKey).sort();
+  // Per user request: use the full history from 2026-01-01 through today, not just a recent
+  // window — now feasible since the daily basis switched to createDate (dense, continuous data).
+  const HIST_START_KEY = '2026-01-01';
+  const pastKeys = Object.keys(valueByDateKey)
+    .filter(k => k >= HIST_START_KEY && k <= todayKey)
+    .sort();
   if(!pastKeys.length) return null;
  
-  const HIST_DAYS = 21, FORECAST_DAYS = 7;
-  // FIX (per user request): blank/no-data days should NOT be counted at all — not even as 0 —
-  // since that would still pull the smoothed level/trend toward zero. Only days that genuinely
-  // have a value in the source data are included in the historical series; if that leaves gaps
-  // in the calendar, the x-axis simply skips those days (accepted tradeoff vs. faking zeros).
-  const recentKeys = pastKeys.slice(-HIST_DAYS);
-  const historical = recentKeys.map(k => valueByDateKey[k]);
+  const FORECAST_DAYS = 7;
+  // Historical series is every day from HIST_START_KEY to the latest day with data (continuous
+  // calendar days, 0-filled for any day with no orders) — createDate is dense enough that this
+  // reflects real day-to-day activity rather than manufacturing artificial gaps.
   const lastDateKey = pastKeys[pastKeys.length-1];
   const lastDate = new Date(lastDateKey + 'T00:00:00');
+  const startDate = new Date(HIST_START_KEY + 'T00:00:00');
+  const totalDays = Math.round((lastDate - startDate) / 86400000) + 1;
+  const recentKeys = [];
+  for(let i = 0; i < totalDays; i++){
+    const d = new Date(startDate); d.setDate(startDate.getDate() + i);
+    recentKeys.push(toDateKey(d));
+  }
+  const historical = recentKeys.map(k => valueByDateKey[k] || 0);
  
   // --- Holt's linear exponential smoothing: level (ALPHA) + trend (BETA) ---
   const ALPHA = 0.3, BETA = 0.15;
