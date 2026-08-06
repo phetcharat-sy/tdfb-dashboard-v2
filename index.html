@@ -168,7 +168,7 @@
     </div>
     <div class="meta-right">
       Last updated<br><span id="lastUpdated">—</span>
-      <div style="font-size:9.5px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-05-v21-add-day-filter-tab1-tab2</div>
+      <div style="font-size:9.5px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-05-v22-add-shipping-channel-filters-tab1</div>
       <div>
         <button class="btn-plain" id="refreshBtn" onclick="loadData()">Refresh</button>
         <button class="btn-plain" id="saveImgBtn" onclick="saveTabAsPNG()" style="margin-left:14px;">Save as PNG (แนวนอน, คมชัด)</button>
@@ -206,6 +206,16 @@
       <div class="filter-field"><label>Week</label><select id="f1_week" onchange="onFilterChange()"><option value="">All</option></select></div>
       <div class="filter-field"><label>Day</label><select id="f1_day" onchange="onFilterChange()"><option value="">All</option></select></div>
       <div class="filter-field"><label>Order Reference</label><input type="text" id="f1_orderRef" placeholder="Search order..." oninput="onFilterChange()"></div>
+      <div class="filter-field"><label>Shipping</label>
+        <select id="f1_urgent" onchange="onFilterChange()">
+          <option value="">All</option><option value="normal">ส่งปกติ</option><option value="urgent">ส่งด่วน</option>
+        </select>
+      </div>
+      <div class="filter-field"><label>Channel</label>
+        <select id="f1_channel" onchange="onFilterChange()">
+          <option value="">All</option><option value="platform">Platform</option><option value="walkin">Walk-in</option>
+        </select>
+      </div>
       <button class="filter-clear" onclick="clearFilters()">Clear filters</button>
     </div>
  
@@ -498,7 +508,7 @@ const COLMAP3 = {
 let ALL_ROWS = [];
 let ALL_ROWS_3 = [];
 let charts = {};
-let filters = { month1:'', week1:'', day1:'', orderRef:'', month2:'', week2:'', day2:'', whstatus:'', product:'' };
+let filters = { month1:'', week1:'', day1:'', orderRef:'', urgent1:'', channel1:'', month2:'', week2:'', day2:'', whstatus:'', product:'' };
 let filters3 = { status:'', product:'' };
  
 const percentDataLabelsPlugin = {
@@ -890,6 +900,8 @@ function onFilterChange(){
   filters.week1 = document.getElementById('f1_week').value;
   filters.day1 = document.getElementById('f1_day').value;
   filters.orderRef = document.getElementById('f1_orderRef').value;
+  filters.urgent1 = document.getElementById('f1_urgent').value;
+  filters.channel1 = document.getElementById('f1_channel').value;
   filters.month2 = document.getElementById('f2_month').value;
   filters.week2 = document.getElementById('f2_week').value;
   filters.day2 = document.getElementById('f2_day').value;
@@ -899,9 +911,9 @@ function onFilterChange(){
 }
  
 function clearFilters(){
-  ['f1_month','f1_week','f1_day','f2_month','f2_week','f2_day','f2_whstatus'].forEach(id=>document.getElementById(id).value='');
+  ['f1_month','f1_week','f1_day','f1_urgent','f1_channel','f2_month','f2_week','f2_day','f2_whstatus'].forEach(id=>document.getElementById(id).value='');
   ['f1_orderRef','f2_product'].forEach(id=>document.getElementById(id).value='');
-  filters = { month1:'', week1:'', day1:'', orderRef:'', month2:'', week2:'', day2:'', whstatus:'', product:'' };
+  filters = { month1:'', week1:'', day1:'', orderRef:'', urgent1:'', channel1:'', month2:'', week2:'', day2:'', whstatus:'', product:'' };
   renderAll();
 }
  
@@ -1105,7 +1117,9 @@ function getTab1Rows(){
     (!filters.month1 || r.month === filters.month1) &&
     (!filters.week1 || r.week === filters.week1) &&
     (!filters.day1 || rowDayKey(r) === filters.day1) &&
-    (!filters.orderRef || r.orderRef.toLowerCase().includes(filters.orderRef.toLowerCase()))
+    (!filters.orderRef || r.orderRef.toLowerCase().includes(filters.orderRef.toLowerCase())) &&
+    (!filters.urgent1 || (filters.urgent1 === 'normal' ? r.urgent === 'ส่งปกติ' : r.urgent === 'ส่งด่วน')) &&
+    (!filters.channel1 || (filters.channel1 === 'platform' ? isPlatformSource(r.source) : !isPlatformSource(r.source)))
   );
 }
  
