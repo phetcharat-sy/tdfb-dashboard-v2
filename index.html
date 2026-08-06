@@ -168,7 +168,7 @@
     </div>
     <div class="meta-right">
       Last updated<br><span id="lastUpdated">—</span>
-      <div style="font-size:9.5px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-05-v15-sort-need-first-then-score</div>
+      <div style="font-size:9.5px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-05-v16-exclude-box-shippingfee-products</div>
       <div>
         <button class="btn-plain" id="refreshBtn" onclick="loadData()">Refresh</button>
         <button class="btn-plain" id="saveImgBtn" onclick="saveTabAsPNG()" style="margin-left:14px;">Save as PNG (แนวนอน, คมชัด)</button>
@@ -615,6 +615,16 @@ async function loadData(){
   }
 }
  
+// สินค้าที่ชื่อขึ้นต้นด้วย "Box" หรือ "Shipping Fee" ไม่ใช่สินค้าจริง (เป็นค่ากล่อง/ค่าส่ง) —
+// กรองออกตั้งแต่จุดโหลดข้อมูล เพื่อไม่ให้หลุดไปนับ/แสดงที่ไหนเลยในแดชบอร์ด (Order Detail, Top 5
+// Products, Replenishment, Forecast ฯลฯ ล้วนอ่านจาก ALL_ROWS / ALL_ROWS_3 ที่กรองแล้วนี้)
+const EXCLUDED_PRODUCT_PREFIXES = ['box', 'shipping fee'];
+function isExcludedProductName(name){
+  const n = (name || '').trim().toLowerCase();
+  if(!n) return false;
+  return EXCLUDED_PRODUCT_PREFIXES.some(prefix => n.startsWith(prefix));
+}
+ 
 function mapRows(rawRows){
   return rawRows.map(r => {
     const out = {};
@@ -627,7 +637,7 @@ function mapRows(rawRows){
       out[key] = (val !== undefined ? val : '').toString().trim();
     }
     return out;
-  }).filter(r => r.orderRef);
+  }).filter(r => r.orderRef && !isExcludedProductName(r.product));
 }
  
 function mapRows3(rawRows){
@@ -646,7 +656,7 @@ function mapRows3(rawRows){
       if(fk) out.safetyStock = (r[fk]||'').toString().trim();
     }
     return out;
-  }).filter(r => r.product);
+  }).filter(r => r.product && !isExcludedProductName(r.product));
 }
  
 function parseDate(s){
