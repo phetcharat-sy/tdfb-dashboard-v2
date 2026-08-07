@@ -168,7 +168,7 @@
     </div>
     <div class="meta-right">
       Last updated<br><span id="lastUpdated">—</span>
-      <div style="font-size:10.3px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-05-v54-split-staffing-tables-doubleday-highlight</div>
+      <div style="font-size:10.3px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-05-v55-staffing-ot-finishtime-calculator</div>
       <div>
         <button class="btn-plain" id="refreshBtn" onclick="loadData()">Refresh</button>
         <button class="btn-plain" id="saveImgBtn" onclick="saveTabAsPNG()" style="margin-left:14px;">Save as PNG (แนวนอน, คมชัด)</button>
@@ -463,7 +463,12 @@
       </div>
       <div class="grid-2">
         <div class="table-panel">
-          <div style="font-size:16.2px;color:var(--ink-soft);font-weight:600;margin-bottom:8px;">Packing / Delivery</div>
+          <div style="font-size:16.2px;color:var(--ink-soft);font-weight:600;margin-bottom:8px;">Packing / Delivery <span style="font-size:12px;color:var(--ink-faint);font-weight:400;">(เริ่มกะ 09:00 น.)</span></div>
+          <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px;padding:12px 14px;background:var(--paper);border:1px solid var(--hairline);border-radius:10px;">
+            <div class="filter-field"><label>วันที่</label><select id="staffing_delivery_date" onchange="onDeliveryStaffingChange()"></select></div>
+            <div class="filter-field"><label>จำนวนคนที่มีจริง</label><input type="number" min="1" id="staffing_delivery_staff" placeholder="เช่น 2" oninput="onDeliveryStaffingChange()" style="max-width:100px;"></div>
+            <div id="staffing_delivery_result" style="font-family:'IBM Plex Sans Thai';font-size:14.5px;color:var(--ink-soft);flex:1;min-width:220px;"></div>
+          </div>
           <div class="table-scroll">
             <table class="data-table">
               <thead><tr>
@@ -478,7 +483,12 @@
           </div>
         </div>
         <div class="table-panel">
-          <div style="font-size:16.2px;color:var(--ink-soft);font-weight:600;margin-bottom:8px;">WH</div>
+          <div style="font-size:16.2px;color:var(--ink-soft);font-weight:600;margin-bottom:8px;">WH <span style="font-size:12px;color:var(--ink-faint);font-weight:400;">(เริ่มกะ 08:00 น.)</span></div>
+          <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px;padding:12px 14px;background:var(--paper);border:1px solid var(--hairline);border-radius:10px;">
+            <div class="filter-field"><label>วันที่</label><select id="staffing_wh_date" onchange="onWhStaffingChange()"></select></div>
+            <div class="filter-field"><label>จำนวนคนที่มีจริง</label><input type="number" min="1" id="staffing_wh_staff" placeholder="เช่น 2" oninput="onWhStaffingChange()" style="max-width:100px;"></div>
+            <div id="staffing_wh_result" style="font-family:'IBM Plex Sans Thai';font-size:14.5px;color:var(--ink-soft);flex:1;min-width:220px;"></div>
+          </div>
           <div class="table-scroll">
             <table class="data-table">
               <thead><tr>
@@ -2178,6 +2188,93 @@ function renderStaffingForecast(dailyOrdersSeries, dailyQtySeries){
       '<td>' + whCell + '</td>' +
       '</tr>';
   }).join('');
+
+  // Store rows for the OT/finish-time calculator (used by onDeliveryStaffingChange / onWhStaffingChange)
+  STAFFING_ROWS = rows;
+
+  ['staffing_delivery_date', 'staffing_wh_date'].forEach(id => {
+    const el = document.getElementById(id);
+    if(!el) return;
+    const prevValue = el.value;
+    el.innerHTML = rows.map((r, i) => '<option value="' + i + '">' + escapeHtml(r.label) + (r.isDD ? ' ⚡' : '') + '</option>').join('');
+    if(prevValue && Number(prevValue) < rows.length) el.value = prevValue;
+  });
+  onDeliveryStaffingChange();
+  onWhStaffingChange();
+}
+
+let STAFFING_ROWS = [];
+
+// Converts a "HH:MM" start time + a duration in hours into a finish "HH:MM" string, noting a
+// day rollover (+1d, +2d, ...) if the shift runs past midnight.
+function addHoursToTime(startHHMM, hours){
+  const [h, m] = startHHMM.split(':').map(Number);
+  const totalMinutes = h*60 + m + Math.round(hours*60);
+  const days = Math.floor(totalMinutes / (24*60));
+  let mins = totalMinutes % (24*60);
+  if(mins < 0) mins += 24*60;
+  const hh = String(Math.floor(mins/60)).padStart(2,'0');
+  const mm = String(mins%60).padStart(2,'0');
+  return hh + ':' + mm + (days > 0 ? ' (+' + days + 'd)' : '');
+}
+
+// Given a forecasted workload, how many people are actually available, their per-person hourly
+// rate, the shift's start time + length, and an optional hard cap on concurrent workers (e.g. WH's
+// 3 handheld scanners) — works out total hours needed, how much of that is overtime, and the
+// clock time the work will actually finish.
+function computeShiftOutcome(forecastedAmount, staffAvailable, ratePerPersonPerHour, shiftStart, shiftHours, maxConcurrent){
+  if(!staffAvailable || staffAvailable <= 0) return null;
+  const effectiveStaff = maxConcurrent ? Math.min(staffAvailable, maxConcurrent) : staffAvailable;
+  const totalHours = forecastedAmount / (effectiveStaff * ratePerPersonPerHour);
+  const otHours = Math.max(0, totalHours - shiftHours);
+  const finishTime = addHoursToTime(shiftStart, totalHours);
+  const idleStaff = maxConcurrent && staffAvailable > maxConcurrent ? staffAvailable - maxConcurrent : 0;
+  return { totalHours, otHours, finishTime, effectiveStaff, idleStaff };
+}
+
+function onDeliveryStaffingChange(){
+  const dateSel = document.getElementById('staffing_delivery_date');
+  const staffInput = document.getElementById('staffing_delivery_staff');
+  const resultEl = document.getElementById('staffing_delivery_result');
+  if(!dateSel || !staffInput || !resultEl) return;
+  const row = STAFFING_ROWS[Number(dateSel.value)];
+  const staffCount = Number(staffInput.value);
+  if(!row || !staffCount){ resultEl.textContent = ''; return; }
+
+  const ratePerPersonPerHour = STAFFING_CRITERIA.ordersPerPersonPerDay / STAFFING_CRITERIA.packingHours; // 33.33
+  const result = computeShiftOutcome(row.forecastedOrders, staffCount, ratePerPersonPerHour, '09:00', STAFFING_CRITERIA.packingHours, null);
+  if(!result){ resultEl.textContent = ''; return; }
+
+  resultEl.innerHTML = 'ใช้เวลาทำงานรวม <b>' + result.totalHours.toFixed(1) + ' ชม.</b>' +
+    (result.otHours > 0
+      ? ' (ต้องทำ OT <b style="color:var(--azuki);">' + result.otHours.toFixed(1) + ' ชม.</b>)'
+      : ' (ไม่ต้องทำ OT)') +
+    ' · คาดว่าจะแพ็คเสร็จเวลา <b style="color:var(--matcha-deep);">' + result.finishTime + '</b>';
+}
+
+function onWhStaffingChange(){
+  const dateSel = document.getElementById('staffing_wh_date');
+  const staffInput = document.getElementById('staffing_wh_staff');
+  const resultEl = document.getElementById('staffing_wh_result');
+  if(!dateSel || !staffInput || !resultEl) return;
+  const row = STAFFING_ROWS[Number(dateSel.value)];
+  const staffCount = Number(staffInput.value);
+  if(!row || !staffCount){ resultEl.textContent = ''; return; }
+
+  const result = computeShiftOutcome(
+    row.forecastedQty, staffCount, STAFFING_CRITERIA.whItemsPerPersonPerHour,
+    '08:00', STAFFING_CRITERIA.whHours, STAFFING_CRITERIA.whMaxHandhelds
+  );
+  if(!result){ resultEl.textContent = ''; return; }
+
+  const idleNote = result.idleStaff > 0
+    ? ' <span style="color:var(--ink-faint);">(มี handheld แค่ 3 เครื่อง เลยใช้งานพร้อมกันได้แค่ ' + result.effectiveStaff + ' คน อีก ' + result.idleStaff + ' คนต้องหมุนเวียน)</span>'
+    : '';
+  resultEl.innerHTML = 'ใช้เวลาทำงานรวม <b>' + result.totalHours.toFixed(1) + ' ชม.</b>' +
+    (result.otHours > 0
+      ? ' (ต้องทำ OT <b style="color:var(--azuki);">' + result.otHours.toFixed(1) + ' ชม.</b>)'
+      : ' (ไม่ต้องทำ OT)') +
+    ' · คาดว่าจะหยิบของเสร็จเวลา <b style="color:var(--matcha-deep);">' + result.finishTime + '</b>' + idleNote;
 }
 
 function renderForecast1wChart(forecastRows){
