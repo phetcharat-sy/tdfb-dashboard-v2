@@ -168,7 +168,7 @@
     </div>
     <div class="meta-right">
       Last updated<br><span id="lastUpdated">—</span>
-      <div style="font-size:10.3px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-05-v52-enlarge-text-icons-round2</div>
+      <div style="font-size:10.3px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-05-v53-add-staffing-forecast</div>
       <div>
         <button class="btn-plain" id="refreshBtn" onclick="loadData()">Refresh</button>
         <button class="btn-plain" id="saveImgBtn" onclick="saveTabAsPNG()" style="margin-left:14px;">Save as PNG (แนวนอน, คมชัด)</button>
@@ -448,6 +448,34 @@
         <div class="chart-panel">
           <div style="font-size:16.2px;color:var(--ink-soft);font-weight:600;margin-bottom:8px;">จำนวนสินค้า (ชิ้น) / วัน</div>
           <div class="chart-box" style="height:280px;"><canvas id="chart_forecast_daily_qty"></canvas></div>
+        </div>
+      </div>
+    </div>
+ 
+    <div class="section">
+      <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>พยากรณ์อัตรากำลังคน (Staffing Forecast)</div>
+      <div class="section-desc">คำนวณจากยอดพยากรณ์ 7 วันข้างหน้า (จากกราฟรายวันด้านบน) — แบ่งเป็นฝั่ง Packing/Delivery และฝั่ง WH</div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:15px;color:var(--ink-faint);background:var(--panel);border:1px solid var(--hairline);border-radius:12px;padding:16px 20px;margin-bottom:16px;line-height:1.8;">
+        <b style="color:var(--ink-soft);">เกณฑ์ Packing:</b> สมมติฐาน 200 ออเดอร์/คน/วัน (ทำงาน 6 ชม. = ขั้นต่ำ 33.33 ออเดอร์/คน/ชม.) → <code>Packing (คน) = ceil(ออเดอร์ ÷ 200)</code><br>
+        + คนท้ายไลน์แยกพัสดุ ขั้นต่ำ 1 คนเสมอ ไม่ว่ายอดจะเท่าไหร่<br>
+        <b style="color:var(--ink-soft);">เกณฑ์ WH หยิบของ:</b> ขั้นต่ำ 88 ชิ้น/คน/ชม. (ทำงาน 6 ชม. = 528 ชิ้น/คน/วัน) → <code>WH (คน) = ceil(จำนวนสินค้า ÷ 528)</code><br>
+        มี handheld รองรับสูงสุด 3 เครื่อง (266 ชิ้น/ชม./เครื่อง, รวม 800 ชิ้น/ชม.) — ถ้าคำนวณได้เกิน 3 คน จะขึ้นเตือนว่าต้องหมุนเวียนใช้เครื่อง
+      </div>
+      <div class="table-panel">
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr>
+              <th>วันที่</th>
+              <th>ออเดอร์ (คาดการณ์)</th>
+              <th>Packing (คน)</th>
+              <th>ท้ายไลน์ (คน)</th>
+              <th>รวม Packing Team</th>
+              <th>สินค้า ชิ้น (คาดการณ์)</th>
+              <th>WH หยิบของ (คน)</th>
+              <th>รวมกำลังคนทั้งหมด</th>
+            </tr></thead>
+            <tbody id="tab4_staffing_body"></tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -1733,6 +1761,9 @@ function renderTab4(){
   const dailyQtySeries = computeDailyForecastSeries(qtyByDate);
   if(dailyQtySeries) renderTrendLineChart('chart_forecast_daily_qty', 'forecastDailyQty', dailyQtySeries, 'จำนวนสินค้า (ชิ้น)');
  
+  // Staffing forecast: how many Packing/Delivery and WH picking staff are needed per forecasted day
+  renderStaffingForecast(dailyOrdersSeries, dailyQtySeries);
+ 
   renderForecast1wChart(forecastRows);
   renderForecast4wChart(forecastRows);
   renderForecastTable(forecastRows);
@@ -2055,6 +2086,73 @@ function buildForecastChartOpts(items){
   return opts;
 }
  
+// Staffing Forecast: given forecasted daily orders (Packing/Delivery side) and forecasted daily
+// quantity (WH picking side), estimate how many staff are needed per forecasted day.
+//
+// Packing: 200 orders/person/day assumption (working 6h → min 33.33 orders/person/hour), plus a
+// fixed minimum of 1 person for the end-of-line parcel sorter regardless of volume.
+//
+// WH picking: minimum 88 items/person/hour (working 6h → 528 items/person/day), constrained by a
+// max of 3 handheld scanners (266 items/hr/device, 800 items/hr combined) — if the computed staff
+// count exceeds 3, devices must be rotated across shifts within the day.
+const STAFFING_CRITERIA = {
+  ordersPerPersonPerDay: 200,
+  packingHours: 6,
+  endOfLineStaff: 1,
+  whItemsPerPersonPerHour: 88,
+  whHours: 6,
+  whMaxHandhelds: 3
+};
+
+function renderStaffingForecast(dailyOrdersSeries, dailyQtySeries){
+  const tbody = document.getElementById('tab4_staffing_body');
+  if(!tbody) return;
+  if(!dailyOrdersSeries || !dailyQtySeries || !dailyOrdersSeries.forecastData.length){
+    tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state">ไม่มีข้อมูลพอสำหรับพยากรณ์กำลังคน</div></td></tr>';
+    return;
+  }
+
+  const { ordersPerPersonPerDay, endOfLineStaff, whItemsPerPersonPerHour, whHours, whMaxHandhelds } = STAFFING_CRITERIA;
+  const whItemsPerPersonPerDay = whItemsPerPersonPerHour * whHours; // 528
+
+  const n = dailyOrdersSeries.forecastData.length;
+  const rows = [];
+  for(let i = 0; i < n; i++){
+    const label = dailyOrdersSeries.labels[dailyOrdersSeries.historical.length + i];
+    const forecastedOrders = dailyOrdersSeries.forecastData[i];
+    const forecastedQty = (dailyQtySeries.forecastData[i] !== undefined) ? dailyQtySeries.forecastData[i] : 0;
+
+    const packingStaff = Math.max(1, Math.ceil(forecastedOrders / ordersPerPersonPerDay));
+    const totalPackingTeam = packingStaff + endOfLineStaff;
+
+    const whStaff = Math.max(1, Math.ceil(forecastedQty / whItemsPerPersonPerDay));
+    const whExceedsHandhelds = whStaff > whMaxHandhelds;
+
+    rows.push({
+      label, forecastedOrders, forecastedQty,
+      packingStaff, endOfLineStaff, totalPackingTeam,
+      whStaff, whExceedsHandhelds,
+      grandTotal: totalPackingTeam + whStaff
+    });
+  }
+
+  tbody.innerHTML = rows.map(r => {
+    const whCell = r.whExceedsHandhelds
+      ? '<span class="qty-highlight">' + r.whStaff + '</span> <span style="font-size:12px;color:var(--azuki);">(เกิน 3 เครื่อง ต้องหมุนเวียน)</span>'
+      : r.whStaff;
+    return '<tr>' +
+      '<td class="strong">' + escapeHtml(r.label) + '</td>' +
+      '<td>' + r.forecastedOrders.toLocaleString('en-US') + '</td>' +
+      '<td>' + r.packingStaff + '</td>' +
+      '<td>' + r.endOfLineStaff + '</td>' +
+      '<td><b>' + r.totalPackingTeam + '</b></td>' +
+      '<td>' + r.forecastedQty.toLocaleString('en-US') + '</td>' +
+      '<td>' + whCell + '</td>' +
+      '<td><b>' + r.grandTotal + '</b></td>' +
+      '</tr>';
+  }).join('');
+}
+
 function renderForecast1wChart(forecastRows){
   const items = buildForecastItems(forecastRows, 1);
   if(!items.length) return;
