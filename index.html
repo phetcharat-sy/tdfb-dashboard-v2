@@ -172,7 +172,7 @@
     </div>
     <div class="meta-right">
       Last updated<br><span id="lastUpdated">—</span>
-      <div style="font-size:11.8px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-10-v59-readable-forecast-labels</div>
+      <div style="font-size:11.8px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-10-v60-ui-fixes</div>
       <div>
         <button class="btn-plain" id="refreshBtn" onclick="loadData()">Refresh</button>
         <button class="btn-plain" id="saveImgBtn" onclick="saveTabAsPNG()" style="margin-left:14px;">Save as PNG (แนวนอน, คมชัด)</button>
@@ -250,6 +250,12 @@
     </div>
 
     <div class="section">
+      <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>Sales Channel Share</div>
+      <div class="section-desc">Orders by Sender Name</div>
+      <div class="chart-panel"><div class="chart-box" style="height:280px;"><canvas id="chart_channel"></canvas></div></div>
+    </div>
+
+    <div class="section">
       <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>Order Detail</div>
       <div class="section-desc">แสดงเฉพาะรายการที่ไม่ใช่ "ส่งในวัน" (ก่อนกำหนด/ล่าช้า/ไม่ระบุ) · เรียง Remark Team notes ก่อน แล้วตามด้วยล่าสุด</div>
       <div class="table-panel">
@@ -260,12 +266,6 @@
           </table>
         </div>
       </div>
-    </div>
-
-    <div class="section">
-      <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>Sales Channel Share</div>
-      <div class="section-desc">Orders by Sender Name</div>
-      <div class="chart-panel"><div class="chart-box" style="height:280px;"><canvas id="chart_channel"></canvas></div></div>
     </div>
 
     <div class="footer-note" id="tab1_footer"></div>
@@ -635,7 +635,7 @@ const percentDataLabelsPlugin = {
         const value = dataset.data[index];
         if(value === null || value === undefined || Number.isNaN(Number(value))) return;
         const formatter = options.formatter || formatPercentLabel;
-        ctx.fillText(formatter(value), bar.x, Math.max(12, bar.y - 7));
+        ctx.fillText(formatter(value), bar.x, Math.max(22, bar.y - 5));
       });
     });
     ctx.restore();
@@ -1825,8 +1825,8 @@ function baseChartOptions({legend=true}={}){
     responsive:true, maintainAspectRatio:false,
     plugins:{ legend:{ display:legend, labels:{ color:'#4E5C46', font:{size:17.8, family:"'IBM Plex Sans Thai'"} } }, tooltip: tooltipStyle() },
     scales:{
-      x:{ ticks:{ color:'#8C9482', font:{size:16.9} }, grid:{ display:false } },
-      y:{ ticks:{ color:'#8C9482', font:{size:16.9} }, grid:{ color:'rgba(31,46,26,0.06)' }, beginAtZero:true }
+      x:{ ticks:{ color:'#4E5C46', font:{size:16.9} }, grid:{ display:false } },
+      y:{ ticks:{ color:'#4E5C46', font:{size:16.9} }, grid:{ color:'rgba(31,46,26,0.06)' }, beginAtZero:true }
     }
   };
 }
@@ -1837,7 +1837,7 @@ function percentChartOptions({ dataLabels=false, target=null }={}){
   opts.plugins.tooltip.callbacks = { label: (ctx)=> ctx.dataset.label ? (ctx.dataset.label+': '+ctx.formattedValue+'%') : (ctx.label+': '+ctx.formattedValue+'%') };
   opts.plugins.percentDataLabels = { display:dataLabels };
   opts.plugins.targetLine = { display: target !== null, value: target };
-  opts.layout = { padding:{ top:dataLabels ? 18 : 0 } };
+  opts.layout = { padding:{ top:dataLabels ? 30 : 0 } };
   return opts;
 }
 function formatPercentLabel(value){
