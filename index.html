@@ -153,7 +153,24 @@
   /* v72: โหมดสำหรับ export เป็นภาพขึ้นจอใหญ่ — บีบส่วนที่กินที่แต่ไม่ให้ข้อมูล
      เพื่อให้เนื้อหาจริงเต็มหน้ามากขึ้นและตัวหนังสือใหญ่ที่สุดเท่าที่ทำได้
      ใช้เฉพาะตอนกดปุ่ม Save เท่านั้น ถอดคลาสทิ้งทันทีหลัง capture */
+  /* คุม padding ให้แน่นอน เพื่อให้ความกว้าง "เนื้อหาจริง" ที่ถูก capture เท่ากับที่ตั้งไว้เป๊ะ
+     (ความกว้างเนื้อหาน้อย = ตัวหนังสือกินสัดส่วนของภาพมาก = อ่านง่ายบนจอใหญ่) */
+  body.exporting .wrap{padding:24px 40px 40px !important;}
   body.exporting .filter-row{display:none !important;}          /* ซ้ำกับหัวเรื่องในภาพอยู่แล้ว */
+  /* v73: ขยายตัวหนังสือที่เล็กที่สุดก่อน — พวก label/หัวตาราง/คำอธิบาย คือตัวที่อ่านไม่ออกบนโปรเจกเตอร์ */
+  body.exporting .stat-label{font-size:21px !important;}
+  body.exporting .stat-value{font-size:54px !important;}
+  body.exporting .section-title{font-size:37px !important;}
+  body.exporting .section-title svg{width:30px !important;height:30px !important;}
+  body.exporting .section-desc{font-size:22px !important;}
+  body.exporting table.data-table{font-size:25px !important;}
+  body.exporting table.data-table thead th{font-size:21px !important;}
+  body.exporting .footer-note{font-size:21px !important;}
+  body.exporting .ch-legend-title{font-size:21px !important;}
+  body.exporting .ch-name{font-size:27px !important;}
+  body.exporting .ch-sub{font-size:21px !important;}
+  body.exporting .ch-pct{font-size:42px !important;}
+  body.exporting .chart-panel > div[style*="font-size"]{font-size:23px !important;}
   body.exporting .hero{padding:4px 0 20px !important;}
   body.exporting .bowl{width:300px !important;height:300px !important;}
   body.exporting .bowl-number{font-size:54px !important;}
@@ -198,7 +215,7 @@
     </div>
     <div class="meta-right">
       Last updated<br><span id="lastUpdated">—</span>
-      <div style="font-size:11.8px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-11-v72-projector-ready</div>
+      <div style="font-size:11.8px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-11-v73-bigger-fonts</div>
       <div>
         <button class="btn-plain" id="refreshBtn" onclick="loadData()">Refresh</button>
         <button class="btn-plain" id="saveImgBtn" onclick="saveTabAsPNG()" style="margin-left:14px;">Save as PNG (แนวนอน, คมชัด)</button>
@@ -648,13 +665,40 @@ let charts = {};
 let filters = { month1:'', week1:'', day1:'', orderRef:'', urgent1:'', channel1:'', month2:'', week2:'', day2:'', whstatus:'', product:'' };
 let filters3 = { status:'', product:'' };
 
+/*
+  v73: ตัวหนังสือเล็กบนจอใหญ่ มี 2 แหล่งที่ต้องแก้แยกกัน
+    (1) ตัวหนังสือใน DOM (การ์ด KPI, หัวเรื่อง, ตาราง) → คุมด้วย CSS body.exporting
+    (2) ตัวหนังสือที่ Chart.js/plugin วาดลง canvas (ตัวเลขแกน, label บนกราฟ) → CSS คุมไม่ได้
+        ต้องคูณขนาดในตัว options แล้ว update ใหม่ ตัวแปรนี้คือตัวคูณสำหรับข้อ (2)
+*/
+let CHART_FONT_BOOST = 1;
+const fz = n => Math.round(n * CHART_FONT_BOOST * 10) / 10;   // ขนาดฟอนต์ที่ปรับตามโหมด
+
+// เดินเข้าไปคูณทุก font.size ใน options ของทุกกราฟ แล้ววาดใหม่
+function applyChartFontBoost(factor){
+  const seen = new WeakSet();
+  const walk = (o) => {
+    if(!o || typeof o !== 'object' || seen.has(o)) return;
+    seen.add(o);
+    if(o.font && typeof o.font.size === 'number') o.font.size = o.font.size * factor;
+    for(const k in o){
+      if(k.charAt(0) === '_') continue;
+      const v = o[k];
+      if(v && typeof v === 'object') walk(v);
+    }
+  };
+  Object.values(charts).forEach(c => {
+    try{ walk(c.options); c.update('none'); }catch(e){}
+  });
+}
+
 const percentDataLabelsPlugin = {
   id: 'percentDataLabels',
   afterDatasetsDraw(chart, args, options){
     if(!options.display) return;
     const ctx = chart.ctx;
     ctx.save();
-    ctx.font = "700 17px 'IBM Plex Mono', monospace";
+    ctx.font = '700 ' + fz(17) + "px 'IBM Plex Mono', monospace";
     ctx.fillStyle = '#1F2E1A';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'bottom';
@@ -770,11 +814,11 @@ const lineDataLabelsPlugin = {
 
         const text = formatter(value);
         ctx.font = emphasize
-          ? (isForecast ? "italic 700 19px 'IBM Plex Mono', monospace"
-                        : "700 18px 'IBM Plex Mono', monospace")
-          : "500 15px 'IBM Plex Mono', monospace";
+          ? (isForecast ? 'italic 700 ' + fz(19) + "px 'IBM Plex Mono', monospace"
+                        : '700 ' + fz(18) + "px 'IBM Plex Mono', monospace")
+          : '500 ' + fz(15) + "px 'IBM Plex Mono', monospace";
         const w = ctx.measureText(text).width;
-        const h = emphasize ? 18 : 15;
+        const h = emphasize ? fz(18) : fz(15);
 
         const above = emphasize ? true : (index % 2 === 0);
         const baseY = above ? point.y - 9 : point.y + h + 8;
@@ -1124,7 +1168,12 @@ async function saveTabAsPNG(){
     ความกว้างน้อยลง → ตัวหนังสือกินสัดส่วนของภาพมากขึ้น → อ่านง่ายขึ้นบนสไลด์
     เสร็จแล้วคืนความกว้างเดิมใน finally เสมอ หน้าเว็บจริงไม่กระทบ
   */
-  const EXPORT_WIDTH = 1600;                       // px CSS · ลดเลขนี้ = ตัวหนังสือใหญ่ขึ้นอีก
+  // v73: คุม "ความกว้างเนื้อหาที่ถูก capture" ตรงๆ (ไม่ใช่ความกว้าง wrap) จะได้คาดผลได้
+  //      เลขนี้คือปุ่มหลักของขนาดตัวหนังสือบนสไลด์ · ยิ่งน้อย ตัวยิ่งใหญ่ แต่แผ่นยิ่งเยอะ
+  const EXPORT_CONTENT_WIDTH = 1200;
+  const EXPORT_PAD = 40;                           // ต้องตรงกับ body.exporting .wrap ใน CSS
+  const EXPORT_WIDTH = EXPORT_CONTENT_WIDTH + EXPORT_PAD*2;
+  const FONT_BOOST = 1.3;                          // ตัวคูณฟอนต์ที่ Chart.js วาดลง canvas
   const wrapEl = document.getElementById('dashboardWrap');
   const prevWidth = wrapEl.style.width;
   const prevMaxWidth = wrapEl.style.maxWidth;
@@ -1133,13 +1182,12 @@ async function saveTabAsPNG(){
 
   try{
     document.body.classList.add('exporting');       // v72: บีบส่วนที่กินที่แต่ไม่ให้ข้อมูล
-    const naturalWidth = wrapEl.getBoundingClientRect().width;
-    if(naturalWidth > EXPORT_WIDTH){               // ไม่ขยายให้กว้างกว่าเดิม ถ้าจออยู่แล้วแคบ
-      wrapEl.style.width = EXPORT_WIDTH + 'px';
-      wrapEl.style.maxWidth = EXPORT_WIDTH + 'px';
-    }
+    wrapEl.style.width = EXPORT_WIDTH + 'px';
+    wrapEl.style.maxWidth = EXPORT_WIDTH + 'px';
+    CHART_FONT_BOOST = FONT_BOOST;                 // v73: ขยายฟอนต์ในกราฟด้วย CSS คุมไม่ได้
+    applyChartFontBoost(FONT_BOOST);
     resizeCharts();                                // Chart.js ต้องวาดใหม่ตามกล่องใหม่ ไม่งั้นกราฟเพี้ยน
-    await settle(500);
+    await settle(550);
     // v61: Google Slides / Docs รับภาพได้สูงสุด 25 ล้านพิกเซล (MP) ต่อรูป
     // ถ้าเกิน จะอัปโหลดไม่ได้และขึ้น "เกิดข้อผิดพลาด" แบบไม่บอกเหตุผล
     // จึงคำนวณ scale ให้แต่ละหน้าอยู่ใต้เพดานตั้งแต่ตอน capture แทนการ fix scale=3
@@ -1341,6 +1389,10 @@ async function saveTabAsPNG(){
     document.body.classList.remove('exporting');   // คืนสภาพหน้าเว็บเสมอ แม้ export ล้มเหลว
     wrapEl.style.width = prevWidth;
     wrapEl.style.maxWidth = prevMaxWidth;
+    if(CHART_FONT_BOOST !== 1){
+      applyChartFontBoost(1 / CHART_FONT_BOOST);   // หารกลับให้ options เท่าเดิมเป๊ะ
+      CHART_FONT_BOOST = 1;
+    }
     resizeCharts();
     btn.textContent = originalLabel;
     btn.disabled = false;
@@ -1772,7 +1824,7 @@ const pieValueLabelsPlugin = {
     const meta = chart.getDatasetMeta(0);
     const ctx = chart.ctx;
     ctx.save();
-    ctx.font = "700 19px 'IBM Plex Mono', monospace";
+    ctx.font = '700 ' + fz(19) + "px 'IBM Plex Mono', monospace";
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     meta.data.forEach((arc, i) => {
