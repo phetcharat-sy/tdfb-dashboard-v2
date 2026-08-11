@@ -138,6 +138,18 @@
   details[open] summary::before{transform:rotate(90deg);}
   details summary:hover{color:var(--matcha-deep);}
 
+  /* v65: legend ของ Sales Channel Share ทำเป็นกล่องมีกรอบแยกต่างหาก
+     ไม่ใช้ legend ในตัว Chart.js เพราะปรับขนาด/กรอบ/จัดคอลัมน์ไม่ได้ ตัวเลขเลยเล็กจนอ่านยาก */
+  .channel-wrap{display:flex;gap:32px;align-items:center;flex-wrap:wrap;}
+  .channel-legend{border:1.5px solid var(--hairline-strong);border-radius:22px;padding:22px 26px;background:var(--paper);min-width:340px;flex-shrink:0;}
+  .ch-legend-title{font-family:'IBM Plex Mono',monospace;font-size:16.9px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);padding-bottom:12px;border-bottom:1.5px solid var(--hairline-strong);margin-bottom:6px;}
+  .ch-row{display:flex;align-items:center;gap:16px;padding:14px 0;border-bottom:1px solid var(--hairline);}
+  .ch-row:last-child{border-bottom:none;padding-bottom:2px;}
+  .ch-dot{width:18px;height:18px;border-radius:6px;flex-shrink:0;}
+  .ch-name{flex:1;font-size:24.5px;font-weight:600;color:var(--ink);line-height:1.25;}
+  .ch-sub{font-family:'IBM Plex Mono',monospace;font-size:17.8px;font-weight:400;color:var(--ink-faint);margin-top:3px;}
+  .ch-pct{font-family:'Zen Maru Gothic',sans-serif;font-weight:900;font-size:36px;color:var(--matcha-deep);white-space:nowrap;}
+
   ::-webkit-scrollbar{width:7px;height:7px;}
   ::-webkit-scrollbar-track{background:transparent;}
   ::-webkit-scrollbar-thumb{background:var(--hairline-strong);border-radius:4px;}
@@ -172,7 +184,7 @@
     </div>
     <div class="meta-right">
       Last updated<br><span id="lastUpdated">—</span>
-      <div style="font-size:11.8px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-11-v64-forecast-stagger</div>
+      <div style="font-size:11.8px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-11-v65-channel-legend</div>
       <div>
         <button class="btn-plain" id="refreshBtn" onclick="loadData()">Refresh</button>
         <button class="btn-plain" id="saveImgBtn" onclick="saveTabAsPNG()" style="margin-left:14px;">Save as PNG (แนวนอน, คมชัด)</button>
@@ -252,7 +264,12 @@
     <div class="section">
       <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>Sales Channel Share</div>
       <div class="section-desc">Orders by Sender Name</div>
-      <div class="chart-panel"><div class="chart-box" style="height:280px;"><canvas id="chart_channel"></canvas></div></div>
+      <div class="chart-panel">
+        <div class="channel-wrap">
+          <div class="chart-box" style="height:320px;flex:1;min-width:300px;"><canvas id="chart_channel"></canvas></div>
+          <div class="channel-legend" id="channel_legend"></div>
+        </div>
+      </div>
     </div>
 
     <div class="section">
@@ -1713,38 +1730,32 @@ function renderChannelChart(orderRows){
   const ctx = document.getElementById('chart_channel');
   if(charts.channel) charts.channel.destroy();
   const counts_ = entries.map(e => e[1]);
+
+  // v65: วาด legend เองเป็น HTML จะได้คุมขนาด/กรอบ/การจัดคอลัมน์ได้เต็มที่
+  const legendEl = document.getElementById('channel_legend');
+  if(legendEl){
+    const fmtPct = v => (Number.isInteger(v) ? v : v.toFixed(1)) + '%';
+    legendEl.innerHTML =
+      '<div class="ch-legend-title">Orders by brand</div>' +
+      labels.map((l, i) =>
+        '<div class="ch-row">' +
+          '<span class="ch-dot" style="background:' + backgroundColor[i] + '"></span>' +
+          '<div class="ch-name">' + escapeHtml(l) +
+            '<div class="ch-sub">' + Number(counts_[i]).toLocaleString('en-US') + ' orders</div>' +
+          '</div>' +
+          '<div class="ch-pct">' + fmtPct(data[i]) + '</div>' +
+        '</div>'
+      ).join('');
+  }
+
   charts.channel = new Chart(ctx, {
     type:'pie',
     data:{ labels, datasets:[{ data, backgroundColor }] },
     options:{
       responsive:true, maintainAspectRatio:false,
-      layout:{ padding:{ right:6 } },
+      layout:{ padding:6 },
       plugins:{
-        legend:{
-          position:'right',
-          labels:{
-            color:'#4E5C46',
-            font:{size:17.8, family:"'IBM Plex Sans Thai'"},
-            boxWidth:14, boxHeight:14, padding:12,
-            // v63: เอา % (และจำนวนออเดอร์) มาโชว์ใน legend ด้านข้างเลย จะได้ไม่ต้อง hover ทีละชิ้น
-            generateLabels: (ch) => {
-              const ds = ch.data.datasets[0];
-              return ch.data.labels.map((label, i) => {
-                const v = Number(ds.data[i]);
-                const pct = Number.isInteger(v) ? v : v.toFixed(1);
-                const n = counts_[i];
-                return {
-                  text: label + '  ' + pct + '%  (' + Number(n).toLocaleString('en-US') + ')',
-                  fillStyle: ds.backgroundColor[i],
-                  strokeStyle: ds.backgroundColor[i],
-                  lineWidth: 0,
-                  hidden: !ch.getDataVisibility(i),
-                  index: i
-                };
-              });
-            }
-          }
-        },
+        legend:{ display:false },
         pieValueLabels:{ display:true, minPercent:8 },
         tooltip:{ ...tooltipStyle(), callbacks:{ label: c => c.label+': '+c.formattedValue+'% (' + Number(counts_[c.dataIndex]).toLocaleString('en-US') + ' orders)' } }
       }
