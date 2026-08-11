@@ -150,6 +150,20 @@
   .ch-sub{font-family:'IBM Plex Mono',monospace;font-size:17.8px;font-weight:400;color:var(--ink-faint);margin-top:3px;}
   .ch-pct{font-family:'Zen Maru Gothic',sans-serif;font-weight:900;font-size:36px;color:var(--matcha-deep);white-space:nowrap;}
 
+  /* v72: โหมดสำหรับ export เป็นภาพขึ้นจอใหญ่ — บีบส่วนที่กินที่แต่ไม่ให้ข้อมูล
+     เพื่อให้เนื้อหาจริงเต็มหน้ามากขึ้นและตัวหนังสือใหญ่ที่สุดเท่าที่ทำได้
+     ใช้เฉพาะตอนกดปุ่ม Save เท่านั้น ถอดคลาสทิ้งทันทีหลัง capture */
+  body.exporting .filter-row{display:none !important;}          /* ซ้ำกับหัวเรื่องในภาพอยู่แล้ว */
+  body.exporting .hero{padding:4px 0 20px !important;}
+  body.exporting .bowl{width:300px !important;height:300px !important;}
+  body.exporting .bowl-number{font-size:54px !important;}
+  body.exporting .hero-caption{margin-top:8px !important;font-size:22px !important;}
+  body.exporting .section{margin-bottom:26px !important;}
+  body.exporting .stat-card{padding:24px 20px !important;}
+  body.exporting .stat-icon{width:56px !important;height:56px !important;}
+  body.exporting .stat-icon svg{width:29px !important;height:29px !important;}
+  body.exporting details{display:none !important;}              /* กล่อง "วิธีคิด" ที่พับอยู่ ไม่ต้องพิมพ์ */
+
   ::-webkit-scrollbar{width:7px;height:7px;}
   ::-webkit-scrollbar-track{background:transparent;}
   ::-webkit-scrollbar-thumb{background:var(--hairline-strong);border-radius:4px;}
@@ -184,7 +198,7 @@
     </div>
     <div class="meta-right">
       Last updated<br><span id="lastUpdated">—</span>
-      <div style="font-size:11.8px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-11-v70-pagebreak-fit</div>
+      <div style="font-size:11.8px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-11-v72-projector-ready</div>
       <div>
         <button class="btn-plain" id="refreshBtn" onclick="loadData()">Refresh</button>
         <button class="btn-plain" id="saveImgBtn" onclick="saveTabAsPNG()" style="margin-left:14px;">Save as PNG (แนวนอน, คมชัด)</button>
@@ -1103,7 +1117,29 @@ async function saveTabAsPNG(){
   btn.textContent = 'กำลังบันทึก...';
   btn.disabled = true;
 
+  /*
+    v71: ตัวหนังสือในรูปเล็ก เพราะแดชบอร์ดถูก capture ที่ความกว้างจริงของจอ (~2600 px)
+    ตัวหนังสือ 20 px จึงเป็นแค่ 0.8% ของความกว้างสไลด์ พอย่อลงสไลด์ 16:9 ก็จิ๋ว
+    แก้ที่ต้นเหตุ: บีบแดชบอร์ดให้แคบลงชั่วคราวตอน capture เท่านั้น
+    ความกว้างน้อยลง → ตัวหนังสือกินสัดส่วนของภาพมากขึ้น → อ่านง่ายขึ้นบนสไลด์
+    เสร็จแล้วคืนความกว้างเดิมใน finally เสมอ หน้าเว็บจริงไม่กระทบ
+  */
+  const EXPORT_WIDTH = 1600;                       // px CSS · ลดเลขนี้ = ตัวหนังสือใหญ่ขึ้นอีก
+  const wrapEl = document.getElementById('dashboardWrap');
+  const prevWidth = wrapEl.style.width;
+  const prevMaxWidth = wrapEl.style.maxWidth;
+  const resizeCharts = () => Object.values(charts).forEach(c => { try{ c.resize(); }catch(e){} });
+  const settle = (ms) => new Promise(r => requestAnimationFrame(() => setTimeout(r, ms)));
+
   try{
+    document.body.classList.add('exporting');       // v72: บีบส่วนที่กินที่แต่ไม่ให้ข้อมูล
+    const naturalWidth = wrapEl.getBoundingClientRect().width;
+    if(naturalWidth > EXPORT_WIDTH){               // ไม่ขยายให้กว้างกว่าเดิม ถ้าจออยู่แล้วแคบ
+      wrapEl.style.width = EXPORT_WIDTH + 'px';
+      wrapEl.style.maxWidth = EXPORT_WIDTH + 'px';
+    }
+    resizeCharts();                                // Chart.js ต้องวาดใหม่ตามกล่องใหม่ ไม่งั้นกราฟเพี้ยน
+    await settle(500);
     // v61: Google Slides / Docs รับภาพได้สูงสุด 25 ล้านพิกเซล (MP) ต่อรูป
     // ถ้าเกิน จะอัปโหลดไม่ได้และขึ้น "เกิดข้อผิดพลาด" แบบไม่บอกเหตุผล
     // จึงคำนวณ scale ให้แต่ละหน้าอยู่ใต้เพดานตั้งแต่ตอน capture แทนการ fix scale=3
@@ -1152,7 +1188,9 @@ async function saveTabAsPNG(){
             ทำให้ดึงเนื้อหาก้อนถัดไปขึ้นมาอยู่หน้าเดียวกันได้ แทนที่จะทิ้งที่ว่างครึ่งหน้าแล้วขึ้นหน้าใหม่
         (ค) ข้อมูลชุดเดียวกันต้องอยู่ด้วยกัน — เพราะจุดตัดชั้นหลักอยู่ที่ขอบ section เสมอ
     */
-    const MIN_FIT = 0.72;                        // ย่อได้มากสุด 28% เพื่อรวมเนื้อหาเข้าหน้าเดียว
+    // v72: ทุกครั้งที่ย่อ ตัวหนังสือบนจอใหญ่จะเล็กลงตรงๆ จึงยอมให้ย่อได้แค่ 15%
+    // แลกกับการที่หน้าเต็มเกือบ 100% ไม่มีพื้นที่ว่างเป็นแถบใหญ่ และจำนวนแผ่นน้อยลง
+    const MIN_FIT = 0.85;
     const MAX_CONTENT = AVAIL_H / MIN_FIT;       // ความสูงเนื้อหาสูงสุดที่ยัดลงหนึ่งหน้าได้
 
     const containerRect = activeTab.getBoundingClientRect();
@@ -1300,6 +1338,10 @@ async function saveTabAsPNG(){
     console.error('Save as PNG failed:', err);
     alert('บันทึกภาพไม่สำเร็จ ลองใหม่อีกครั้ง');
   } finally {
+    document.body.classList.remove('exporting');   // คืนสภาพหน้าเว็บเสมอ แม้ export ล้มเหลว
+    wrapEl.style.width = prevWidth;
+    wrapEl.style.maxWidth = prevMaxWidth;
+    resizeCharts();
     btn.textContent = originalLabel;
     btn.disabled = false;
   }
