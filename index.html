@@ -184,7 +184,7 @@
     </div>
     <div class="meta-right">
       Last updated<br><span id="lastUpdated">—</span>
-      <div style="font-size:11.8px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-11-v66-forecast-italic</div>
+      <div style="font-size:11.8px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-11-v68-slides-exact</div>
       <div>
         <button class="btn-plain" id="refreshBtn" onclick="loadData()">Refresh</button>
         <button class="btn-plain" id="saveImgBtn" onclick="saveTabAsPNG()" style="margin-left:14px;">Save as PNG (แนวนอน, คมชัด)</button>
@@ -1109,11 +1109,14 @@ async function saveTabAsPNG(){
     // จึงคำนวณ scale ให้แต่ละหน้าอยู่ใต้เพดานตั้งแต่ตอน capture แทนการ fix scale=3
     const MAX_MP   = 20;    // เผื่อจากลิมิตจริง 25 MP
     const MAX_SIDE = 8000;  // กันด้านยาวเกินสำหรับโปรแกรมอื่น
-    const LANDSCAPE_ASPECT = 1.5;
+    // v67: ทุกหน้าที่ export ออกมาต้องเป็น 16:9 เป๊ะ
+    // เพราะพอเอาไปวางเป็น "พื้นหลังสไลด์" ใน Google Slides มันจะยืดรูปให้เต็มสไลด์เสมอ
+    // ของเดิม 1.5:1 โดนยืดออกด้านกว้าง 1.19 เท่า วงกลม 100.00% เลยกลายเป็นวงรี
+    const SLIDE_ASPECT = 16/9;
     const MARGIN_CSS = 20, HEADER_CSS = 160;
 
     const tabRect  = activeTab.getBoundingClientRect();
-    const pageGuess = Math.max(1, Math.round(tabRect.height / (tabRect.width / LANDSCAPE_ASPECT)));
+    const pageGuess = Math.max(1, Math.round(tabRect.height / (tabRect.width / SLIDE_ASPECT)));
     const pageCssArea = (tabRect.width + MARGIN_CSS*2)
                       * (tabRect.height / pageGuess + MARGIN_CSS*2 + HEADER_CSS);
 
@@ -1129,9 +1132,18 @@ async function saveTabAsPNG(){
     });
 
     // แบ่งหน้าแนวนอนแบบรู้ขอบเนื้อหา — ไม่ย่อภาพ วาด 1:1 จาก capture เพื่อไม่ให้เบลอ
-    const idealSliceHeight = captured.width / LANDSCAPE_ASPECT;
+    const MARGIN   = Math.round(20 * scale);
+    const HEADER_H = Math.round(160 * scale);
+    // v68: ปัดความกว้างขึ้นให้หาร 16 ลงตัว แล้วคิดความสูงเป็น W*9/16 → ได้ 16:9 แบบไม่มีเศษ
+    // ตรงกับขนาดสไลด์มาตรฐานของ Google Slides (จอกว้าง 25.4 x 14.29 ซม.) เป๊ะ วางเป็นพื้นหลังแล้วไม่ยืด
+    const PAGE_W   = Math.ceil((captured.width + MARGIN*2) / 16) * 16;
+    const PAGE_H   = PAGE_W * 9 / 16;
+    const XOFF     = Math.round((PAGE_W - captured.width) / 2);    // จัดเนื้อหาให้อยู่กลางหน้า
+    const AVAIL_H  = Math.max(120, PAGE_H - MARGIN*2 - HEADER_H);  // ที่ว่างสำหรับเนื้อหาต่อหน้า
+
+    const idealSliceHeight = AVAIL_H;
     const totalHeight = captured.height;
-    const roughPageCount = Math.max(1, Math.round(totalHeight / idealSliceHeight));
+    const roughPageCount = Math.max(1, Math.ceil(totalHeight / idealSliceHeight));
 
     const containerRect = activeTab.getBoundingClientRect();
     const blockSelectors = '.hero, .filter-row, .stat-grid, .section, .footer-note';
@@ -1149,6 +1161,8 @@ async function saveTabAsPNG(){
         const diff = Math.abs(top - idealY);
         if(diff < bestDiff){ bestDiff = diff; best = top; }
       });
+      // ห้ามยาวเกินที่ว่างต่อหน้า ไม่งั้นหน้าจะสูงกว่า 16:9 แล้วโดนยืดแนวตั้งแทน
+      best = Math.min(best, splitPoints[splitPoints.length-1] + AVAIL_H);
       if(best > splitPoints[splitPoints.length-1] && best < totalHeight){
         splitPoints.push(Math.round(best));
       }
@@ -1166,32 +1180,35 @@ async function saveTabAsPNG(){
 
     const ranges = [];
     for(let i = 0; i < cleaned.length - 1; i++){
-      const srcY = cleaned[i];
-      const srcH = cleaned[i+1] - cleaned[i];
-      if(srcH > 0) ranges.push({ srcY, srcH });
+      let srcY = cleaned[i];
+      const endY = cleaned[i+1];
+      // ด่านสุดท้าย ถ้าช่วงไหนยังยาวเกิน AVAIL_H (เช่น section เดียวยาวมาก) ให้ตัดตรงๆ เป็นท่อนๆ
+      while(endY - srcY > AVAIL_H){
+        ranges.push({ srcY, srcH: AVAIL_H });
+        srcY += AVAIL_H;
+      }
+      if(endY - srcY > 0) ranges.push({ srcY, srcH: endY - srcY });
     }
 
-    const MARGIN = Math.round(20 * scale);
     const dateStr = new Date().toISOString().slice(0,10);
 
     // v59: แถบหัวเรื่องบอกว่ารูปนี้เป็น KPI เรื่องอะไร กรองอะไรไว้ export เมื่อไหร่
     // วาดทุกหน้า (ไม่ใช่แค่หน้าแรก) เวลาส่งต่อทีละหน้าจะได้ไม่หลงว่าเป็นรูปอะไร
     const hdr = buildExportHeader(activeTab);
     const exportedAt = new Date().toLocaleString('en-GB', { dateStyle:'medium', timeStyle:'short' });
-    const HEADER_H = Math.round(160 * scale);
     const px = n => Math.round(n * scale);
 
     const pages = ranges.map(({ srcY, srcH }, pageIdx) => {
       const pageCanvas = document.createElement('canvas');
-      pageCanvas.width  = captured.width + MARGIN*2;
-      pageCanvas.height = srcH + MARGIN*2 + HEADER_H;
+      pageCanvas.width  = PAGE_W;
+      pageCanvas.height = PAGE_H;      // ตายตัว 16:9 · หน้าที่เนื้อหาสั้นจะเว้นว่างด้านล่างแทนการยืด
       const ctx = pageCanvas.getContext('2d');
 
       ctx.fillStyle = '#F6F2E7';
       ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
 
-      const left  = MARGIN;
-      const right = pageCanvas.width - MARGIN;
+      const left  = XOFF;
+      const right = pageCanvas.width - XOFF;
 
       ctx.textBaseline = 'alphabetic';
       ctx.textAlign = 'left';
@@ -1238,7 +1255,7 @@ async function saveTabAsPNG(){
       ctx.lineTo(right, lineY);
       ctx.stroke();
 
-      ctx.drawImage(captured, 0, srcY, captured.width, srcH, MARGIN, MARGIN + HEADER_H, captured.width, srcH);
+      ctx.drawImage(captured, 0, srcY, captured.width, srcH, XOFF, MARGIN + HEADER_H, captured.width, srcH);
       return fitToLimit(pageCanvas);
     });
 
