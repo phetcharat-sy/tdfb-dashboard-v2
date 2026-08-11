@@ -172,7 +172,7 @@
     </div>
     <div class="meta-right">
       Last updated<br><span id="lastUpdated">—</span>
-      <div style="font-size:11.8px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-11-v61-png-mp-limit</div>
+      <div style="font-size:11.8px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-11-v63-pie-percent</div>
       <div>
         <button class="btn-plain" id="refreshBtn" onclick="loadData()">Refresh</button>
         <button class="btn-plain" id="saveImgBtn" onclick="saveTabAsPNG()" style="margin-left:14px;">Save as PNG (แนวนอน, คมชัด)</button>
@@ -676,16 +676,119 @@ function drawRoundRect(ctx, x, y, w, h, r){
 }
 
 /*
-  FIX (v59): เดิม plugin นี้วาดตัวเลข "ทุกจุด" โดยไม่เช็คว่าทับกันไหม กราฟรายวันมี 50+ จุด
-  ตัวเลขเลยซ้อนกันจนอ่านไม่ออก — ตัวที่สำคัญที่สุด (เลขพยากรณ์) จมหายไปกับเลขค่าจริงย้อนหลัง
-  ที่ไม่มีใครอ่าน เขียนใหม่ให้:
-    1. ถ้าส่ง boundaryIndex มา (= กราฟพยากรณ์) จุดพยากรณ์ + จุดจริงล่าสุด โชว์เสมอ ตัวหนา
-       สีน้ำตาลทอง มีกล่องขาวรองกันทับเส้น ส่วนค่าจริงย้อนหลังเหลือแค่จุดพีค/ก้นบึ้ง/ทุกๆ everyNth จุด
-    2. เช็คการชนกันจริงด้วย bounding box — ค่าจริงที่ชนกับตัวที่วาดไปแล้วจะถูกข้าม
-       แต่ตัวพยากรณ์ไม่มีวันถูกข้าม
-    3. ค่าจริงสลับวางบน-ล่าง เพิ่มพื้นที่ว่างอีกเท่าตัว
-  กราฟที่ไม่ส่ง boundaryIndex ทำงานเหมือนเดิมทุกอย่าง
+  v62: เลขพยากรณ์เคยทับกันจนอ่านไม่ออก เพราะจุดพยากรณ์อยู่ชิดกันมาก (รายวัน 7 จุดใน ~15px/จุด)
+  แต่ตัวเลขกว้าง ~45px และโค้ดเดิมบังคับวาดทุกตัว (emphasize = ไม่มีวันถูกข้าม) เลยเบียดกันเละ
+  แก้โดยย้ายเลขพยากรณ์ออกจากตัวกราฟ ไปอยู่ใน "กล่องสรุปพยากรณ์" มุมที่ว่างที่สุดแทน
+  บนกราฟเหลือแค่จุดจริงล่าสุด (ตัวคั่น) + ค่าจริงย้อนหลังแบบเบาบาง
+  ถ้าไม่เปิด forecastPanel จะกลับไปวาดบนกราฟแบบเดิม แต่มีระบบขยับหลบการชนแล้ว
 */
+
+// วาดกล่องสรุปค่าพยากรณ์ ลอยอยู่ในมุมที่มีจุดข้อมูลน้อยที่สุด (เทียบเฉพาะมุมบน เพราะกราฟ fill จากล่าง)
+function drawForecastPanel(chart, options){
+  const ctx  = chart.ctx;
+  const area = chart.chartArea;
+  const labels = chart.data.labels || [];
+  const ds = chart.data.datasets[0];
+  if(!ds) return;
+  const b = options.boundaryIndex;
+  const fmt = options.formatter || (v => Number(v).toLocaleString('en-US'));
+  const ddHits = options.doubleDayHits || [];
+
+  const rows = [];
+  for(let i = b + 1; i < ds.data.length; i++){
+    const v = ds.data[i];
+    if(v === null || v === undefined || Number.isNaN(Number(v))) continue;
+    rows.push({
+      k: String(labels[i] || '').replace('*',''),
+      v: fmt(v),
+      dd: ddHits.includes(i)
+    });
+  }
+  if(!rows.length) return;
+
+  const PAD = 11, LH = 21, TITLE_H = 24, GAP = 16, COLGAP = 20;
+  const KEY_FONT   = "500 15px 'IBM Plex Mono', monospace";
+  const VAL_FONT   = "700 16px 'IBM Plex Mono', monospace";
+  const TITLE_FONT = "600 14px 'IBM Plex Sans Thai', sans-serif";
+  const title = options.panelTitle || 'พยากรณ์';
+
+  ctx.save();
+  ctx.font = KEY_FONT;
+  const keyW = Math.max(...rows.map(r => ctx.measureText(r.k + (r.dd ? ' ⚡' : '')).width));
+  ctx.font = VAL_FONT;
+  const valW = Math.max(...rows.map(r => ctx.measureText(r.v).width));
+  ctx.font = TITLE_FONT;
+  const titleW = ctx.measureText(title).width + 30;
+
+  // เกิน 5 แถวแตกเป็น 2 คอลัมน์ ไม่งั้นกล่องสูงจนกินพื้นที่กราฟ (รายวันมี 7 แถว)
+  const cols   = rows.length > 5 ? 2 : 1;
+  const perCol = Math.ceil(rows.length / cols);
+  const colW   = keyW + GAP + valW;
+
+  const w = Math.max(cols*colW + (cols-1)*COLGAP, titleW) + PAD*2;
+  const h = TITLE_H + perCol*LH + PAD*2 - 2;
+
+  const INSET = 10;
+  const cands = [
+    { x: area.left + INSET,          y: area.top + INSET },
+    { x: area.right - INSET - w,     y: area.top + INSET }
+  ];
+  const pts = [];
+  chart.data.datasets.forEach((d, di) => {
+    const m = chart.getDatasetMeta(di);
+    if(m.hidden) return;
+    m.data.forEach(p => pts.push(p));
+  });
+  let best = cands[0], bestScore = Infinity;
+  cands.forEach(c => {
+    let score = 0;
+    pts.forEach(p => {
+      if(p.x >= c.x - 10 && p.x <= c.x + w + 10 && p.y >= c.y - 10 && p.y <= c.y + h + 10) score++;
+    });
+    if(score < bestScore){ bestScore = score; best = c; }
+  });
+
+  ctx.fillStyle = 'rgba(255,253,245,0.95)';
+  drawRoundRect(ctx, best.x, best.y, w, h, 9);
+  ctx.fill();
+  ctx.strokeStyle = '#D3CBAE';
+  ctx.lineWidth = 1;
+  drawRoundRect(ctx, best.x, best.y, w, h, 9);
+  ctx.stroke();
+
+  ctx.textBaseline = 'middle';
+  const titleY = best.y + PAD + 8;
+  ctx.strokeStyle = '#C89B4A';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([5,3]);
+  ctx.beginPath();
+  ctx.moveTo(best.x + PAD, titleY);
+  ctx.lineTo(best.x + PAD + 20, titleY);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.textAlign = 'left';
+  ctx.font = TITLE_FONT;
+  ctx.fillStyle = '#8C9482';
+  ctx.fillText(title, best.x + PAD + 26, titleY);
+
+  rows.forEach((r, i) => {
+    const col = Math.floor(i / perCol);
+    const rowInCol = i % perCol;
+    const cx = best.x + PAD + col*(colW + COLGAP);
+    const y = best.y + PAD + TITLE_H + rowInCol*LH + LH/2 - 2;
+    ctx.textAlign = 'left';
+    ctx.font = KEY_FONT;
+    ctx.fillStyle = r.dd ? '#A6432E' : '#8C9482';
+    ctx.fillText(r.k + (r.dd ? ' ⚡' : ''), cx, y);
+    ctx.textAlign = 'right';
+    ctx.font = VAL_FONT;
+    ctx.fillStyle = '#8A5A2E';
+    ctx.fillText(r.v, cx + colW, y);
+  });
+  ctx.restore();
+}
+
 const lineDataLabelsPlugin = {
   id: 'lineDataLabels',
   afterDatasetsDraw(chart, args, options){
@@ -696,6 +799,7 @@ const lineDataLabelsPlugin = {
     const everyNth      = (options.everyNth === undefined) ? 1 : options.everyNth;
     const showPeaks     = options.showPeaks !== false;
     const formatter     = options.formatter || (v => Number(v).toLocaleString('en-US'));
+    const panelMode     = options.forecastPanel === true && boundaryIndex >= 0;
 
     ctx.save();
     chart.data.datasets.forEach((dataset, datasetIndex) => {
@@ -724,7 +828,8 @@ const lineDataLabelsPlugin = {
 
         const isForecast = boundaryIndex >= 0 && index >  boundaryIndex;
         const isBoundary = boundaryIndex >= 0 && index === boundaryIndex;
-        const emphasize  = isForecast || isBoundary;
+        if(panelMode && isForecast) return;   // เลขพยากรณ์ย้ายไปอยู่ในกล่องสรุปแล้ว
+        const emphasize  = isBoundary || (!panelMode && isForecast);
 
         let show;
         if(boundaryIndex < 0){
@@ -746,16 +851,45 @@ const lineDataLabelsPlugin = {
         const h = emphasize ? 18 : 15;
 
         const above = emphasize ? true : (index % 2 === 0);
-        let y = above ? point.y - 9 : point.y + h + 8;
-        y = Math.max(area.top + h + 2, Math.min(y, area.bottom - 2));
+        const baseY = above ? point.y - 9 : point.y + h + 8;
         const x = Math.max(area.left + w/2 + 2, Math.min(point.x, area.right - w/2 - 2));
 
-        const box = { x1:x - w/2 - 3, x2:x + w/2 + 3, y1:y - h - 2, y2:y + 2 };
-        const clash = placed.some(p =>
-          !(box.x2 < p.x1 || box.x1 > p.x2 || box.y2 < p.y1 || box.y1 > p.y2)
-        );
-        if(clash && !emphasize) return;
+        const hitTest = (yy) => {
+          const bx = { x1:x - w/2 - 3, x2:x + w/2 + 3, y1:yy - h - 2, y2:yy + 2 };
+          const clash = placed.some(p =>
+            !(bx.x2 < p.x1 || bx.x1 > p.x2 || bx.y2 < p.y1 || bx.y1 > p.y2)
+          );
+          return { box: bx, clash };
+        };
+
+        // ตัวสำคัญ (จุดคั่น/พยากรณ์) ห้ามหาย — ถ้าชน ให้ไล่ขยับขึ้นทีละแถวจนกว่าจะว่าง
+        // ตัวธรรมดายังใช้กติกาเดิม คือชนแล้วข้าม
+        const STEP = h + 6;
+        let y = Math.max(area.top + h + 2, Math.min(baseY, area.bottom - 2));
+        let res = hitTest(y);
+        if(res.clash && emphasize){
+          for(let k = 1; k <= 8; k++){
+            const up = baseY - STEP*k;
+            if(up < area.top + h + 2) break;
+            const t = hitTest(up);
+            if(!t.clash){ y = up; res = t; break; }
+          }
+        }
+        if(res.clash && !emphasize) return;
+        const box = res.box;
         placed.push(box);
+
+        // ถ้าโดนดันขึ้นไปไกลจากจุดจริง ลากเส้นบางๆ โยงกลับ จะได้รู้ว่าเลขนี้ของจุดไหน
+        if(emphasize && Math.abs(y - point.y) > 26){
+          ctx.save();
+          ctx.strokeStyle = 'rgba(140,148,130,0.55)';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(x, y + 2);
+          ctx.lineTo(point.x, point.y);
+          ctx.stroke();
+          ctx.restore();
+        }
 
         ctx.textAlign = 'center';
         ctx.textBaseline = 'bottom';
@@ -763,13 +897,14 @@ const lineDataLabelsPlugin = {
           ctx.fillStyle = 'rgba(255,253,245,0.94)';
           drawRoundRect(ctx, box.x1, box.y1, box.x2 - box.x1, box.y2 - box.y1, 5);
           ctx.fill();
-          ctx.fillStyle = isForecast ? '#8A5A2E' : '#1F2E1A';
+          ctx.fillStyle = (!panelMode && isForecast) ? '#8A5A2E' : '#1F2E1A';
         } else {
           ctx.fillStyle = '#9AA290';
         }
         ctx.fillText(text, x, y);
       });
     });
+    if(panelMode) drawForecastPanel(chart, options);
     ctx.restore();
   }
 };
@@ -1616,6 +1751,40 @@ function renderPlatformChart(platform, walkin){
   });
 }
 
+// v63: วาด % ลงบนชิ้นพายโดยตรง เฉพาะชิ้นที่ใหญ่พอ (ชิ้นเล็กเขียนทับกันแล้วอ่านไม่ออก
+// ปล่อยให้ไปอ่านจาก legend ด้านข้างที่มี % กำกับอยู่แล้วแทน)
+const pieValueLabelsPlugin = {
+  id: 'pieValueLabels',
+  afterDatasetsDraw(chart, args, options){
+    if(!options || !options.display) return;
+    const minPct = options.minPercent === undefined ? 8 : options.minPercent;
+    const data = chart.data.datasets[0] ? chart.data.datasets[0].data : [];
+    const meta = chart.getDatasetMeta(0);
+    const ctx = chart.ctx;
+    ctx.save();
+    ctx.font = "700 19px 'IBM Plex Mono', monospace";
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    meta.data.forEach((arc, i) => {
+      const v = Number(data[i]);
+      if(!Number.isFinite(v) || v < minPct) return;
+      if(meta.data[i].hidden) return;
+      const angle = (arc.startAngle + arc.endAngle) / 2;
+      const r = arc.innerRadius + (arc.outerRadius - arc.innerRadius) * 0.62;
+      const x = arc.x + Math.cos(angle) * r;
+      const y = arc.y + Math.sin(angle) * r;
+      const text = (Number.isInteger(v) ? v : v.toFixed(1)) + '%';
+      ctx.lineWidth = 3.5;
+      ctx.strokeStyle = 'rgba(31,46,26,0.35)';
+      ctx.strokeText(text, x, y);
+      ctx.fillStyle = '#FFFDF5';
+      ctx.fillText(text, x, y);
+    });
+    ctx.restore();
+  }
+};
+Chart.register(pieValueLabelsPlugin);
+
 function renderChannelChart(orderRows){
   const counts = {};
   orderRows.forEach(r => { const c = r.senderName || 'Unspecified'; counts[c] = (counts[c]||0)+1; });
@@ -1635,14 +1804,41 @@ function renderChannelChart(orderRows){
   });
   const ctx = document.getElementById('chart_channel');
   if(charts.channel) charts.channel.destroy();
+  const counts_ = entries.map(e => e[1]);
   charts.channel = new Chart(ctx, {
     type:'pie',
     data:{ labels, datasets:[{ data, backgroundColor }] },
     options:{
       responsive:true, maintainAspectRatio:false,
+      layout:{ padding:{ right:6 } },
       plugins:{
-        legend:{ position:'right', labels:{ color:'#4E5C46', font:{size:17.8, family:"'IBM Plex Sans Thai'"} } },
-        tooltip:{ ...tooltipStyle(), callbacks:{ label: c => c.label+': '+c.formattedValue+'%' } }
+        legend:{
+          position:'right',
+          labels:{
+            color:'#4E5C46',
+            font:{size:17.8, family:"'IBM Plex Sans Thai'"},
+            boxWidth:14, boxHeight:14, padding:12,
+            // v63: เอา % (และจำนวนออเดอร์) มาโชว์ใน legend ด้านข้างเลย จะได้ไม่ต้อง hover ทีละชิ้น
+            generateLabels: (ch) => {
+              const ds = ch.data.datasets[0];
+              return ch.data.labels.map((label, i) => {
+                const v = Number(ds.data[i]);
+                const pct = Number.isInteger(v) ? v : v.toFixed(1);
+                const n = counts_[i];
+                return {
+                  text: label + '  ' + pct + '%  (' + Number(n).toLocaleString('en-US') + ')',
+                  fillStyle: ds.backgroundColor[i],
+                  strokeStyle: ds.backgroundColor[i],
+                  lineWidth: 0,
+                  hidden: !ch.getDataVisibility(i),
+                  index: i
+                };
+              });
+            }
+          }
+        },
+        pieValueLabels:{ display:true, minPercent:8 },
+        tooltip:{ ...tooltipStyle(), callbacks:{ label: c => c.label+': '+c.formattedValue+'% (' + Number(counts_[c.dataIndex]).toLocaleString('en-US') + ' orders)' } }
       }
     }
   });
@@ -2211,9 +2407,12 @@ function renderTrendLineChart(canvasId, chartKey, series, seriesLabel){
   opts.plugins.lineDataLabels = {
     display: true,
     boundaryIndex,
-    everyNth: Math.max(1, Math.ceil(historical.length / 8))
+    everyNth: Math.max(1, Math.ceil(historical.length / 8)),
+    forecastPanel: true,
+    doubleDayHits,
+    panelTitle: 'พยากรณ์ล่วงหน้า'
   };
-  opts.layout = { padding:{ top:30, right:46, bottom:16, left:6 } };
+  opts.layout = { padding:{ top:26, right:18, bottom:16, left:6 } };
 
   opts.plugins.tooltip = {
     ...tooltipStyle(),
