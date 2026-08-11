@@ -41,6 +41,11 @@
   .subtitle{font-size:22.8px;color:var(--ink-soft);font-weight:500;}
   .meta-right{text-align:right;font-family:'IBM Plex Mono',monospace;font-size:18.6px;color:var(--ink-faint);}
   .meta-right #lastUpdated{color:var(--ink-soft);}
+  /* v81: "Last fetched" คือเวลาที่เบราว์เซอร์ดึง CSV ไม่ใช่ความสดของข้อมูลในชีต
+     ถ้าชีตค้างตั้งแต่เช้า ตัวเลขเดิมจะดูเหมือนสดทั้งที่ขาดข้อมูลครึ่งวัน จึงต้องโชว์แยก */
+  .freshness{margin-top:4px;font-family:'IBM Plex Mono',monospace;font-size:16.9px;line-height:1.5;}
+  .freshness .ok{color:var(--matcha-deep);}
+  .freshness .stale{color:var(--azuki);font-weight:600;}
   .btn-plain{font-family:'IBM Plex Mono',monospace;font-size:18.6px;font-weight:700;background:none;color:var(--matcha-deep);border:none;border-bottom:1.5px solid var(--matcha-deep);padding:2px 0;cursor:pointer;margin-top:8px;letter-spacing:.04em;}
   .btn-plain:hover{opacity:.65;}
   .btn-plain:disabled{opacity:.4;cursor:wait;}
@@ -168,6 +173,12 @@
   .cal-actions button:hover{border-bottom-color:currentColor;}
 
   /* ตอน export เป็นภาพ ไม่ต้องให้ panel ที่เปิดอยู่ติดไปในรูป */
+  /* v80: กล่องกระทบยอดรายวัน */
+  .daycheck{margin-top:12px;padding:14px 18px;background:rgba(200,155,74,.10);
+    border:1px solid rgba(200,155,74,.35);border-radius:12px;
+    font-family:'IBM Plex Sans Thai',sans-serif;font-size:19.5px;color:var(--ink-soft);line-height:1.75;}
+  .daycheck b{color:var(--matcha-deep);}
+
   /* v78: ปุ่มสลับว่า "วัน" ในตัวกรองหมายถึงวันที่คอลัมน์ไหน */
   .seg{display:inline-flex;gap:4px;background:rgba(31,46,26,.055);border-radius:13px;padding:4px;}
   .seg button{border:none;background:none;border-radius:10px;padding:7px 14px;
@@ -316,8 +327,9 @@
       <div class="subtitle">ภาพรวมประสิทธิภาพการแพ็คและจัดส่งสินค้าประจำวัน</div>
     </div>
     <div class="meta-right">
-      Last updated<br><span id="lastUpdated">—</span>
-      <div style="font-size:11.8px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-11-v79-countunique</div>
+      Last fetched<br><span id="lastUpdated">—</span>
+      <div id="dataFreshness" class="freshness"></div>
+      <div style="font-size:11.8px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-11-v81-freshness</div>
       <div>
         <button class="btn-plain" id="refreshBtn" onclick="loadData()">Refresh</button>
         <button class="btn-plain" id="saveImgBtn" onclick="saveTabAsPNG()" style="margin-left:14px;">Save as PNG (แนวนอน, คมชัด)</button>
@@ -412,6 +424,7 @@
     </div>
 
     <div class="footer-note" id="tab1_footer"></div>
+    <div class="daycheck" id="tab1_daycheck" style="display:none;"></div>
   </div>
 
   <!-- ============ TAB 2 ============ -->
@@ -439,7 +452,7 @@
     </div>
 
     <div class="stat-grid">
-      <div class="stat-card"><div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg></div><div class="stat-label">Line Items (Order Line)</div><div class="stat-value" id="m2_product">—</div></div>
+      <div class="stat-card"><div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg></div><div class="stat-label">จำนวนสินค้า (ชิ้น)</div><div class="stat-value" id="m2_product">—</div></div>
       <div class="stat-card"><div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12l2.5 2.5L16 9"/></svg></div><div class="stat-label">On-Time Dispatch</div><div class="stat-value c-matcha" id="m2_ontime">—</div></div>
       <div class="stat-card"><div class="stat-icon i-bamboo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 16V8"/><path d="M8 12l4-4 4 4"/></svg></div><div class="stat-label">จัดส่งก่อนกำหนด</div><div class="stat-value c-bamboo" id="m2_early">—</div></div>
       <div class="stat-card"><div class="stat-icon i-azuki"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l10 18H2L12 3z"/><path d="M12 9v5"/><path d="M12 17h.01"/></svg></div><div class="stat-label">จัดส่งล่าช้า</div><div class="stat-value c-azuki" id="m2_late">—</div></div>
@@ -1021,6 +1034,7 @@ async function loadData(){
 
     renderAll();
     document.getElementById('lastUpdated').textContent = new Date().toLocaleString('en-GB', {dateStyle:'medium', timeStyle:'medium'});
+    renderDataFreshness();
     overlay.style.display = 'none';
     wrap.style.display = 'block';
   } catch(err){
@@ -1801,6 +1815,34 @@ document.addEventListener('keydown', (e) => {
   if(e.key === 'Escape') document.querySelectorAll('.ms.open, .cal.open').forEach(el => el.classList.remove('open'));
 });
 
+/*
+  v81: ข้อมูลในชีตอาจค้าง — n8n เขียนถึงแค่รอบเช้า แต่แดชบอร์ดยังโชว์ "Last updated" เป็นเวลาที่
+  เบราว์เซอร์ดึง CSV ทำให้ดูเหมือนสด ทั้งที่ยอดของวันนี้ขาดไปครึ่งวัน
+  จึงหาเวลา "แถวล่าสุดในชีต" มาโชว์ และเตือนเมื่อทิ้งช่วงนานเกิน
+*/
+const STALE_HOURS = 3;
+function renderDataFreshness(){
+  const el = document.getElementById('dataFreshness');
+  if(!el) return;
+  let latest = null;
+  ALL_ROWS.forEach(r => {
+    const d = parseDate(r.createDate);
+    if(d && (!latest || d > latest)) latest = d;
+  });
+  if(!latest){ el.innerHTML = ''; return; }
+
+  const hours = (Date.now() - latest.getTime()) / 3600000;
+  const stamp = formatDateShort(latest) + ' ' +
+    String(latest.getHours()).padStart(2,'0') + ':' + String(latest.getMinutes()).padStart(2,'0');
+
+  if(hours > STALE_HOURS){
+    el.innerHTML = '<span class="stale">แถวล่าสุดในชีต ' + stamp +
+      ' (' + Math.floor(hours) + ' ชม.ที่แล้ว)<br>ยอดวันนี้อาจยังไม่ครบ — กดปุ่ม Update Data ในชีต</span>';
+  } else {
+    el.innerHTML = '<span class="ok">แถวล่าสุดในชีต ' + stamp + '</span>';
+  }
+}
+
 function populateFilterOptions(){
   const countBy = (getter) => {
     const m = {};
@@ -2041,6 +2083,32 @@ function toOrderLevel(rows){
   return [...map.values()];
 }
 
+/*
+  v80: เครื่องมือกระทบยอด — เวลาตัวเลขไม่ตรงกับที่นับจากชีต สาเหตุเกือบทั้งหมดคือ
+  "วัน" ของสองฝ่ายอ้างคอลัมน์ต่างกัน (วันที่ต้องการจัดส่ง vs วันที่ลง Odoo)
+  ฟังก์ชันนี้นับออเดอร์ของ "วันที่ถูกเลือก" ให้ดูทั้งสองฐานพร้อมกัน โดยไม่สนตัวกรองอื่น
+*/
+function countOrdersForDays(daySet, basis){
+  const set = new Set();
+  ALL_ROWS.forEach(r => {
+    const d = parseDate(basis === 'createDate' ? r.createDate : r.expectedDelivery);
+    if(!d) return;
+    if(!daySet.has(toDateKey(d))) return;
+    const k = orderKeyOf(r);
+    if(k) set.add(k);
+  });
+  return set.size;
+}
+
+// แถวที่คอลัมน์วันที่ว่าง/อ่านไม่ออก จะหลุดจากการกรองรายวันทุกกรณี ต้องรู้ว่ามีกี่แถว
+function countRowsMissingDate(basis){
+  let n = 0;
+  ALL_ROWS.forEach(r => {
+    if(!parseDate(basis === 'createDate' ? r.createDate : r.expectedDelivery)) n++;
+  });
+  return n;
+}
+
 function renderAll(){
   renderLatestLine(ALL_ROWS);
   renderTab1();
@@ -2135,6 +2203,30 @@ function renderTab1(){
     ' · นับ "วัน" ตาม ' + basisLabel +
     (EXCLUDED_ONLY_ORDERS ? ' · ไม่นับ ' + EXCLUDED_ONLY_ORDERS.toLocaleString('en-US') + ' ออเดอร์ที่มีแต่ Box/ค่าส่ง/คูปอง' : '') +
     ' · updated ' + new Date().toLocaleString('en-GB');
+
+  // v80: เลือกวันอยู่ → โชว์ยอดของวันนั้นทั้งสองฐาน เพื่อเทียบกับตัวเลขที่นับจากชีตได้ทันที
+  const cmpEl = document.getElementById('tab1_daycheck');
+  if(cmpEl){
+    if(FILTER_SETS.day1.size){
+      const byDel = countOrdersForDays(FILTER_SETS.day1, 'expectedDelivery');
+      const byOdoo = countOrdersForDays(FILTER_SETS.day1, 'createDate');
+      const dayList = [...FILTER_SETS.day1].sort()
+        .map(k => formatDateShort(new Date(k + 'T00:00:00'))).join(', ');
+      cmpEl.innerHTML =
+        'กระทบยอดวันที่ ' + escapeHtml(dayList) + ' — ' +
+        'นับตาม<b>วันที่ต้องการจัดส่ง</b> = ' + byDel.toLocaleString('en-US') + ' ออเดอร์ · ' +
+        'นับตาม<b>วันที่ลง Odoo</b> = ' + byOdoo.toLocaleString('en-US') + ' ออเดอร์' +
+        (byDel !== byOdoo
+          ? ' <span style="color:var(--azuki);">← ต่างกัน ' + Math.abs(byDel - byOdoo).toLocaleString('en-US') +
+            ' ออเดอร์ เพราะออเดอร์ที่คีย์วันนี้ไม่ได้ส่งวันนี้ทั้งหมด</span>'
+          : '') +
+        '<br>แถวที่วันที่ต้องการจัดส่งว่าง/อ่านไม่ออก ' + countRowsMissingDate('expectedDelivery').toLocaleString('en-US') +
+        ' แถว · วันที่ลง Odoo ว่าง ' + countRowsMissingDate('createDate').toLocaleString('en-US') + ' แถว';
+      cmpEl.style.display = 'block';
+    } else {
+      cmpEl.style.display = 'none';
+    }
+  }
 }
 
 function renderTab1RemarkTable(rows){
