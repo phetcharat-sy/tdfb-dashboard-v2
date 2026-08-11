@@ -184,7 +184,7 @@
     </div>
     <div class="meta-right">
       Last updated<br><span id="lastUpdated">—</span>
-      <div style="font-size:11.8px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-11-v65-channel-legend</div>
+      <div style="font-size:11.8px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-11-v66-forecast-italic</div>
       <div>
         <button class="btn-plain" id="refreshBtn" onclick="loadData()">Refresh</button>
         <button class="btn-plain" id="saveImgBtn" onclick="saveTabAsPNG()" style="margin-left:14px;">Save as PNG (แนวนอน, คมชัด)</button>
@@ -756,7 +756,8 @@ const lineDataLabelsPlugin = {
 
         const text = formatter(value);
         ctx.font = emphasize
-          ? "700 18px 'IBM Plex Mono', monospace"
+          ? (isForecast ? "italic 700 19px 'IBM Plex Mono', monospace"
+                        : "700 18px 'IBM Plex Mono', monospace")
           : "500 15px 'IBM Plex Mono', monospace";
         const w = ctx.measureText(text).width;
         const h = emphasize ? 18 : 15;
@@ -813,17 +814,20 @@ const lineDataLabelsPlugin = {
         ctx.textAlign = 'center';
         ctx.textBaseline = 'bottom';
         if(emphasize){
-          // กล่องขาวทึบ + ขอบจางๆ ให้ตัวเลขเด้งออกจากเส้นกราฟและเส้นตาราง
-          ctx.fillStyle = 'rgba(255,253,245,0.97)';
-          drawRoundRect(ctx, box.x1, box.y1, box.x2 - box.x1, box.y2 - box.y1, 5);
-          ctx.fill();
           if(isForecast){
-            ctx.strokeStyle = 'rgba(200,155,74,0.55)';
-            ctx.lineWidth = 1;
+            // v66: เลขพยากรณ์ไม่มีกรอบ ใช้ตัวเอียง + ขอบตัวอักษรสีพื้นกระดาษหนาๆ แทน
+            // ได้ความชัดพอกันแต่ไม่มีกล่องไปบังเส้นกราฟ
+            ctx.lineJoin = 'round';
+            ctx.lineWidth = 4.5;
+            ctx.strokeStyle = 'rgba(255,253,245,0.9)';
+            ctx.strokeText(text, x, y);
+            ctx.fillStyle = '#8A5A2E';
+          } else {
+            ctx.fillStyle = 'rgba(255,253,245,0.97)';
             drawRoundRect(ctx, box.x1, box.y1, box.x2 - box.x1, box.y2 - box.y1, 5);
-            ctx.stroke();
+            ctx.fill();
+            ctx.fillStyle = '#1F2E1A';
           }
-          ctx.fillStyle = isForecast ? '#8A5A2E' : '#1F2E1A';
         } else {
           ctx.fillStyle = '#9AA290';
         }
