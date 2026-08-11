@@ -184,7 +184,7 @@
     </div>
     <div class="meta-right">
       Last updated<br><span id="lastUpdated">—</span>
-      <div style="font-size:11.8px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-11-v68-slides-exact</div>
+      <div style="font-size:11.8px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-11-v70-pagebreak-fit</div>
       <div>
         <button class="btn-plain" id="refreshBtn" onclick="loadData()">Refresh</button>
         <button class="btn-plain" id="saveImgBtn" onclick="saveTabAsPNG()" style="margin-left:14px;">Save as PNG (แนวนอน, คมชัด)</button>
@@ -374,8 +374,8 @@
     </div>
 
     <div class="section">
-      <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>รายการที่ต้องเติม Stock <span style="font-size:19.5px;font-weight:400;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;">(ไม่รวมที่ไม่มีโควต้า)</span></div>
-      <div class="section-desc">เรียงตามคะแนนขายดี · ไม่แสดงสินค้าที่ Remark ระบุว่า "ไม่มีโควต้า"</div>
+      <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>รายการที่ต้องเติม Stock <span style="font-size:19.5px;font-weight:400;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;">(ไม่รวมที่ไม่มีโควต้า / ไม่มี Raw Material)</span></div>
+      <div class="section-desc">เรียงตามคะแนนขายดี · ไม่นับสินค้าที่ Remark ระบุว่า "ไม่มีโควต้า" หรือ "ไม่มี Raw Material"</div>
       <div class="table-panel">
         <div class="table-scroll remark-scroll">
           <table class="data-table">
@@ -1143,72 +1143,54 @@ async function saveTabAsPNG(){
 
     const totalHeight = captured.height;
 
-    // v69: จุดตัดต้องปลอดภัยจริง ๆ — เดิมมีแค่ระดับ section/stat-grid ทำให้กราฟหรือ
-    // แถวตารางที่ยาวเกิน AVAIL_H ไม่มีจุดตัดให้เลือกเลย แล้วโดนตัดกลางแบบดิบ ๆ
-    // จึงเพิ่มขอบเขตของ "แถวตาราง" และ "กราฟย่อยแต่ละอัน" เป็นจุดตัดที่ยอมรับได้ด้วย
+    /*
+      v70: กติกาแบ่งหน้าใหม่ แก้ 3 อาการพร้อมกัน
+        (ก) ตัดขาดๆ หายๆ  — v69 ยอมให้ตัดที่ "แถวตาราง/กราฟย่อย" ด้วย จุดตัดจึงตกกลาง section ได้
+            รอบนี้แยกจุดตัดเป็น 2 ชั้น: ชั้นหลัก = ระดับ section เท่านั้น (หัวเรื่อง+กราฟ+ตารางอยู่ก้อนเดียว)
+            ชั้นสำรอง (แถวตาราง) ใช้เฉพาะตอนที่ section เดียวสูงเกินหน้าเดียวจริงๆ
+        (ข) พื้นที่ว่างเยอะเกินไป / หน้าเยอะเกินจำเป็น — เพิ่มการ "ย่อพอดีหน้า" ได้ถึง MIN_FIT
+            ทำให้ดึงเนื้อหาก้อนถัดไปขึ้นมาอยู่หน้าเดียวกันได้ แทนที่จะทิ้งที่ว่างครึ่งหน้าแล้วขึ้นหน้าใหม่
+        (ค) ข้อมูลชุดเดียวกันต้องอยู่ด้วยกัน — เพราะจุดตัดชั้นหลักอยู่ที่ขอบ section เสมอ
+    */
+    const MIN_FIT = 0.72;                        // ย่อได้มากสุด 28% เพื่อรวมเนื้อหาเข้าหน้าเดียว
+    const MAX_CONTENT = AVAIL_H / MIN_FIT;       // ความสูงเนื้อหาสูงสุดที่ยัดลงหนึ่งหน้าได้
+
     const containerRect = activeTab.getBoundingClientRect();
-    const blockSelectors = '.hero, .filter-row, .stat-grid, .section, .footer-note, ' +
-      '.grid-2 > .section, .grid-3 > .section, table.data-table thead, table.data-table tbody tr';
-    const blockTops = [...activeTab.querySelectorAll(blockSelectors)]
+    const topsOf = (sel) => [...activeTab.querySelectorAll(sel)]
       .filter(el => el.offsetHeight > 0)
       .map(el => (el.getBoundingClientRect().top - containerRect.top) * scale)
       .sort((a,b) => a-b);
 
-    // v69: แทนที่จะหาจุดตัด "ใกล้ตำแหน่งในอุดมคติที่สุด" แล้วหนีบ (clamp) ให้ไม่เกิน AVAIL_H
-    // — ซึ่งจุดที่หนีบมามักตกกลางกราฟ/กลางแถวพอดี — เปลี่ยนเป็นเลือก "จุดปลอดภัยที่ใหญ่ที่สุด
-    // ที่ยังไม่เกินพื้นที่ว่างต่อหน้า" แบบ greedy ทีละหน้า รับประกันว่าไม่มีทางตัดเกิน AVAIL_H
-    // แล้วไปตัดกลางอิลิเมนต์อีก (ตัดกลางได้เฉพาะกรณีอิลิเมนต์เดียวสูงกว่าทั้งหน้าจริง ๆ เท่านั้น)
-    const splitPoints = [0];
-    while(splitPoints[splitPoints.length-1] < totalHeight){
-      const prev = splitPoints[splitPoints.length-1];
-      const limit = prev + AVAIL_H;
-      if(limit >= totalHeight){ splitPoints.push(totalHeight); break; }
+    // ชั้นหลัก: ตัดได้เฉพาะขอบก้อนใหญ่ — การ์ด KPI, ฟิลเตอร์, และแต่ละ section
+    const majorTops = topsOf('.hero, .filter-row, .stat-grid, .section, .footer-note');
+    // ชั้นสำรอง: ใช้เมื่อก้อนเดียวสูงเกินหน้า เช่นตารางยาวมาก
+    const minorTops = topsOf('.grid-2 > .section, .grid-3 > .section, table.data-table thead, table.data-table tbody tr');
 
+    const largestBelow = (list, from, limit) => {
       let best = null;
-      for(const top of blockTops){
-        if(top <= prev + 1) continue;
-        if(top > limit) break; // blockTops เรียงจากน้อยไปมาก เจอเกิน limit แปลว่าหมดตัวเลือกแล้ว
-        best = top; // เก็บตัวล่าสุดไว้เรื่อย ๆ จะได้ตัวใหญ่สุดที่ยังไม่เกิน limit
+      for(const t of list){
+        if(t <= from + 1) continue;
+        if(t > limit) break;
+        best = t;
       }
-      // ไม่พบจุดตัดปลอดภัยในช่วงนี้เลย (เช่น กราฟเดียวสูงกว่าทั้งหน้า) — จำเป็นต้องตัดดิบ
-      splitPoints.push(Math.round(best !== null ? best : limit));
-    }
+      return best;
+    };
 
     const ranges = [];
-    for(let i = 0; i < splitPoints.length - 1; i++){
-      ranges.push({ srcY: splitPoints[i], srcH: splitPoints[i+1] - splitPoints[i] });
-    }
-
-    // v69: กันหน้าสุดท้ายเกือบว่างเปล่า (เช่นเหลือแค่บรรทัดเดียวโดดไปอีกหน้า) —
-    // ถ้าหน้าสุดท้ายเล็กเกินไป ลองรวมกับหน้าก่อนหน้าแล้วหาจุดตัดใหม่ให้สมดุลกว่าเดิม
-    if(ranges.length >= 2){
-      const last = ranges[ranges.length - 1];
-      if(last.srcH < AVAIL_H * 0.3){
-        const prevIdx = ranges.length - 2;
-        const mergedStart = ranges[prevIdx].srcY;
-        const mergedEnd = last.srcY + last.srcH;
-        const mergedH = mergedEnd - mergedStart;
-        if(mergedH <= AVAIL_H){
-          ranges.splice(prevIdx, 2, { srcY: mergedStart, srcH: mergedH });
-        } else {
-          const targetY = mergedStart + mergedH / 2;
-          let bestTop = null, bestDiff = Infinity;
-          for(const top of blockTops){
-            if(top - mergedStart > AVAIL_H) continue;      // ครึ่งแรกยังต้องพอดีในหน้าเดียว
-            if(mergedEnd - top > AVAIL_H) continue;         // ครึ่งหลังก็เช่นกัน
-            if(top <= mergedStart || top >= mergedEnd) continue;
-            const diff = Math.abs(top - targetY);
-            if(diff < bestDiff){ bestDiff = diff; bestTop = top; }
-          }
-          if(bestTop !== null){
-            ranges.splice(prevIdx, 2,
-              { srcY: mergedStart, srcH: bestTop - mergedStart },
-              { srcY: bestTop, srcH: mergedEnd - bestTop }
-            );
-          }
-        }
+    let cursor = 0;
+    let guard = 0;
+    while(cursor < totalHeight - 1 && guard++ < 200){
+      if(totalHeight - cursor <= MAX_CONTENT){        // เหลือน้อยพอลงหน้าสุดท้ายได้หมด
+        ranges.push({ srcY: cursor, srcH: totalHeight - cursor });
+        break;
       }
+      let end = largestBelow(majorTops, cursor, cursor + MAX_CONTENT);
+      if(end === null) end = largestBelow(minorTops, cursor, cursor + MAX_CONTENT);
+      if(end === null) end = cursor + MAX_CONTENT;    // ทางสุดท้ายจริงๆ
+      ranges.push({ srcY: cursor, srcH: Math.round(end - cursor) });
+      cursor = Math.round(end);
     }
+    if(!ranges.length) ranges.push({ srcY: 0, srcH: totalHeight });
 
     const dateStr = new Date().toISOString().slice(0,10);
 
@@ -1275,7 +1257,14 @@ async function saveTabAsPNG(){
       ctx.lineTo(right, lineY);
       ctx.stroke();
 
-      ctx.drawImage(captured, 0, srcY, captured.width, srcH, XOFF, MARGIN + HEADER_H, captured.width, srcH);
+      // v70: ย่อพอดีหน้าถ้าเนื้อหาสูงกว่าที่ว่าง แล้วจัดให้อยู่กลางแนวนอน
+      const fit   = Math.min(1, AVAIL_H / srcH);
+      const drawW = Math.round(captured.width * fit);
+      const drawH = Math.round(srcH * fit);
+      const dx    = Math.round((pageCanvas.width - drawW) / 2);
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(captured, 0, srcY, captured.width, srcH, dx, MARGIN + HEADER_H, drawW, drawH);
       return fitToLimit(pageCanvas);
     });
 
@@ -1372,6 +1361,15 @@ function clearFilters3(){
   renderTab3();
 }
 
+// v70: รายการที่ "ต้องเติม Stock" แต่ Remark บอกว่าเติมไม่ได้ (ไม่มีโควต้า / ไม่มี Raw Material)
+// ไม่ควรถูกนับรวมเป็นจำนวนที่ต้องเติม เพราะเป็นของที่ติดปัญหา ไม่ใช่งานที่สั่งเติมได้
+const BLOCKED_REMARK_KEYS = ['ไม่มีโควต้า', 'ไม่มีโควตา', 'ไม่มี raw material', 'ไม่มีraw material'];
+function isBlockedReplenish(r){
+  const rm = (r.remark3 || '').trim().toLowerCase();
+  if(!rm) return false;
+  return BLOCKED_REMARK_KEYS.some(k => rm.includes(k));
+}
+
 function renderTab3(){
   let rows = ALL_ROWS_3;
   if(filters3.status === 'need') rows = rows.filter(r => (r.needStock||'').includes('ต้องเติม') && !(r.needStock||'').includes('ไม่ต้อง'));
@@ -1380,21 +1378,23 @@ function renderTab3(){
 
   const needRows = rows.filter(r => (r.needStock||'').includes('ต้องเติม') && !(r.needStock||'').includes('ไม่ต้อง'));
   const nonNeedRows = rows.filter(r => (r.needStock||'').includes('ไม่ต้อง'));
-  const totalQty = needRows.reduce((sum, r) => {
+  // v70: นับจำนวนเฉพาะรายการที่สั่งเติมได้จริง — ตัดที่ไม่มีโควต้า / ไม่มี Raw Material ออก
+  const actionableRows = needRows.filter(r => !isBlockedReplenish(r));
+  const blockedRows = needRows.filter(r => isBlockedReplenish(r));
+  const totalQty = actionableRows.reduce((sum, r) => {
     const v = Number(String(r.qtyNeeded||'0').replace(/,/g,''));
     return sum + (Number.isFinite(v) && v > 0 ? v : 0);
   }, 0);
 
   document.getElementById('m3_total').textContent = rows.length.toLocaleString('en-US');
-  document.getElementById('m3_need').textContent = needRows.length.toLocaleString('en-US');
+  document.getElementById('m3_need').textContent = actionableRows.length.toLocaleString('en-US');
   document.getElementById('m3_nonneed').textContent = nonNeedRows.length.toLocaleString('en-US');
   document.getElementById('m3_qty').textContent = totalQty.toLocaleString('en-US');
 
   renderRemark3Chart(needRows);
 
   const tbody = document.getElementById('tab3_body');
-  const sorted = [...needRows]
-    .filter(r => !(r.remark3||'').includes('ไม่มีโควต้า'))
+  const sorted = [...actionableRows]
     .sort((a,b) => {
       const sa = Number(String(a.score||'0').replace(/,/g,'')) || 0;
       const sb = Number(String(b.score||'0').replace(/,/g,'')) || 0;
@@ -1464,7 +1464,9 @@ function renderTab3(){
   }
 
   document.getElementById('tab3_footer').textContent =
-    rows.length.toLocaleString('en-US') + ' products · updated ' + new Date().toLocaleString('en-GB');
+    rows.length.toLocaleString('en-US') + ' products · ต้องเติมและทำได้ ' + actionableRows.length +
+    ' รายการ (' + totalQty.toLocaleString('en-US') + ' ชิ้น) · ติดปัญหาไม่นับรวม ' + blockedRows.length +
+    ' รายการ · updated ' + new Date().toLocaleString('en-GB');
 }
 
 function renderRemark3Chart(needRows){
