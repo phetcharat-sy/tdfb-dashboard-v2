@@ -81,6 +81,52 @@
   .filter-clear{font-family:'IBM Plex Mono',monospace;font-size:17.8px;color:var(--ink-faint);background:none;border:none;cursor:pointer;text-decoration:underline;text-underline-offset:3px;}
   .filter-clear:hover{color:var(--azuki);}
 
+  /* ===== v76: ตัวกรองแบบติ๊กหลายค่า (multi-select) + ปฏิทินเลือกวัน =====
+     เดิมเป็น <select> เลือกได้ค่าเดียว ทำให้ดูรวมหลายสัปดาห์/หลายเดือนไม่ได้
+     และ dropdown วันยาวเป็นร้อยบรรทัดจนหาวันไม่เจอ */
+  .ms, .cal{position:relative;}
+  .ms-trigger, .cal-trigger{background:transparent;border:none;border-bottom:1.5px solid var(--hairline-strong);
+    color:var(--ink);padding:8px 26px 8px 2px;font-size:22.1px;font-family:'IBM Plex Sans Thai';
+    min-width:180px;text-align:left;cursor:pointer;position:relative;white-space:nowrap;}
+  .ms-trigger::after, .cal-trigger::after{content:'▾';position:absolute;right:6px;top:8px;color:var(--ink-faint);font-size:16px;}
+  .ms-trigger.has-value, .cal-trigger.has-value{color:var(--matcha-deep);font-weight:600;border-bottom-color:var(--matcha-deep);}
+  .ms-panel, .cal-panel{display:none;position:absolute;z-index:40;top:100%;left:0;margin-top:6px;
+    background:var(--panel);border:1px solid var(--hairline-strong);border-radius:14px;
+    box-shadow:0 12px 30px rgba(31,46,26,.18);padding:10px;min-width:240px;}
+  .ms.open .ms-panel, .cal.open .cal-panel{display:block;}
+  .ms-tools{display:flex;gap:12px;padding:2px 4px 8px;border-bottom:1px solid var(--hairline);margin-bottom:6px;}
+  .ms-tools button{font-family:'IBM Plex Mono',monospace;font-size:16px;background:none;border:none;
+    color:var(--matcha-deep);cursor:pointer;text-decoration:underline;text-underline-offset:3px;padding:0;}
+  .ms-tools button:hover{color:var(--azuki);}
+  .ms-list{max-height:300px;overflow-y:auto;}
+  .ms-opt{display:flex;align-items:center;gap:10px;padding:7px 6px;border-radius:8px;cursor:pointer;
+    font-size:21px;color:var(--ink-soft);}
+  .ms-opt:hover{background:rgba(122,154,63,.09);}
+  .ms-opt input{width:18px;height:18px;accent-color:var(--matcha);cursor:pointer;flex-shrink:0;}
+  .ms-count{font-family:'IBM Plex Mono',monospace;font-size:15px;color:var(--ink-faint);margin-left:auto;}
+
+  .cal-panel{min-width:352px;}
+  .cal-head{display:flex;align-items:center;justify-content:space-between;padding:2px 2px 10px;}
+  .cal-head button{background:none;border:1px solid var(--hairline-strong);border-radius:9px;width:36px;height:36px;
+    cursor:pointer;color:var(--matcha-deep);font-size:19px;line-height:1;}
+  .cal-head button:disabled{opacity:.3;cursor:default;}
+  .cal-title{font-weight:600;font-size:21px;color:var(--ink);}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+  .cal-dow{font-family:'IBM Plex Mono',monospace;font-size:14px;color:var(--ink-faint);text-align:center;padding:4px 0;}
+  .cal-day{border:none;background:none;border-radius:9px;height:40px;font-size:18px;color:var(--ink-soft);
+    cursor:pointer;font-family:'IBM Plex Sans Thai';}
+  .cal-day:disabled{color:var(--hairline-strong);cursor:default;}
+  .cal-day.on{background:var(--matcha);color:#fff;font-weight:700;}
+  .cal-day:not(:disabled):not(.on):hover{background:rgba(122,154,63,.15);}
+  .cal-actions{display:flex;justify-content:space-between;align-items:center;gap:12px;padding-top:9px;margin-top:8px;
+    border-top:1px solid var(--hairline);font-family:'IBM Plex Mono',monospace;font-size:16px;color:var(--ink-faint);}
+  .cal-actions button{background:none;border:none;color:var(--azuki);cursor:pointer;
+    text-decoration:underline;text-underline-offset:3px;font-size:16px;padding:0;}
+  .cal-hint{font-size:14px;color:var(--ink-faint);}
+
+  /* ตอน export เป็นภาพ ไม่ต้องให้ panel ที่เปิดอยู่ติดไปในรูป */
+  body.exporting .ms-panel, body.exporting .cal-panel{display:none !important;}
+
   .stat-grid{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:22px;}
   .stat-card{flex:1;min-width:250px;background:var(--panel);border:1px solid var(--hairline);border-radius:30px;padding:35px 28px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px;box-shadow:0 3px 12px rgba(31,46,26,.05);transition:transform .15s ease, box-shadow .15s ease;}
   .stat-card:hover{transform:translateY(-3px);box-shadow:0 8px 20px rgba(31,46,26,.09);}
@@ -217,7 +263,7 @@
     </div>
     <div class="meta-right">
       Last updated<br><span id="lastUpdated">—</span>
-      <div style="font-size:11.8px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-11-v75-balanced-pages</div>
+      <div style="font-size:11.8px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-11-v76-multi-filters</div>
       <div>
         <button class="btn-plain" id="refreshBtn" onclick="loadData()">Refresh</button>
         <button class="btn-plain" id="saveImgBtn" onclick="saveTabAsPNG()" style="margin-left:14px;">Save as PNG (แนวนอน, คมชัด)</button>
@@ -251,19 +297,11 @@
     </div>
 
     <div class="filter-row">
-      <div class="filter-field"><label>Month</label><select id="f1_month" onchange="onFilterChange()"><option value="">All</option></select></div>
-      <div class="filter-field"><label>Week</label><select id="f1_week" onchange="onFilterChange()"><option value="">All</option></select></div>
-      <div class="filter-field"><label>Day</label><select id="f1_day" onchange="onFilterChange()"><option value="">All</option></select></div>
-      <div class="filter-field"><label>Shipping</label>
-        <select id="f1_urgent" onchange="onFilterChange()">
-          <option value="">All</option><option value="normal">ส่งปกติ</option><option value="urgent">ส่งด่วน</option>
-        </select>
-      </div>
-      <div class="filter-field"><label>Channel</label>
-        <select id="f1_channel" onchange="onFilterChange()">
-          <option value="">All</option><option value="platform">Platform</option><option value="walkin">Walk-in</option>
-        </select>
-      </div>
+      <div class="filter-field"><label>Month</label><div class="ms" id="f1_month" data-key="month1"></div></div>
+      <div class="filter-field"><label>Week</label><div class="ms" id="f1_week" data-key="week1"></div></div>
+      <div class="filter-field"><label>Day</label><div class="cal" id="f1_day" data-key="day1"></div></div>
+      <div class="filter-field"><label>Shipping</label><div class="ms" id="f1_urgent" data-key="urgent1"></div></div>
+      <div class="filter-field"><label>Channel</label><div class="ms" id="f1_channel" data-key="channel1"></div></div>
       <div class="filter-field"><label>Order Reference</label><input type="text" id="f1_orderRef" placeholder="Search order..." oninput="onFilterChange()"></div>
       <button class="filter-clear" onclick="clearFilters()">Clear filters</button>
     </div>
@@ -336,15 +374,10 @@
     </div>
 
     <div class="filter-row">
-      <div class="filter-field"><label>Month</label><select id="f2_month" onchange="onFilterChange()"><option value="">All</option></select></div>
-      <div class="filter-field"><label>Week</label><select id="f2_week" onchange="onFilterChange()"><option value="">All</option></select></div>
-      <div class="filter-field"><label>Day</label><select id="f2_day" onchange="onFilterChange()"><option value="">All</option></select></div>
-      <div class="filter-field"><label>WH → PK Status</label>
-        <select id="f2_whstatus" onchange="onFilterChange()">
-          <option value="">All</option><option value="ontime">On time</option>
-          <option value="early">Early</option><option value="late">Late</option>
-        </select>
-      </div>
+      <div class="filter-field"><label>Month</label><div class="ms" id="f2_month" data-key="month2"></div></div>
+      <div class="filter-field"><label>Week</label><div class="ms" id="f2_week" data-key="week2"></div></div>
+      <div class="filter-field"><label>Day</label><div class="cal" id="f2_day" data-key="day2"></div></div>
+      <div class="filter-field"><label>WH → PK Status</label><div class="ms" id="f2_whstatus" data-key="whstatus"></div></div>
       <div class="filter-field"><label>Product</label><input type="text" id="f2_product" placeholder="Search product..." oninput="onFilterChange()"></div>
       <button class="filter-clear" onclick="clearFilters()">Clear filters</button>
     </div>
@@ -664,7 +697,7 @@ const COLMAP3 = {
 let ALL_ROWS = [];
 let ALL_ROWS_3 = [];
 let charts = {};
-let filters = { month1:'', week1:'', day1:'', orderRef:'', urgent1:'', channel1:'', month2:'', week2:'', day2:'', whstatus:'', product:'' };
+let filters = { orderRef:'', product:'' };   // v76: ช่องที่เลือกหลายค่าย้ายไปอยู่ใน FILTER_SETS
 let filters3 = { status:'', product:'' };
 
 /*
@@ -1112,13 +1145,28 @@ function buildExportHeader(activeTab){
   const parts = [];
   activeTab.querySelectorAll('.filter-row .filter-field').forEach(f => {
     const labelEl = f.querySelector('label');
-    const ctrl = f.querySelector('select, input');
-    if(!ctrl) return;
     let val = '';
-    if(ctrl.tagName === 'SELECT'){
-      const opt = ctrl.options[ctrl.selectedIndex];
-      val = opt ? opt.textContent.trim() : '';
+    // v76: ค่าที่เลือกอยู่ในปุ่ม trigger ของ multi-select/ปฏิทิน · ช่องข้อความยังอ่านจาก input
+    const trigger = f.querySelector('[data-ms-trigger], [data-cal-trigger]');
+    const host = f.querySelector('.ms, .cal');
+    if(trigger && host){
+      const key = host.dataset.key;
+      const sel = FILTER_SETS[key];
+      if(!sel || !sel.size) return;
+      if(sel.size <= 3){
+        // น้อยกว่า 4 ค่า เขียนออกมาให้ครบ จะได้รู้ว่ากรองอะไรไว้จริง
+        const opts = MS_OPTIONS[key];
+        if(opts){
+          val = [...sel].map(v => { const o = opts.find(x => x.v === v); return o ? o.label : v; }).join(', ');
+        } else {
+          val = [...sel].sort().map(k => formatDateShort(new Date(k + 'T00:00:00'))).join(', ');
+        }
+      } else {
+        val = trigger.textContent.trim();
+      }
     } else {
+      const ctrl = f.querySelector('input');
+      if(!ctrl) return;
       val = (ctrl.value || '').trim();
     }
     if(!val || val.toLowerCase() === 'all') return;
@@ -1442,46 +1490,253 @@ async function saveTabAsPNG(){
   }
 }
 
+/* ================= v76: ตัวกรองแบบติ๊กหลายค่า + ปฏิทิน =================
+   เดิมทุกช่องเป็น <select> เลือกได้ค่าเดียว จึงดูรวมหลายสัปดาห์/หลายเดือนไม่ได้
+   และ dropdown "วัน" ยาวเป็นร้อยบรรทัดจนหาวันไม่เจอ
+   ตอนนี้เก็บค่าที่เลือกเป็น Set ต่อช่อง — Set ว่าง = ไม่กรอง (All)
+*/
+const FILTER_SETS = {
+  month1:new Set(), week1:new Set(), day1:new Set(), urgent1:new Set(), channel1:new Set(),
+  month2:new Set(), week2:new Set(), day2:new Set(), whstatus:new Set()
+};
+const MS_OPTIONS = {};        // key -> [{v, label}]
+let AVAILABLE_DAYS = new Set();  // วันที่มีข้อมูลจริง ใช้ปิดปุ่มวันที่ไม่มีข้อมูล
+const CAL_VIEW = {};          // key -> {y, m} เดือนที่ปฏิทินกำลังเปิดดู
+const CAL_LAST = {};          // key -> dateKey ที่คลิกล่าสุด สำหรับ shift+click เลือกเป็นช่วง
+
+const TH_MONTHS_FULL = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน',
+                        'กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+const TH_DOW = ['อา','จ','อ','พ','พฤ','ศ','ส'];
+
+function setsAllow(key, value){
+  const sel = FILTER_SETS[key];
+  return !sel || sel.size === 0 || sel.has(value);
+}
+
+/* ---------- multi-select แบบติ๊ก ---------- */
+function renderMultiSelect(key){
+  const host = document.querySelector('.ms[data-key="' + key + '"]');
+  if(!host) return;
+  const opts = MS_OPTIONS[key] || [];
+  const sel = FILTER_SETS[key];
+
+  let label = 'All';
+  if(sel.size === 1){
+    const only = [...sel][0];
+    const found = opts.find(o => o.v === only);
+    label = found ? found.label : only;
+  } else if(sel.size > 1){
+    label = 'เลือก ' + sel.size + ' รายการ';
+  }
+
+  const wasOpen = host.classList.contains('open');
+  const prevList = host.querySelector('.ms-list');
+  const prevScroll = prevList ? prevList.scrollTop : 0;
+  host.innerHTML =
+    '<button type="button" class="ms-trigger' + (sel.size ? ' has-value' : '') + '" data-ms-trigger>' +
+      escapeHtml(label) + '</button>' +
+    '<div class="ms-panel">' +
+      '<div class="ms-tools">' +
+        '<button type="button" data-ms-all>เลือกทั้งหมด</button>' +
+        '<button type="button" data-ms-none>ล้าง</button>' +
+      '</div>' +
+      '<div class="ms-list">' +
+        opts.map(o =>
+          '<label class="ms-opt"><input type="checkbox" value="' + escapeHtml(o.v) + '"' +
+          (sel.has(o.v) ? ' checked' : '') + '><span>' + escapeHtml(o.label) + '</span>' +
+          (o.count !== undefined ? '<span class="ms-count">' + Number(o.count).toLocaleString('en-US') + '</span>' : '') +
+          '</label>'
+        ).join('') +
+      '</div>' +
+    '</div>';
+  if(wasOpen) host.classList.add('open');
+  const list = host.querySelector('.ms-list');
+  if(list && prevScroll) list.scrollTop = prevScroll;
+}
+
+/* ---------- ปฏิทิน ---------- */
+function renderCalendar(key){
+  const host = document.querySelector('.cal[data-key="' + key + '"]');
+  if(!host) return;
+  const sel = FILTER_SETS[key];
+  const days = [...AVAILABLE_DAYS].sort();
+  if(!days.length){ host.innerHTML = '<button type="button" class="cal-trigger" data-cal-trigger>All</button>'; return; }
+
+  const minDay = days[0], maxDay = days[days.length-1];
+  if(!CAL_VIEW[key]){
+    const anchor = sel.size ? [...sel].sort()[0] : maxDay;   // เปิดที่เดือนของวันที่เลือก ถ้าไม่เลือกเปิดเดือนล่าสุด
+    CAL_VIEW[key] = { y: Number(anchor.slice(0,4)), m: Number(anchor.slice(5,7)) - 1 };
+  }
+  const { y, m } = CAL_VIEW[key];
+
+  let label = 'All';
+  if(sel.size === 1) label = formatDateFull(new Date([...sel][0] + 'T00:00:00'));
+  else if(sel.size > 1) label = 'เลือก ' + sel.size + ' วัน';
+
+  const first = new Date(y, m, 1);
+  const daysInMonth = new Date(y, m + 1, 0).getDate();
+  const lead = first.getDay();
+
+  let cells = '';
+  for(let i = 0; i < lead; i++) cells += '<span></span>';
+  for(let d = 1; d <= daysInMonth; d++){
+    const dk = y + '-' + String(m+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+    const has = AVAILABLE_DAYS.has(dk);
+    cells += '<button type="button" class="cal-day' + (sel.has(dk) ? ' on' : '') + '"' +
+             ' data-day="' + dk + '"' + (has ? '' : ' disabled') + '>' + d + '</button>';
+  }
+
+  const prevDisabled = (y + '-' + String(m+1).padStart(2,'0')) <= minDay.slice(0,7);
+  const nextDisabled = (y + '-' + String(m+1).padStart(2,'0')) >= maxDay.slice(0,7);
+
+  const wasOpen = host.classList.contains('open');
+  host.innerHTML =
+    '<button type="button" class="cal-trigger' + (sel.size ? ' has-value' : '') + '" data-cal-trigger>' +
+      escapeHtml(label) + '</button>' +
+    '<div class="cal-panel">' +
+      '<div class="cal-head">' +
+        '<button type="button" data-cal-prev' + (prevDisabled ? ' disabled' : '') + '>‹</button>' +
+        '<span class="cal-title">' + TH_MONTHS_FULL[m] + ' ' + y + '</span>' +
+        '<button type="button" data-cal-next' + (nextDisabled ? ' disabled' : '') + '>›</button>' +
+      '</div>' +
+      '<div class="cal-grid">' + TH_DOW.map(d => '<span class="cal-dow">' + d + '</span>').join('') + cells + '</div>' +
+      '<div class="cal-actions">' +
+        '<span class="cal-hint">คลิกเลือกหลายวันได้ · Shift+คลิก = เลือกเป็นช่วง</span>' +
+        '<button type="button" data-cal-clear>ล้างวันที่</button>' +
+      '</div>' +
+    '</div>';
+  if(wasOpen) host.classList.add('open');
+}
+
+function renderFilterControl(key){
+  if(document.querySelector('.cal[data-key="' + key + '"]')) renderCalendar(key);
+  else renderMultiSelect(key);
+}
+function renderAllFilterControls(){
+  Object.keys(FILTER_SETS).forEach(renderFilterControl);
+}
+
+/* ---------- event delegation ครั้งเดียว ครอบทุกช่อง ---------- */
+document.addEventListener('click', (e) => {
+  const inMs  = e.target.closest('.ms');
+  const inCal = e.target.closest('.cal');
+
+  // ปิด panel อื่นทั้งหมดที่ไม่ได้คลิกอยู่
+  document.querySelectorAll('.ms.open, .cal.open').forEach(el => {
+    if(el !== inMs && el !== inCal) el.classList.remove('open');
+  });
+
+  if(inMs){
+    const key = inMs.dataset.key;
+    if(e.target.closest('[data-ms-trigger]')){ inMs.classList.toggle('open'); return; }
+    if(e.target.closest('[data-ms-all]')){
+      (MS_OPTIONS[key] || []).forEach(o => FILTER_SETS[key].add(o.v));
+      renderMultiSelect(key); onFilterChange(); return;
+    }
+    if(e.target.closest('[data-ms-none]')){
+      FILTER_SETS[key].clear(); renderMultiSelect(key); onFilterChange(); return;
+    }
+    return;
+  }
+
+  if(inCal){
+    const key = inCal.dataset.key;
+    if(e.target.closest('[data-cal-trigger]')){ inCal.classList.toggle('open'); return; }
+    if(e.target.closest('[data-cal-prev]') && CAL_VIEW[key]){
+      CAL_VIEW[key].m--; if(CAL_VIEW[key].m < 0){ CAL_VIEW[key].m = 11; CAL_VIEW[key].y--; }
+      renderCalendar(key); return;
+    }
+    if(e.target.closest('[data-cal-next]') && CAL_VIEW[key]){
+      CAL_VIEW[key].m++; if(CAL_VIEW[key].m > 11){ CAL_VIEW[key].m = 0; CAL_VIEW[key].y++; }
+      renderCalendar(key); return;
+    }
+    if(e.target.closest('[data-cal-clear]')){
+      FILTER_SETS[key].clear(); CAL_LAST[key] = null; renderCalendar(key); onFilterChange(); return;
+    }
+    const dayBtn = e.target.closest('.cal-day');
+    if(dayBtn && !dayBtn.disabled){
+      const dk = dayBtn.dataset.day;
+      const sel = FILTER_SETS[key];
+      if(e.shiftKey && CAL_LAST[key]){
+        // เลือกเป็นช่วง — เอาเฉพาะวันที่มีข้อมูลจริงในช่วงนั้น
+        const a = CAL_LAST[key] < dk ? CAL_LAST[key] : dk;
+        const b = CAL_LAST[key] < dk ? dk : CAL_LAST[key];
+        [...AVAILABLE_DAYS].filter(d => d >= a && d <= b).forEach(d => sel.add(d));
+      } else {
+        if(sel.has(dk)) sel.delete(dk); else sel.add(dk);
+        CAL_LAST[key] = dk;
+      }
+      renderCalendar(key); onFilterChange(); return;
+    }
+    return;
+  }
+});
+
+// เลือก/ไม่เลือก checkbox ในรายการ
+document.addEventListener('change', (e) => {
+  const opt = e.target.closest('.ms-opt');
+  if(!opt) return;
+  const host = opt.closest('.ms');
+  if(!host) return;
+  const key = host.dataset.key;
+  const v = e.target.value;
+  if(e.target.checked) FILTER_SETS[key].add(v); else FILTER_SETS[key].delete(v);
+  renderMultiSelect(key);
+  onFilterChange();
+});
+
+// กด Esc ปิด panel ที่เปิดอยู่
+document.addEventListener('keydown', (e) => {
+  if(e.key === 'Escape') document.querySelectorAll('.ms.open, .cal.open').forEach(el => el.classList.remove('open'));
+});
+
 function populateFilterOptions(){
-  const months = [...new Set(ALL_ROWS.map(r=>r.month).filter(Boolean))].sort((a,b)=> MONTH_ORDER.indexOf(a) - MONTH_ORDER.indexOf(b));
-  const weeks = [...new Set(ALL_ROWS.map(r=>r.week).filter(Boolean))].sort((a,b)=> Number(a)-Number(b));
-  const dayKeys = [...new Set(ALL_ROWS.map(r=>rowDayKey(r)).filter(Boolean))].sort();
-  ['f1_month','f2_month'].forEach(id=>{
-    const el = document.getElementById(id);
-    el.innerHTML = '<option value="">All</option>' + months.map(m=>'<option value="'+escapeHtml(m)+'">'+escapeHtml(m)+'</option>').join('');
-  });
-  ['f1_week','f2_week'].forEach(id=>{
-    const el = document.getElementById(id);
-    el.innerHTML = '<option value="">All</option>' + weeks.map(w=>'<option value="'+escapeHtml(w)+'">Week '+escapeHtml(w)+'</option>').join('');
-  });
-  ['f1_day','f2_day'].forEach(id=>{
-    const el = document.getElementById(id);
-    el.innerHTML = '<option value="">All</option>' + dayKeys.map(k=>{
-      const label = formatDateFull(new Date(k + 'T00:00:00'));
-      return '<option value="'+escapeHtml(k)+'">'+escapeHtml(label)+'</option>';
-    }).join('');
-  });
+  const countBy = (getter) => {
+    const m = {};
+    ALL_ROWS.forEach(r => { const v = getter(r); if(v) m[v] = (m[v]||0) + 1; });
+    return m;
+  };
+
+  const monthCounts = countBy(r => r.month);
+  const months = Object.keys(monthCounts).sort((a,b) => MONTH_ORDER.indexOf(a) - MONTH_ORDER.indexOf(b));
+  const weekCounts = countBy(r => r.week);
+  const weeks = Object.keys(weekCounts).sort((a,b) => Number(a) - Number(b));
+
+  AVAILABLE_DAYS = new Set(ALL_ROWS.map(r => rowDayKey(r)).filter(Boolean));
+
+  const monthOpts = months.map(m => ({ v:m, label:m, count:monthCounts[m] }));
+  const weekOpts  = weeks.map(w => ({ v:w, label:'Week ' + w, count:weekCounts[w] }));
+
+  MS_OPTIONS.month1 = monthOpts;  MS_OPTIONS.month2 = monthOpts;
+  MS_OPTIONS.week1  = weekOpts;   MS_OPTIONS.week2  = weekOpts;
+  MS_OPTIONS.urgent1  = [{ v:'normal', label:'ส่งปกติ' }, { v:'urgent', label:'ส่งด่วน' }];
+  MS_OPTIONS.channel1 = [{ v:'platform', label:'Platform' }, { v:'walkin', label:'Walk-in' }];
+  MS_OPTIONS.whstatus = [{ v:'ontime', label:'On time' }, { v:'early', label:'Early' }, { v:'late', label:'Late' }];
+
+  // ค่าที่เลือกไว้แต่ไม่มีในข้อมูลชุดใหม่แล้ว ต้องเอาออก ไม่งั้นกรองจนว่างเปล่าแบบไม่มีสาเหตุ
+  const prune = (key, valid) => {
+    [...FILTER_SETS[key]].forEach(v => { if(!valid.has(v)) FILTER_SETS[key].delete(v); });
+  };
+  const monthSet = new Set(months), weekSet = new Set(weeks);
+  prune('month1', monthSet); prune('month2', monthSet);
+  prune('week1', weekSet);   prune('week2', weekSet);
+  prune('day1', AVAILABLE_DAYS); prune('day2', AVAILABLE_DAYS);
+
+  Object.keys(CAL_VIEW).forEach(k => { delete CAL_VIEW[k]; });   // ให้ปฏิทินคำนวณเดือนเริ่มต้นใหม่
+  renderAllFilterControls();
 }
 
 function onFilterChange(){
-  filters.month1 = document.getElementById('f1_month').value;
-  filters.week1 = document.getElementById('f1_week').value;
-  filters.day1 = document.getElementById('f1_day').value;
   filters.orderRef = document.getElementById('f1_orderRef').value;
-  filters.urgent1 = document.getElementById('f1_urgent').value;
-  filters.channel1 = document.getElementById('f1_channel').value;
-  filters.month2 = document.getElementById('f2_month').value;
-  filters.week2 = document.getElementById('f2_week').value;
-  filters.day2 = document.getElementById('f2_day').value;
-  filters.whstatus = document.getElementById('f2_whstatus').value;
-  filters.product = document.getElementById('f2_product').value;
+  filters.product  = document.getElementById('f2_product').value;
   renderAll();
 }
 
 function clearFilters(){
-  ['f1_month','f1_week','f1_day','f1_urgent','f1_channel','f2_month','f2_week','f2_day','f2_whstatus'].forEach(id=>document.getElementById(id).value='');
-  ['f1_orderRef','f2_product'].forEach(id=>document.getElementById(id).value='');
-  filters = { month1:'', week1:'', day1:'', orderRef:'', urgent1:'', channel1:'', month2:'', week2:'', day2:'', whstatus:'', product:'' };
+  Object.keys(FILTER_SETS).forEach(k => { FILTER_SETS[k].clear(); CAL_LAST[k] = null; });
+  ['f1_orderRef','f2_product'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+  filters.orderRef = ''; filters.product = '';
+  renderAllFilterControls();
   renderAll();
 }
 
@@ -1693,13 +1948,14 @@ function setHero(numId, ringId, pct){
 
 /* ================= TAB 1 ================= */
 function getTab1Rows(){
+  // v76: แต่ละช่องเป็น Set — ว่าง = ไม่กรอง, มีหลายค่า = เอาทุกค่าที่ติ๊กมารวมกัน
   return ALL_ROWS.filter(r =>
-    (!filters.month1 || r.month === filters.month1) &&
-    (!filters.week1 || r.week === filters.week1) &&
-    (!filters.day1 || rowDayKey(r) === filters.day1) &&
+    setsAllow('month1', r.month) &&
+    setsAllow('week1', r.week) &&
+    setsAllow('day1', rowDayKey(r)) &&
     (!filters.orderRef || r.orderRef.toLowerCase().includes(filters.orderRef.toLowerCase())) &&
-    (!filters.urgent1 || (filters.urgent1 === 'normal' ? r.urgent === 'ส่งปกติ' : r.urgent === 'ส่งด่วน')) &&
-    (!filters.channel1 || (filters.channel1 === 'platform' ? isPlatformSource(r.source) : !isPlatformSource(r.source)))
+    setsAllow('urgent1', r.urgent === 'ส่งด่วน' ? 'urgent' : 'normal') &&
+    setsAllow('channel1', isPlatformSource(r.source) ? 'platform' : 'walkin')
   );
 }
 
@@ -1964,10 +2220,10 @@ function renderUrgentChart(orderRows){
 /* ================= TAB 2 ================= */
 function getTab2Rows(){
   return ALL_ROWS.filter(r =>
-    (!filters.month2 || r.month === filters.month2) &&
-    (!filters.week2 || r.week === filters.week2) &&
-    (!filters.day2 || rowDayKey(r) === filters.day2) &&
-    (!filters.whstatus || classify(r.whStatus) === filters.whstatus) &&
+    setsAllow('month2', r.month) &&
+    setsAllow('week2', r.week) &&
+    setsAllow('day2', rowDayKey(r)) &&
+    setsAllow('whstatus', classify(r.whStatus)) &&
     (!filters.product || r.product.toLowerCase().includes(filters.product.toLowerCase()))
   );
 }
