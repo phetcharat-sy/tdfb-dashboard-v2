@@ -75,56 +75,110 @@
 
   .filter-row{display:flex;gap:22px;flex-wrap:wrap;align-items:flex-end;padding:16px 20px;border-radius:14px;background:var(--panel);border:1px solid var(--hairline);margin-bottom:28px;}
   .filter-field{display:flex;flex-direction:column;gap:5px;}
-  .filter-field label{font-size:16.9px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;}
+  .filter-field > label{font-size:16.9px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;}
   .filter-field select, .filter-field input{background:transparent;border:none;border-bottom:1.5px solid var(--hairline-strong);color:var(--ink);padding:8px 2px;font-size:22.1px;font-family:'IBM Plex Sans Thai';min-width:170px;}
   .filter-field select:focus, .filter-field input:focus{outline:none;border-bottom-color:var(--matcha-deep);}
   .filter-clear{font-family:'IBM Plex Mono',monospace;font-size:17.8px;color:var(--ink-faint);background:none;border:none;cursor:pointer;text-decoration:underline;text-underline-offset:3px;}
   .filter-clear:hover{color:var(--azuki);}
 
-  /* ===== v76: ตัวกรองแบบติ๊กหลายค่า (multi-select) + ปฏิทินเลือกวัน =====
-     เดิมเป็น <select> เลือกได้ค่าเดียว ทำให้ดูรวมหลายสัปดาห์/หลายเดือนไม่ได้
-     และ dropdown วันยาวเป็นร้อยบรรทัดจนหาวันไม่เจอ */
+  /* ===== v77: ตัวกรองติ๊กหลายค่า + ปฏิทิน =====
+     หมายเหตุ: .ms-opt เป็น <label> ที่อยู่ใน .filter-field จึงเคยรับกฎ
+     ".filter-field label" (mono / uppercase / สีจาง / letter-spacing) มาเต็มๆ ทำให้ดูเพี้ยน
+     แก้โดยเปลี่ยนกฎนั้นเป็น ".filter-field > label" แล้วคุมสไตล์ในนี้เองทั้งหมด */
   .ms, .cal{position:relative;}
-  .ms-trigger, .cal-trigger{background:transparent;border:none;border-bottom:1.5px solid var(--hairline-strong);
-    color:var(--ink);padding:8px 26px 8px 2px;font-size:22.1px;font-family:'IBM Plex Sans Thai';
-    min-width:180px;text-align:left;cursor:pointer;position:relative;white-space:nowrap;}
-  .ms-trigger::after, .cal-trigger::after{content:'▾';position:absolute;right:6px;top:8px;color:var(--ink-faint);font-size:16px;}
-  .ms-trigger.has-value, .cal-trigger.has-value{color:var(--matcha-deep);font-weight:600;border-bottom-color:var(--matcha-deep);}
-  .ms-panel, .cal-panel{display:none;position:absolute;z-index:40;top:100%;left:0;margin-top:6px;
-    background:var(--panel);border:1px solid var(--hairline-strong);border-radius:14px;
-    box-shadow:0 12px 30px rgba(31,46,26,.18);padding:10px;min-width:240px;}
-  .ms.open .ms-panel, .cal.open .cal-panel{display:block;}
-  .ms-tools{display:flex;gap:12px;padding:2px 4px 8px;border-bottom:1px solid var(--hairline);margin-bottom:6px;}
-  .ms-tools button{font-family:'IBM Plex Mono',monospace;font-size:16px;background:none;border:none;
-    color:var(--matcha-deep);cursor:pointer;text-decoration:underline;text-underline-offset:3px;padding:0;}
-  .ms-tools button:hover{color:var(--azuki);}
-  .ms-list{max-height:300px;overflow-y:auto;}
-  .ms-opt{display:flex;align-items:center;gap:10px;padding:7px 6px;border-radius:8px;cursor:pointer;
-    font-size:21px;color:var(--ink-soft);}
-  .ms-opt:hover{background:rgba(122,154,63,.09);}
-  .ms-opt input{width:18px;height:18px;accent-color:var(--matcha);cursor:pointer;flex-shrink:0;}
-  .ms-count{font-family:'IBM Plex Mono',monospace;font-size:15px;color:var(--ink-faint);margin-left:auto;}
 
-  .cal-panel{min-width:352px;}
-  .cal-head{display:flex;align-items:center;justify-content:space-between;padding:2px 2px 10px;}
-  .cal-head button{background:none;border:1px solid var(--hairline-strong);border-radius:9px;width:36px;height:36px;
-    cursor:pointer;color:var(--matcha-deep);font-size:19px;line-height:1;}
-  .cal-head button:disabled{opacity:.3;cursor:default;}
-  .cal-title{font-weight:600;font-size:21px;color:var(--ink);}
-  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
-  .cal-dow{font-family:'IBM Plex Mono',monospace;font-size:14px;color:var(--ink-faint);text-align:center;padding:4px 0;}
-  .cal-day{border:none;background:none;border-radius:9px;height:40px;font-size:18px;color:var(--ink-soft);
-    cursor:pointer;font-family:'IBM Plex Sans Thai';}
+  .ms-trigger, .cal-trigger{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    background:transparent;border:none;border-bottom:1.5px solid var(--hairline-strong);
+    color:var(--ink);padding:7px 2px;font-size:22.1px;font-weight:500;
+    font-family:'IBM Plex Sans Thai',sans-serif;min-width:186px;max-width:280px;
+    text-align:left;cursor:pointer;white-space:nowrap;transition:border-color .14s ease,color .14s ease;}
+  .ms-trigger:hover, .cal-trigger:hover{border-bottom-color:var(--matcha);}
+  .ms-trigger > span, .cal-trigger > span{overflow:hidden;text-overflow:ellipsis;}
+  .ms-caret{flex-shrink:0;color:var(--ink-faint);font-size:13px;line-height:1;transition:transform .16s ease;}
+  .ms.open .ms-caret, .cal.open .ms-caret{transform:rotate(180deg);}
+  .ms-trigger.has-value, .cal-trigger.has-value{color:var(--matcha-deep);font-weight:600;border-bottom-color:var(--matcha-deep);}
+  .ms-trigger.has-value .ms-caret, .cal-trigger.has-value .ms-caret{color:var(--matcha-deep);}
+
+  .ms-panel, .cal-panel{
+    display:none;position:absolute;z-index:60;top:calc(100% + 8px);left:0;
+    background:var(--panel);border:1px solid var(--hairline-strong);border-radius:18px;
+    box-shadow:0 18px 44px rgba(31,46,26,.20), 0 2px 6px rgba(31,46,26,.06);
+    padding:8px;min-width:300px;}
+  .ms.open .ms-panel, .cal.open .cal-panel{display:block;animation:msIn .14s ease;}
+  @keyframes msIn{from{opacity:0;transform:translateY(-5px);}to{opacity:1;transform:none;}}
+
+  .ms-head{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:8px 12px 10px;
+    border-bottom:1px solid var(--hairline);margin-bottom:6px;}
+  .ms-head-title{font-family:'IBM Plex Mono',monospace;font-size:15px;letter-spacing:.07em;
+    text-transform:uppercase;color:var(--ink-faint);white-space:nowrap;}
+  .ms-head-actions{display:flex;gap:14px;flex-shrink:0;}
+  .ms-head-actions button{font-family:'IBM Plex Sans Thai',sans-serif;font-size:17px;background:none;border:none;
+    color:var(--matcha-deep);cursor:pointer;padding:0;border-bottom:1px solid transparent;}
+  .ms-head-actions button:hover{border-bottom-color:currentColor;}
+  .ms-head-actions button.danger{color:var(--azuki);}
+
+  .ms-list{max-height:314px;overflow-y:auto;padding:2px;}
+  .ms-opt{display:flex;align-items:center;gap:13px;padding:10px 11px;border-radius:11px;cursor:pointer;
+    font-family:'IBM Plex Sans Thai',sans-serif;font-size:21px;font-weight:400;letter-spacing:0;
+    text-transform:none;color:var(--ink-soft);transition:background .12s ease;}
+  .ms-opt:hover{background:rgba(122,154,63,.10);}
+  .ms-opt.on{background:rgba(122,154,63,.15);color:var(--ink);font-weight:600;}
+  .ms-opt input{position:absolute;opacity:0;width:0;height:0;pointer-events:none;}
+  .ms-box{width:21px;height:21px;border-radius:7px;border:1.5px solid var(--hairline-strong);
+    background:var(--paper);flex-shrink:0;position:relative;transition:background .12s ease,border-color .12s ease;}
+  .ms-opt input:checked + .ms-box{background:var(--matcha);border-color:var(--matcha);}
+  .ms-box::after{content:'';position:absolute;left:6.5px;top:3px;width:6px;height:11px;
+    border:solid #fff;border-width:0 2.6px 2.6px 0;transform:rotate(45deg) scale(0);
+    transform-origin:center;transition:transform .13s cubic-bezier(.2,.9,.3,1.3);}
+  .ms-opt input:checked + .ms-box::after{transform:rotate(45deg) scale(1);}
+  .ms-text{flex:1;text-align:left;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .ms-count{flex-shrink:0;font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:500;
+    color:var(--ink-faint);background:rgba(31,46,26,.05);border-radius:6px;padding:3px 8px;}
+  .ms-opt.on .ms-count{color:var(--matcha-deep);background:rgba(122,154,63,.18);}
+
+  .ms-foot{padding:9px 12px 4px;margin-top:4px;border-top:1px solid var(--hairline);
+    font-family:'IBM Plex Mono',monospace;font-size:15px;color:var(--ink-faint);}
+  .ms-foot b{color:var(--matcha-deep);}
+
+  /* ---------- ปฏิทิน ---------- */
+  .cal-panel{min-width:372px;padding:10px;}
+  .cal-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:4px 4px 12px;}
+  .cal-head button{background:none;border:1.5px solid var(--hairline-strong);border-radius:11px;
+    width:38px;height:38px;cursor:pointer;color:var(--matcha-deep);font-size:20px;line-height:1;
+    display:flex;align-items:center;justify-content:center;transition:all .12s ease;}
+  .cal-head button:hover:not(:disabled){border-color:var(--matcha);background:rgba(122,154,63,.10);}
+  .cal-head button:disabled{opacity:.28;cursor:default;}
+  .cal-title{font-family:'Zen Maru Gothic',sans-serif;font-weight:700;font-size:23px;color:var(--ink);}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+  .cal-dow{font-family:'IBM Plex Mono',monospace;font-size:14px;letter-spacing:.04em;color:var(--ink-faint);
+    text-align:center;padding:2px 0 6px;}
+  .cal-day{border:1.5px solid transparent;background:none;border-radius:11px;height:42px;
+    font-family:'IBM Plex Sans Thai',sans-serif;font-size:19px;font-weight:500;color:var(--ink-soft);cursor:pointer;
+    transition:all .12s ease;}
   .cal-day:disabled{color:var(--hairline-strong);cursor:default;}
-  .cal-day.on{background:var(--matcha);color:#fff;font-weight:700;}
-  .cal-day:not(:disabled):not(.on):hover{background:rgba(122,154,63,.15);}
-  .cal-actions{display:flex;justify-content:space-between;align-items:center;gap:12px;padding-top:9px;margin-top:8px;
-    border-top:1px solid var(--hairline);font-family:'IBM Plex Mono',monospace;font-size:16px;color:var(--ink-faint);}
-  .cal-actions button{background:none;border:none;color:var(--azuki);cursor:pointer;
-    text-decoration:underline;text-underline-offset:3px;font-size:16px;padding:0;}
-  .cal-hint{font-size:14px;color:var(--ink-faint);}
+  .cal-day.on{background:var(--matcha);border-color:var(--matcha);color:#fff;font-weight:700;
+    box-shadow:0 3px 8px rgba(76,107,38,.28);}
+  .cal-day:not(:disabled):not(.on):hover{background:rgba(122,154,63,.14);border-color:rgba(122,154,63,.35);}
+  .cal-actions{display:flex;justify-content:space-between;align-items:center;gap:14px;
+    padding:11px 4px 2px;margin-top:10px;border-top:1px solid var(--hairline);}
+  .cal-hint{font-family:'IBM Plex Mono',monospace;font-size:14px;color:var(--ink-faint);line-height:1.5;}
+  .cal-actions button{font-family:'IBM Plex Sans Thai',sans-serif;background:none;border:none;color:var(--azuki);
+    cursor:pointer;font-size:17px;padding:0;flex-shrink:0;border-bottom:1px solid transparent;}
+  .cal-actions button:hover{border-bottom-color:currentColor;}
 
   /* ตอน export เป็นภาพ ไม่ต้องให้ panel ที่เปิดอยู่ติดไปในรูป */
+  /* v78: ปุ่มสลับว่า "วัน" ในตัวกรองหมายถึงวันที่คอลัมน์ไหน */
+  .seg{display:inline-flex;gap:4px;background:rgba(31,46,26,.055);border-radius:13px;padding:4px;}
+  .seg button{border:none;background:none;border-radius:10px;padding:7px 14px;
+    font-family:'IBM Plex Sans Thai',sans-serif;font-size:18px;color:var(--ink-soft);cursor:pointer;white-space:nowrap;}
+  .seg button:hover{color:var(--ink);}
+  .seg button.on{background:var(--panel);color:var(--matcha-deep);font-weight:600;box-shadow:0 2px 7px rgba(31,46,26,.12);}
+
+  /* ช่องที่อยู่ขวาสุดของแถว ให้ panel กางออกทางซ้าย ไม่ให้ล้นขอบจอ */
+  .filter-field:nth-last-child(-n+3) .ms-panel,
+  .filter-field:nth-last-child(-n+3) .cal-panel{left:auto;right:0;}
+
   body.exporting .ms-panel, body.exporting .cal-panel{display:none !important;}
 
   .stat-grid{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:22px;}
@@ -263,7 +317,7 @@
     </div>
     <div class="meta-right">
       Last updated<br><span id="lastUpdated">—</span>
-      <div style="font-size:11.8px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-11-v76-multi-filters</div>
+      <div style="font-size:11.8px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-11-v79-countunique</div>
       <div>
         <button class="btn-plain" id="refreshBtn" onclick="loadData()">Refresh</button>
         <button class="btn-plain" id="saveImgBtn" onclick="saveTabAsPNG()" style="margin-left:14px;">Save as PNG (แนวนอน, คมชัด)</button>
@@ -303,6 +357,7 @@
       <div class="filter-field"><label>Shipping</label><div class="ms" id="f1_urgent" data-key="urgent1"></div></div>
       <div class="filter-field"><label>Channel</label><div class="ms" id="f1_channel" data-key="channel1"></div></div>
       <div class="filter-field"><label>Order Reference</label><input type="text" id="f1_orderRef" placeholder="Search order..." oninput="onFilterChange()"></div>
+      <div class="filter-field"><label>นับ "วัน" ตามคอลัมน์</label><div class="seg" data-seg="basis"></div></div>
       <button class="filter-clear" onclick="clearFilters()">Clear filters</button>
     </div>
 
@@ -379,6 +434,7 @@
       <div class="filter-field"><label>Day</label><div class="cal" id="f2_day" data-key="day2"></div></div>
       <div class="filter-field"><label>WH → PK Status</label><div class="ms" id="f2_whstatus" data-key="whstatus"></div></div>
       <div class="filter-field"><label>Product</label><input type="text" id="f2_product" placeholder="Search product..." oninput="onFilterChange()"></div>
+      <div class="filter-field"><label>นับ "วัน" ตามคอลัมน์</label><div class="seg" data-seg="basis"></div></div>
       <button class="filter-clear" onclick="clearFilters()">Clear filters</button>
     </div>
 
@@ -986,8 +1042,10 @@ function isExcludedProductName(name){
   return EXCLUDED_PRODUCT_PREFIXES.some(prefix => n.startsWith(prefix));
 }
 
+let EXCLUDED_ONLY_ORDERS = 0;   // ออเดอร์ที่มีแต่บรรทัด Box/ค่าส่ง/คูปอง จึงหลุดออกทั้งออเดอร์
+
 function mapRows(rawRows){
-  return rawRows.map(r => {
+  const mapped = rawRows.map(r => {
     const out = {};
     const rNorm = {};
     Object.keys(r).forEach(k => { rNorm[k.trim().toLowerCase()] = r[k]; });
@@ -998,7 +1056,15 @@ function mapRows(rawRows){
       out[key] = (val !== undefined ? val : '').toString().trim();
     }
     return out;
-  }).filter(r => r.orderRef && !isExcludedProductName(r.product));
+  }).filter(r => r.orderRef);
+
+  // ออเดอร์ที่ทุกบรรทัดเป็นสินค้าที่ไม่นับ (Box/ค่าส่ง/คูปอง/เอกสาร) จะหายไปทั้งออเดอร์
+  // เก็บจำนวนไว้โชว์ท้ายหน้า เพื่อกระทบยอดกับรายงานฝั่งอื่นได้ว่าส่วนต่างมาจากไหน
+  const allRefs = new Set(mapped.map(r => r.orderRef));
+  const keptRows = mapped.filter(r => !isExcludedProductName(r.product));
+  const keptRefs = new Set(keptRows.map(r => r.orderRef));
+  EXCLUDED_ONLY_ORDERS = allRefs.size - keptRefs.size;
+  return keptRows;
 }
 
 function mapRows3(rawRows){
@@ -1043,9 +1109,44 @@ function toDateKey(d){
   if(!d) return '';
   return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 }
+/*
+  v78: ทำไมยอดออเดอร์ไม่ตรงกับแดชบอร์ดตัวอื่น
+  ตัวกรอง "Day" เดิมนับตาม 'วันที่ลง Odoo' (createDate) ซึ่งเป็นวันที่คีย์ออเดอร์เข้าระบบ
+  แต่แท็บ Forecast และแดชบอร์ดฝั่งจัดส่ง นับตาม 'วันที่ต้องการจัดส่ง' (expectedDelivery)
+  ออเดอร์ที่คีย์วันเดียวอาจกระจายไปส่งหลายวัน ตัวเลขจึงต่างกันมาก
+  ตอนนี้เลือกฐานวันที่ได้ และตั้งค่าเริ่มต้นเป็น 'วันที่ต้องการจัดส่ง' ให้ตรงกับแท็บ Forecast
+*/
+const DATE_BASIS_OPTIONS = [
+  { v:'expectedDelivery', label:'วันที่ต้องการจัดส่ง' },
+  { v:'createDate',       label:'วันที่ลง Odoo' }
+];
+let DATE_BASIS = 'expectedDelivery';
+
 function rowDayKey(r){
-  return toDateKey(parseDate(r.createDate));
+  return toDateKey(parseDate(DATE_BASIS === 'createDate' ? r.createDate : r.expectedDelivery));
 }
+
+function renderDateBasisToggle(){
+  document.querySelectorAll('[data-seg="basis"]').forEach(host => {
+    host.innerHTML = DATE_BASIS_OPTIONS.map(o =>
+      '<button type="button" class="' + (DATE_BASIS === o.v ? 'on' : '') + '" data-basis="' + o.v + '">' +
+      escapeHtml(o.label) + '</button>'
+    ).join('');
+  });
+}
+
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-seg="basis"] button');
+  if(!btn) return;
+  const v = btn.dataset.basis;
+  if(v === DATE_BASIS) return;
+  DATE_BASIS = v;
+  FILTER_SETS.day1.clear(); FILTER_SETS.day2.clear();   // วันที่เลือกไว้ไม่ตรงฐานใหม่แล้ว
+  CAL_LAST.day1 = null; CAL_LAST.day2 = null;
+  renderDateBasisToggle();
+  populateFilterOptions();
+  renderAll();
+});
 function formatDateFull(d){
   if(!d) return '';
   const months = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
@@ -1179,7 +1280,8 @@ function buildExportHeader(activeTab){
   return {
     title: t.en + (t.th ? '  —  ' + t.th : ''),
     note: t.note,
-    filterText: parts.length ? parts.join('   ·   ') : 'ข้อมูลทั้งหมด (ไม่ได้กรอง)',
+    filterText: (parts.length ? parts.join('   ·   ') : 'ข้อมูลทั้งหมด (ไม่ได้กรอง)') +
+                '   ·   นับวันตาม ' + ((DATE_BASIS_OPTIONS.find(o => o.v === DATE_BASIS) || {}).label || ''),
     hero: (hero && hero !== '—') ? hero : '',
     slug: t.en.replace(/[^A-Za-z0-9]+/g,'-')
   };
@@ -1534,20 +1636,28 @@ function renderMultiSelect(key){
   const prevScroll = prevList ? prevList.scrollTop : 0;
   host.innerHTML =
     '<button type="button" class="ms-trigger' + (sel.size ? ' has-value' : '') + '" data-ms-trigger>' +
-      escapeHtml(label) + '</button>' +
+      '<span>' + escapeHtml(label) + '</span><span class="ms-caret">▼</span></button>' +
     '<div class="ms-panel">' +
-      '<div class="ms-tools">' +
-        '<button type="button" data-ms-all>เลือกทั้งหมด</button>' +
-        '<button type="button" data-ms-none>ล้าง</button>' +
+      '<div class="ms-head">' +
+        '<span class="ms-head-title">ติ๊กได้หลายค่า</span>' +
+        '<span class="ms-head-actions">' +
+          '<button type="button" data-ms-all>ทั้งหมด</button>' +
+          '<button type="button" class="danger" data-ms-none>ล้าง</button>' +
+        '</span>' +
       '</div>' +
       '<div class="ms-list">' +
         opts.map(o =>
-          '<label class="ms-opt"><input type="checkbox" value="' + escapeHtml(o.v) + '"' +
-          (sel.has(o.v) ? ' checked' : '') + '><span>' + escapeHtml(o.label) + '</span>' +
-          (o.count !== undefined ? '<span class="ms-count">' + Number(o.count).toLocaleString('en-US') + '</span>' : '') +
+          '<label class="ms-opt' + (sel.has(o.v) ? ' on' : '') + '">' +
+            '<input type="checkbox" value="' + escapeHtml(o.v) + '"' + (sel.has(o.v) ? ' checked' : '') + '>' +
+            '<span class="ms-box"></span>' +
+            '<span class="ms-text">' + escapeHtml(o.label) + '</span>' +
+            (o.count !== undefined ? '<span class="ms-count">' + Number(o.count).toLocaleString('en-US') + '</span>' : '') +
           '</label>'
         ).join('') +
       '</div>' +
+      (sel.size
+        ? '<div class="ms-foot">เลือกอยู่ <b>' + sel.size + '</b> จาก ' + opts.length + ' รายการ</div>'
+        : '<div class="ms-foot">ไม่เลือก = แสดงทั้งหมด</div>') +
     '</div>';
   if(wasOpen) host.classList.add('open');
   const list = host.querySelector('.ms-list');
@@ -1592,7 +1702,7 @@ function renderCalendar(key){
   const wasOpen = host.classList.contains('open');
   host.innerHTML =
     '<button type="button" class="cal-trigger' + (sel.size ? ' has-value' : '') + '" data-cal-trigger>' +
-      escapeHtml(label) + '</button>' +
+      '<span>' + escapeHtml(label) + '</span><span class="ms-caret">▼</span></button>' +
     '<div class="cal-panel">' +
       '<div class="cal-head">' +
         '<button type="button" data-cal-prev' + (prevDisabled ? ' disabled' : '') + '>‹</button>' +
@@ -1601,7 +1711,8 @@ function renderCalendar(key){
       '</div>' +
       '<div class="cal-grid">' + TH_DOW.map(d => '<span class="cal-dow">' + d + '</span>').join('') + cells + '</div>' +
       '<div class="cal-actions">' +
-        '<span class="cal-hint">คลิกเลือกหลายวันได้ · Shift+คลิก = เลือกเป็นช่วง</span>' +
+        '<span class="cal-hint">' + (sel.size ? 'เลือกอยู่ ' + sel.size + ' วัน<br>' : '') +
+          'Shift+คลิก = เลือกเป็นช่วง</span>' +
         '<button type="button" data-cal-clear>ล้างวันที่</button>' +
       '</div>' +
     '</div>';
@@ -1723,6 +1834,7 @@ function populateFilterOptions(){
   prune('day1', AVAILABLE_DAYS); prune('day2', AVAILABLE_DAYS);
 
   Object.keys(CAL_VIEW).forEach(k => { delete CAL_VIEW[k]; });   // ให้ปฏิทินคำนวณเดือนเริ่มต้นใหม่
+  renderDateBasisToggle();
   renderAllFilterControls();
 }
 
@@ -1896,15 +2008,32 @@ function renderRemark3Chart(needRows){
   });
 }
 
+/*
+  v79: การ์ด ORDERS = COUNTUNIQUE ของ Order Reference
+  ก่อนหน้านี้ตัดซ้ำด้วยค่าดิบของ orderRef ตรงๆ ทำให้ "S31157" กับ "s31157 " (ต่างแค่
+  ตัวพิมพ์/ช่องว่าง) นับเป็น 2 ออเดอร์ ตัวเลขจึงสูงกว่า COUNTUNIQUE ในชีต
+  จึงทำคีย์มาตรฐานตัวเดียวใช้ร่วมกันทุกจุดที่ตัดซ้ำ
+*/
+function orderKeyOf(r){
+  return (r.orderRef || '').trim().toUpperCase();
+}
+function countUniqueOrders(rows){
+  const set = new Set();
+  rows.forEach(r => { const k = orderKeyOf(r); if(k) set.add(k); });
+  return set.size;
+}
+
 function toOrderLevel(rows){
   const priority = { late:3, unknown:2, early:1, ontime:1 };
   const map = new Map();
   rows.forEach(r=>{
+    const key = orderKeyOf(r);
+    if(!key) return;
     const cls = combineStatus(classify(r.packStatus), classify(r.whStatus));
-    if(!map.has(r.orderRef)){
-      map.set(r.orderRef, { ...r, _packWorst: cls });
+    if(!map.has(key)){
+      map.set(key, { ...r, _packWorst: cls });
     } else {
-      const cur = map.get(r.orderRef);
+      const cur = map.get(key);
       if((priority[cls]||0) > (priority[cur._packWorst]||0)) cur._packWorst = cls;
       if(!cur.createDate && r.createDate) cur.createDate = r.createDate;
     }
@@ -1963,7 +2092,7 @@ function renderTab1(){
   const lineRows = getTab1Rows();
   const orderRows = toOrderLevel(lineRows);
 
-  const totalOrders = orderRows.length;
+  const totalOrders = countUniqueOrders(lineRows);   // v79: COUNTUNIQUE ของ Order Reference
   const onTimeOrders = orderRows.filter(r => r._packWorst === 'ontime' || r._packWorst === 'early').length;
   const lateOrders = orderRows.filter(r => r._packWorst === 'late').length;
   const pendingOrders = orderRows.filter(r => isPending(r.deliveryStatus)).length;
@@ -1999,8 +2128,13 @@ function renderTab1(){
   const lateByPackOnly = lineRows.filter(r => classify(r.packStatus) === 'late').length;
   const lateByWhOnly = lineRows.filter(r => classify(r.whStatus) === 'late').length;
 
+  const basisLabel = (DATE_BASIS_OPTIONS.find(o => o.v === DATE_BASIS) || {}).label || DATE_BASIS;
   document.getElementById('tab1_footer').textContent =
-    totalOrders.toLocaleString('en-US') + ' orders (from ' + lineRows.length.toLocaleString('en-US') + ' line items) · late(pack)=' + lateByPackOnly + ' late(WH)=' + lateByWhOnly + ' late(combined orders)=' + lateOrders + ' · updated ' + new Date().toLocaleString('en-GB');
+    'COUNTUNIQUE(Order Reference) = ' + totalOrders.toLocaleString('en-US') +
+    ' · จาก ' + lineRows.length.toLocaleString('en-US') + ' line items · late(pack)=' + lateByPackOnly + ' late(WH)=' + lateByWhOnly + ' late(combined orders)=' + lateOrders +
+    ' · นับ "วัน" ตาม ' + basisLabel +
+    (EXCLUDED_ONLY_ORDERS ? ' · ไม่นับ ' + EXCLUDED_ONLY_ORDERS.toLocaleString('en-US') + ' ออเดอร์ที่มีแต่ Box/ค่าส่ง/คูปอง' : '') +
+    ' · updated ' + new Date().toLocaleString('en-GB');
 }
 
 function renderTab1RemarkTable(rows){
@@ -2015,8 +2149,9 @@ function renderTab1RemarkTable(rows){
     });
   const seen = new Set();
   const dedupedRows = sortedRows.filter(r => {
-    if(!r.orderRef || seen.has(r.orderRef)) return false;
-    seen.add(r.orderRef);
+    const k = orderKeyOf(r);
+    if(!k || seen.has(k)) return false;
+    seen.add(k);
     return true;
   });
   const tbody = document.getElementById('tab1_remark_body');
@@ -2247,7 +2382,7 @@ function renderTab2(){
     else lateQty += qty;
   });
 
-  const uniqueOrders = new Set(rows.map(r=>r.orderRef)).size;
+  const uniqueOrders = countUniqueOrders(rows);
 
   const denom = totalQty || 1;
   const oosPct = Math.round(((onTimeQty+earlyQty)/denom)*10000)/100;
@@ -2382,8 +2517,9 @@ function renderTab2RemarkTable(rows){
     });
   const seen = new Set();
   const dedupedRows = sortedRows.filter(r => {
-    if(!r.orderRef || seen.has(r.orderRef)) return false;
-    seen.add(r.orderRef);
+    const k = orderKeyOf(r);
+    if(!k || seen.has(k)) return false;
+    seen.add(k);
     return true;
   });
   const tbody = document.getElementById('tab2_remark_body');
@@ -2459,7 +2595,7 @@ function renderTab4(){
   const ordersByDate = {};
   const qtyByDate = {};
   ALL_ROWS.forEach(r => {
-    const orderKey = (r.orderRef||'').trim();
+    const orderKey = orderKeyOf(r);
     const lineQty = parseQty(r.orderLine);
 
     if(r.week){
