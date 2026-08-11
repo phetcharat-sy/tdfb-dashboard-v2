@@ -329,7 +329,7 @@
     <div class="meta-right">
       Last fetched<br><span id="lastUpdated">—</span>
       <div id="dataFreshness" class="freshness"></div>
-      <div style="font-size:11.8px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-11-v81-freshness</div>
+      <div style="font-size:11.8px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-11-v82-qty-audit</div>
       <div>
         <button class="btn-plain" id="refreshBtn" onclick="loadData()">Refresh</button>
         <button class="btn-plain" id="saveImgBtn" onclick="saveTabAsPNG()" style="margin-left:14px;">Save as PNG (แนวนอน, คมชัด)</button>
@@ -369,7 +369,6 @@
       <div class="filter-field"><label>Shipping</label><div class="ms" id="f1_urgent" data-key="urgent1"></div></div>
       <div class="filter-field"><label>Channel</label><div class="ms" id="f1_channel" data-key="channel1"></div></div>
       <div class="filter-field"><label>Order Reference</label><input type="text" id="f1_orderRef" placeholder="Search order..." oninput="onFilterChange()"></div>
-      <div class="filter-field"><label>นับ "วัน" ตามคอลัมน์</label><div class="seg" data-seg="basis"></div></div>
       <button class="filter-clear" onclick="clearFilters()">Clear filters</button>
     </div>
 
@@ -447,7 +446,6 @@
       <div class="filter-field"><label>Day</label><div class="cal" id="f2_day" data-key="day2"></div></div>
       <div class="filter-field"><label>WH → PK Status</label><div class="ms" id="f2_whstatus" data-key="whstatus"></div></div>
       <div class="filter-field"><label>Product</label><input type="text" id="f2_product" placeholder="Search product..." oninput="onFilterChange()"></div>
-      <div class="filter-field"><label>นับ "วัน" ตามคอลัมน์</label><div class="seg" data-seg="basis"></div></div>
       <button class="filter-clear" onclick="clearFilters()">Clear filters</button>
     </div>
 
@@ -484,6 +482,7 @@
     </div>
 
     <div class="footer-note" id="tab2_footer"></div>
+    <div class="daycheck" id="tab2_audit" style="display:none;"></div>
   </div>
 
   <!-- ============ TAB 3 (Replenishment) ============ -->
@@ -1123,44 +1122,11 @@ function toDateKey(d){
   if(!d) return '';
   return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 }
-/*
-  v78: ทำไมยอดออเดอร์ไม่ตรงกับแดชบอร์ดตัวอื่น
-  ตัวกรอง "Day" เดิมนับตาม 'วันที่ลง Odoo' (createDate) ซึ่งเป็นวันที่คีย์ออเดอร์เข้าระบบ
-  แต่แท็บ Forecast และแดชบอร์ดฝั่งจัดส่ง นับตาม 'วันที่ต้องการจัดส่ง' (expectedDelivery)
-  ออเดอร์ที่คีย์วันเดียวอาจกระจายไปส่งหลายวัน ตัวเลขจึงต่างกันมาก
-  ตอนนี้เลือกฐานวันที่ได้ และตั้งค่าเริ่มต้นเป็น 'วันที่ต้องการจัดส่ง' ให้ตรงกับแท็บ Forecast
-*/
-const DATE_BASIS_OPTIONS = [
-  { v:'expectedDelivery', label:'วันที่ต้องการจัดส่ง' },
-  { v:'createDate',       label:'วันที่ลง Odoo' }
-];
-let DATE_BASIS = 'expectedDelivery';
-
+// v82: "วัน" ยึดคอลัมน์ 'วันที่ต้องการจัดส่ง' เท่านั้น (ตามที่ตกลง) ไม่มีตัวเลือกให้สลับอีก
 function rowDayKey(r){
-  return toDateKey(parseDate(DATE_BASIS === 'createDate' ? r.createDate : r.expectedDelivery));
+  return toDateKey(parseDate(r.expectedDelivery));
 }
 
-function renderDateBasisToggle(){
-  document.querySelectorAll('[data-seg="basis"]').forEach(host => {
-    host.innerHTML = DATE_BASIS_OPTIONS.map(o =>
-      '<button type="button" class="' + (DATE_BASIS === o.v ? 'on' : '') + '" data-basis="' + o.v + '">' +
-      escapeHtml(o.label) + '</button>'
-    ).join('');
-  });
-}
-
-document.addEventListener('click', (e) => {
-  const btn = e.target.closest('[data-seg="basis"] button');
-  if(!btn) return;
-  const v = btn.dataset.basis;
-  if(v === DATE_BASIS) return;
-  DATE_BASIS = v;
-  FILTER_SETS.day1.clear(); FILTER_SETS.day2.clear();   // วันที่เลือกไว้ไม่ตรงฐานใหม่แล้ว
-  CAL_LAST.day1 = null; CAL_LAST.day2 = null;
-  renderDateBasisToggle();
-  populateFilterOptions();
-  renderAll();
-});
 function formatDateFull(d){
   if(!d) return '';
   const months = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
@@ -1295,7 +1261,7 @@ function buildExportHeader(activeTab){
     title: t.en + (t.th ? '  —  ' + t.th : ''),
     note: t.note,
     filterText: (parts.length ? parts.join('   ·   ') : 'ข้อมูลทั้งหมด (ไม่ได้กรอง)') +
-                '   ·   นับวันตาม ' + ((DATE_BASIS_OPTIONS.find(o => o.v === DATE_BASIS) || {}).label || ''),
+                '   ·   นับวันตามวันที่ต้องการจัดส่ง',
     hero: (hero && hero !== '—') ? hero : '',
     slug: t.en.replace(/[^A-Za-z0-9]+/g,'-')
   };
@@ -1876,7 +1842,6 @@ function populateFilterOptions(){
   prune('day1', AVAILABLE_DAYS); prune('day2', AVAILABLE_DAYS);
 
   Object.keys(CAL_VIEW).forEach(k => { delete CAL_VIEW[k]; });   // ให้ปฏิทินคำนวณเดือนเริ่มต้นใหม่
-  renderDateBasisToggle();
   renderAllFilterControls();
 }
 
@@ -2088,10 +2053,10 @@ function toOrderLevel(rows){
   "วัน" ของสองฝ่ายอ้างคอลัมน์ต่างกัน (วันที่ต้องการจัดส่ง vs วันที่ลง Odoo)
   ฟังก์ชันนี้นับออเดอร์ของ "วันที่ถูกเลือก" ให้ดูทั้งสองฐานพร้อมกัน โดยไม่สนตัวกรองอื่น
 */
-function countOrdersForDays(daySet, basis){
+function countOrdersForDays(daySet){
   const set = new Set();
   ALL_ROWS.forEach(r => {
-    const d = parseDate(basis === 'createDate' ? r.createDate : r.expectedDelivery);
+    const d = parseDate(r.expectedDelivery);
     if(!d) return;
     if(!daySet.has(toDateKey(d))) return;
     const k = orderKeyOf(r);
@@ -2101,12 +2066,34 @@ function countOrdersForDays(daySet, basis){
 }
 
 // แถวที่คอลัมน์วันที่ว่าง/อ่านไม่ออก จะหลุดจากการกรองรายวันทุกกรณี ต้องรู้ว่ามีกี่แถว
-function countRowsMissingDate(basis){
+function countRowsMissingDate(){
   let n = 0;
-  ALL_ROWS.forEach(r => {
-    if(!parseDate(basis === 'createDate' ? r.createDate : r.expectedDelivery)) n++;
-  });
+  ALL_ROWS.forEach(r => { if(!parseDate(r.expectedDelivery)) n++; });
   return n;
+}
+
+/*
+  v82: จำนวนชิ้นสูงเกินจริง — ผลรวมจำนวนชิ้นบวกจาก "ทุกแถว" ในชีต
+  ถ้า n8n เคยเขียนซ้ำ (append ไม่ใช่ append-or-update) แถวเดิมจะถูกบวกซ้ำ
+  แต่จำนวนออเดอร์ยังถูก เพราะตัดซ้ำด้วย Order Reference
+  → นั่นคือลายเซ็นตรงกับที่เห็น: ออเดอร์เกือบตรง แต่จำนวนชิ้นเกินไปเยอะ
+  ฟังก์ชันนี้หาแถวที่ซ้ำกันทุกช่องสำคัญ แล้วบอกว่าผลรวมเฟ้อไปเท่าไหร่
+*/
+function auditDuplicateRows(rows){
+  const seen = new Map();
+  let dupRows = 0, dupQty = 0;
+  rows.forEach(r => {
+    const key = [
+      orderKeyOf(r),
+      (r.product || '').trim().toLowerCase(),
+      (r.orderLine || '').trim(),
+      (r.expectedDelivery || '').trim()
+    ].join('|');
+    const n = (seen.get(key) || 0) + 1;
+    seen.set(key, n);
+    if(n > 1){ dupRows++; dupQty += parseQty(r.orderLine); }
+  });
+  return { dupRows, dupQty, uniqueRows: seen.size };
 }
 
 function renderAll(){
@@ -2196,11 +2183,10 @@ function renderTab1(){
   const lateByPackOnly = lineRows.filter(r => classify(r.packStatus) === 'late').length;
   const lateByWhOnly = lineRows.filter(r => classify(r.whStatus) === 'late').length;
 
-  const basisLabel = (DATE_BASIS_OPTIONS.find(o => o.v === DATE_BASIS) || {}).label || DATE_BASIS;
   document.getElementById('tab1_footer').textContent =
     'COUNTUNIQUE(Order Reference) = ' + totalOrders.toLocaleString('en-US') +
     ' · จาก ' + lineRows.length.toLocaleString('en-US') + ' line items · late(pack)=' + lateByPackOnly + ' late(WH)=' + lateByWhOnly + ' late(combined orders)=' + lateOrders +
-    ' · นับ "วัน" ตาม ' + basisLabel +
+    ' · นับ "วัน" ตามวันที่ต้องการจัดส่ง' +
     (EXCLUDED_ONLY_ORDERS ? ' · ไม่นับ ' + EXCLUDED_ONLY_ORDERS.toLocaleString('en-US') + ' ออเดอร์ที่มีแต่ Box/ค่าส่ง/คูปอง' : '') +
     ' · updated ' + new Date().toLocaleString('en-GB');
 
@@ -2208,20 +2194,15 @@ function renderTab1(){
   const cmpEl = document.getElementById('tab1_daycheck');
   if(cmpEl){
     if(FILTER_SETS.day1.size){
-      const byDel = countOrdersForDays(FILTER_SETS.day1, 'expectedDelivery');
-      const byOdoo = countOrdersForDays(FILTER_SETS.day1, 'createDate');
+      const byDel = countOrdersForDays(FILTER_SETS.day1);
       const dayList = [...FILTER_SETS.day1].sort()
         .map(k => formatDateShort(new Date(k + 'T00:00:00'))).join(', ');
+      const missing = countRowsMissingDate();
       cmpEl.innerHTML =
-        'กระทบยอดวันที่ ' + escapeHtml(dayList) + ' — ' +
-        'นับตาม<b>วันที่ต้องการจัดส่ง</b> = ' + byDel.toLocaleString('en-US') + ' ออเดอร์ · ' +
-        'นับตาม<b>วันที่ลง Odoo</b> = ' + byOdoo.toLocaleString('en-US') + ' ออเดอร์' +
-        (byDel !== byOdoo
-          ? ' <span style="color:var(--azuki);">← ต่างกัน ' + Math.abs(byDel - byOdoo).toLocaleString('en-US') +
-            ' ออเดอร์ เพราะออเดอร์ที่คีย์วันนี้ไม่ได้ส่งวันนี้ทั้งหมด</span>'
-          : '') +
-        '<br>แถวที่วันที่ต้องการจัดส่งว่าง/อ่านไม่ออก ' + countRowsMissingDate('expectedDelivery').toLocaleString('en-US') +
-        ' แถว · วันที่ลง Odoo ว่าง ' + countRowsMissingDate('createDate').toLocaleString('en-US') + ' แถว';
+        'กระทบยอดวันที่ ' + escapeHtml(dayList) + ' — นับตาม<b>วันที่ต้องการจัดส่ง</b> = <b>' +
+        byDel.toLocaleString('en-US') + '</b> ออเดอร์' +
+        (missing ? '<br><span style="color:var(--azuki);">แถวที่วันที่ต้องการจัดส่งว่าง/อ่านไม่ออก ' +
+          missing.toLocaleString('en-US') + ' แถว — แถวเหล่านี้ไม่เข้าการกรองรายวันเลย</span>' : '');
       cmpEl.style.display = 'block';
     } else {
       cmpEl.style.display = 'none';
@@ -2494,6 +2475,30 @@ function renderTab2(){
 
   document.getElementById('tab2_footer').textContent =
     totalQty.toLocaleString('en-US') + ' units (' + rows.length.toLocaleString('en-US') + ' line items) from ' + uniqueOrders.toLocaleString('en-US') + ' orders · updated ' + new Date().toLocaleString('en-GB');
+
+  // v82: กล่องตรวจสอบที่มาของจำนวนชิ้น — โชว์ให้เห็นว่าผลรวมเฟ้อจากแถวซ้ำเท่าไหร่
+  const auditEl = document.getElementById('tab2_audit');
+  if(auditEl){
+    const a = auditDuplicateRows(rows);
+    const perOrder = uniqueOrders ? (totalQty / uniqueOrders) : 0;
+    const cleanQty = totalQty - a.dupQty;
+    const perOrderClean = uniqueOrders ? (cleanQty / uniqueOrders) : 0;
+    auditEl.innerHTML =
+      'ที่มาของ <b>จำนวนสินค้า (ชิ้น)</b> = ผลรวมคอลัมน์ <b>Order Line</b> ของทุกแถวที่ผ่านตัวกรอง<br>' +
+      'แถวทั้งหมด ' + rows.length.toLocaleString('en-US') +
+      ' · แถวที่ไม่ซ้ำ ' + a.uniqueRows.toLocaleString('en-US') +
+      ' · ผลรวมชิ้น ' + totalQty.toLocaleString('en-US') +
+      ' · เฉลี่ย ' + perOrder.toFixed(2) + ' ชิ้น/ออเดอร์' +
+      (a.dupRows
+        ? '<br><span style="color:var(--azuki);font-weight:600;">พบแถวซ้ำ ' + a.dupRows.toLocaleString('en-US') +
+          ' แถว (Order Reference + Product + Order Line + วันที่ต้องการจัดส่ง ตรงกันทุกช่อง) ' +
+          'รวมเป็น ' + a.dupQty.toLocaleString('en-US') + ' ชิ้น</span>' +
+          '<br>ถ้าตัดแถวซ้ำออก จำนวนชิ้นจะเป็น <b>' + cleanQty.toLocaleString('en-US') + '</b> ชิ้น (' +
+          perOrderClean.toFixed(2) + ' ชิ้น/ออเดอร์) — ต้นเหตุคือ Google Sheets node ใน n8n ใช้โหมด Append ' +
+          'ควรเปลี่ยนเป็น Append or Update แล้วจับคู่ด้วย Order Reference'
+        : '<br><span style="color:var(--matcha-deep);">ไม่พบแถวซ้ำ — ผลรวมชิ้นมาจากข้อมูลที่ไม่ซ้ำทั้งหมด</span>');
+    auditEl.style.display = 'block';
+  }
 }
 
 function renderWeekly2Chart(rows){
