@@ -1141,53 +1141,73 @@ async function saveTabAsPNG(){
     const XOFF     = Math.round((PAGE_W - captured.width) / 2);    // จัดเนื้อหาให้อยู่กลางหน้า
     const AVAIL_H  = Math.max(120, PAGE_H - MARGIN*2 - HEADER_H);  // ที่ว่างสำหรับเนื้อหาต่อหน้า
 
-    const idealSliceHeight = AVAIL_H;
     const totalHeight = captured.height;
-    const roughPageCount = Math.max(1, Math.ceil(totalHeight / idealSliceHeight));
 
+    // v69: จุดตัดต้องปลอดภัยจริง ๆ — เดิมมีแค่ระดับ section/stat-grid ทำให้กราฟหรือ
+    // แถวตารางที่ยาวเกิน AVAIL_H ไม่มีจุดตัดให้เลือกเลย แล้วโดนตัดกลางแบบดิบ ๆ
+    // จึงเพิ่มขอบเขตของ "แถวตาราง" และ "กราฟย่อยแต่ละอัน" เป็นจุดตัดที่ยอมรับได้ด้วย
     const containerRect = activeTab.getBoundingClientRect();
-    const blockSelectors = '.hero, .filter-row, .stat-grid, .section, .footer-note';
+    const blockSelectors = '.hero, .filter-row, .stat-grid, .section, .footer-note, ' +
+      '.grid-2 > .section, .grid-3 > .section, table.data-table thead, table.data-table tbody tr';
     const blockTops = [...activeTab.querySelectorAll(blockSelectors)]
       .filter(el => el.offsetHeight > 0)
       .map(el => (el.getBoundingClientRect().top - containerRect.top) * scale)
       .sort((a,b) => a-b);
 
+    // v69: แทนที่จะหาจุดตัด "ใกล้ตำแหน่งในอุดมคติที่สุด" แล้วหนีบ (clamp) ให้ไม่เกิน AVAIL_H
+    // — ซึ่งจุดที่หนีบมามักตกกลางกราฟ/กลางแถวพอดี — เปลี่ยนเป็นเลือก "จุดปลอดภัยที่ใหญ่ที่สุด
+    // ที่ยังไม่เกินพื้นที่ว่างต่อหน้า" แบบ greedy ทีละหน้า รับประกันว่าไม่มีทางตัดเกิน AVAIL_H
+    // แล้วไปตัดกลางอิลิเมนต์อีก (ตัดกลางได้เฉพาะกรณีอิลิเมนต์เดียวสูงกว่าทั้งหน้าจริง ๆ เท่านั้น)
     const splitPoints = [0];
-    for(let i = 1; i < roughPageCount; i++){
-      const idealY = i * idealSliceHeight;
-      let best = idealY, bestDiff = Infinity;
-      blockTops.forEach(top => {
-        if(top <= splitPoints[splitPoints.length-1] + idealSliceHeight * 0.15) return;
-        const diff = Math.abs(top - idealY);
-        if(diff < bestDiff){ bestDiff = diff; best = top; }
-      });
-      // ห้ามยาวเกินที่ว่างต่อหน้า ไม่งั้นหน้าจะสูงกว่า 16:9 แล้วโดนยืดแนวตั้งแทน
-      best = Math.min(best, splitPoints[splitPoints.length-1] + AVAIL_H);
-      if(best > splitPoints[splitPoints.length-1] && best < totalHeight){
-        splitPoints.push(Math.round(best));
-      }
-    }
-    splitPoints.push(totalHeight);
+    while(splitPoints[splitPoints.length-1] < totalHeight){
+      const prev = splitPoints[splitPoints.length-1];
+      const limit = prev + AVAIL_H;
+      if(limit >= totalHeight){ splitPoints.push(totalHeight); break; }
 
-    const MIN_SLICE_RATIO = 0.35;
-    const cleaned = [splitPoints[0]];
-    for(let i = 1; i < splitPoints.length; i++){
-      const sliceH = splitPoints[i] - cleaned[cleaned.length-1];
-      if(sliceH < idealSliceHeight * MIN_SLICE_RATIO && i !== splitPoints.length - 1) continue;
-      cleaned.push(splitPoints[i]);
+      let best = null;
+      for(const top of blockTops){
+        if(top <= prev + 1) continue;
+        if(top > limit) break; // blockTops เรียงจากน้อยไปมาก เจอเกิน limit แปลว่าหมดตัวเลือกแล้ว
+        best = top; // เก็บตัวล่าสุดไว้เรื่อย ๆ จะได้ตัวใหญ่สุดที่ยังไม่เกิน limit
+      }
+      // ไม่พบจุดตัดปลอดภัยในช่วงนี้เลย (เช่น กราฟเดียวสูงกว่าทั้งหน้า) — จำเป็นต้องตัดดิบ
+      splitPoints.push(Math.round(best !== null ? best : limit));
     }
-    if(cleaned[cleaned.length-1] !== totalHeight) cleaned.push(totalHeight);
 
     const ranges = [];
-    for(let i = 0; i < cleaned.length - 1; i++){
-      let srcY = cleaned[i];
-      const endY = cleaned[i+1];
-      // ด่านสุดท้าย ถ้าช่วงไหนยังยาวเกิน AVAIL_H (เช่น section เดียวยาวมาก) ให้ตัดตรงๆ เป็นท่อนๆ
-      while(endY - srcY > AVAIL_H){
-        ranges.push({ srcY, srcH: AVAIL_H });
-        srcY += AVAIL_H;
+    for(let i = 0; i < splitPoints.length - 1; i++){
+      ranges.push({ srcY: splitPoints[i], srcH: splitPoints[i+1] - splitPoints[i] });
+    }
+
+    // v69: กันหน้าสุดท้ายเกือบว่างเปล่า (เช่นเหลือแค่บรรทัดเดียวโดดไปอีกหน้า) —
+    // ถ้าหน้าสุดท้ายเล็กเกินไป ลองรวมกับหน้าก่อนหน้าแล้วหาจุดตัดใหม่ให้สมดุลกว่าเดิม
+    if(ranges.length >= 2){
+      const last = ranges[ranges.length - 1];
+      if(last.srcH < AVAIL_H * 0.3){
+        const prevIdx = ranges.length - 2;
+        const mergedStart = ranges[prevIdx].srcY;
+        const mergedEnd = last.srcY + last.srcH;
+        const mergedH = mergedEnd - mergedStart;
+        if(mergedH <= AVAIL_H){
+          ranges.splice(prevIdx, 2, { srcY: mergedStart, srcH: mergedH });
+        } else {
+          const targetY = mergedStart + mergedH / 2;
+          let bestTop = null, bestDiff = Infinity;
+          for(const top of blockTops){
+            if(top - mergedStart > AVAIL_H) continue;      // ครึ่งแรกยังต้องพอดีในหน้าเดียว
+            if(mergedEnd - top > AVAIL_H) continue;         // ครึ่งหลังก็เช่นกัน
+            if(top <= mergedStart || top >= mergedEnd) continue;
+            const diff = Math.abs(top - targetY);
+            if(diff < bestDiff){ bestDiff = diff; bestTop = top; }
+          }
+          if(bestTop !== null){
+            ranges.splice(prevIdx, 2,
+              { srcY: mergedStart, srcH: bestTop - mergedStart },
+              { srcY: bestTop, srcH: mergedEnd - bestTop }
+            );
+          }
+        }
       }
-      if(endY - srcY > 0) ranges.push({ srcY, srcH: endY - srcY });
     }
 
     const dateStr = new Date().toISOString().slice(0,10);
