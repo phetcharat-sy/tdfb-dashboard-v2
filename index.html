@@ -146,6 +146,20 @@
     font-family:'IBM Plex Mono',monospace;font-size:15px;color:var(--ink-faint);}
   .ms-foot b{color:var(--matcha-deep);}
 
+  /* ===== v83: ช่องค้นหาในพาเนล — ใช้กับช่องที่มีรายการเยอะ (สินค้า) ===== */
+  .ms-search{padding:2px 4px 8px;}
+  .ms-search input{width:100%;min-width:0;box-sizing:border-box;
+    background:var(--paper);border:1.5px solid var(--hairline-strong);border-radius:11px;
+    padding:9px 12px;font-family:'IBM Plex Sans Thai',sans-serif;font-size:19px;color:var(--ink);}
+  .ms-search input:focus{outline:none;border-color:var(--matcha-deep);
+    box-shadow:0 0 0 3px rgba(122,154,63,.16);}
+  .ms-search input::placeholder{color:var(--ink-faint);}
+  .ms-empty{padding:18px 12px;text-align:center;color:var(--ink-faint);
+    font-family:'IBM Plex Sans Thai',sans-serif;font-size:19px;}
+  /* ชื่อสินค้ายาว จึงต้องกางพาเนลกว้างกว่าช่องอื่น */
+  .ms-wide .ms-panel{min-width:560px;max-width:min(560px,88vw);}
+  .ms-wide .ms-list{max-height:392px;}
+
   /* ---------- ปฏิทิน ---------- */
   .cal-panel{min-width:372px;padding:10px;}
   .cal-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:4px 4px 12px;}
@@ -329,7 +343,7 @@
     <div class="meta-right">
       Last fetched<br><span id="lastUpdated">—</span>
       <div id="dataFreshness" class="freshness"></div>
-      <div style="font-size:11.8px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-11-v82-qty-audit</div>
+      <div style="font-size:11.8px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-12-v83-product-multiselect</div>
       <div>
         <button class="btn-plain" id="refreshBtn" onclick="loadData()">Refresh</button>
         <button class="btn-plain" id="saveImgBtn" onclick="saveTabAsPNG()" style="margin-left:14px;">Save as PNG (แนวนอน, คมชัด)</button>
@@ -445,7 +459,7 @@
       <div class="filter-field"><label>Week</label><div class="ms" id="f2_week" data-key="week2"></div></div>
       <div class="filter-field"><label>Day</label><div class="cal" id="f2_day" data-key="day2"></div></div>
       <div class="filter-field"><label>WH → PK Status</label><div class="ms" id="f2_whstatus" data-key="whstatus"></div></div>
-      <div class="filter-field"><label>Product</label><input type="text" id="f2_product" placeholder="Search product..." oninput="onFilterChange()"></div>
+      <div class="filter-field"><label>Product</label><div class="ms ms-wide" id="f2_product" data-key="product2"></div></div>
       <button class="filter-clear" onclick="clearFilters()">Clear filters</button>
     </div>
 
@@ -765,7 +779,7 @@ const COLMAP3 = {
 let ALL_ROWS = [];
 let ALL_ROWS_3 = [];
 let charts = {};
-let filters = { orderRef:'', product:'' };   // v76: ช่องที่เลือกหลายค่าย้ายไปอยู่ใน FILTER_SETS
+let filters = { orderRef:'' };   // v83: เหลือแค่ช่องพิมพ์ค้นหา · ช่องที่ติ๊กหลายค่าอยู่ใน FILTER_SETS
 let filters3 = { status:'', product:'' };
 
 /*
@@ -1243,7 +1257,9 @@ function buildExportHeader(activeTab){
           val = [...sel].sort().map(k => formatDateShort(new Date(k + 'T00:00:00'))).join(', ');
         }
       } else {
-        val = trigger.textContent.trim();
+        // v83: อ่านแค่ span แรก ไม่เอา ▼ ติดไปในหัวรูป export
+        const labelSpan = trigger.querySelector('span');
+        val = (labelSpan ? labelSpan.textContent : trigger.textContent).trim();
       }
     } else {
       const ctrl = f.querySelector('input');
@@ -1579,9 +1595,16 @@ async function saveTabAsPNG(){
 */
 const FILTER_SETS = {
   month1:new Set(), week1:new Set(), day1:new Set(), urgent1:new Set(), channel1:new Set(),
-  month2:new Set(), week2:new Set(), day2:new Set(), whstatus:new Set()
+  month2:new Set(), week2:new Set(), day2:new Set(), whstatus:new Set(), product2:new Set()
 };
 const MS_OPTIONS = {};        // key -> [{v, label}]
+
+/* v83: ช่อง Product เปลี่ยนจากพิมพ์ค้นหา → ติ๊กเลือกได้หลายรายการ
+   รายการสินค้ามีหลายสิบถึงหลายร้อยชื่อ จึงต้องมีช่องค้นหาอยู่ในพาเนล
+   และ render เฉพาะรายการที่ตรงคำค้น ไม่ต้องเลื่อนหาทีละบรรทัด */
+const MS_SEARCHABLE = new Set(['product2']);   // key ที่มีช่องค้นหาในพาเนล
+const MS_SEARCH = {};                          // key -> คำค้นที่พิมพ์อยู่
+const MS_RENDER_CAP = 300;                     // กันรายการยาวเกินจนพาเนลหนืด
 let AVAILABLE_DAYS = new Set();  // วันที่มีข้อมูลจริง ใช้ปิดปุ่มวันที่ไม่มีข้อมูล
 const CAL_VIEW = {};          // key -> {y, m} เดือนที่ปฏิทินกำลังเปิดดู
 const CAL_LAST = {};          // key -> dateKey ที่คลิกล่าสุด สำหรับ shift+click เลือกเป็นช่วง
@@ -1596,27 +1619,73 @@ function setsAllow(key, value){
 }
 
 /* ---------- multi-select แบบติ๊ก ---------- */
+
+// รายการที่ตรงคำค้น (ช่องที่ไม่มีช่องค้นหา = คืนทั้งหมด)
+function msFilteredOpts(key){
+  const opts = MS_OPTIONS[key] || [];
+  const q = (MS_SEARCH[key] || '').trim().toLowerCase();
+  if(!q) return opts;
+  const words = q.split(/\s+/);
+  return opts.filter(o => {
+    const hay = String(o.label || o.v).toLowerCase();
+    return words.every(w => hay.includes(w));
+  });
+}
+
+function msTriggerLabel(key){
+  const sel = FILTER_SETS[key];
+  if(!sel.size) return 'All';
+  if(sel.size === 1){
+    const only = [...sel][0];
+    const found = (MS_OPTIONS[key] || []).find(o => o.v === only);
+    return found ? found.label : only;
+  }
+  return 'เลือก ' + sel.size + ' รายการ';
+}
+
+function msListHtml(key){
+  const sel = FILTER_SETS[key];
+  const matched = msFilteredOpts(key);
+  if(!matched.length){
+    return '<div class="ms-empty">ไม่พบรายการที่ตรงกับคำค้น</div>';
+  }
+  // ตัวที่ติ๊กไว้แล้วต้องเห็นเสมอ ไม่ให้หลุดออกเพราะโดน cap ตัด
+  const shown = matched.length > MS_RENDER_CAP
+    ? matched.filter(o => sel.has(o.v)).concat(matched.filter(o => !sel.has(o.v))).slice(0, MS_RENDER_CAP)
+    : matched;
+  return shown.map(o =>
+    '<label class="ms-opt' + (sel.has(o.v) ? ' on' : '') + '" title="' + escapeHtml(o.label) + '">' +
+      '<input type="checkbox" value="' + escapeHtml(o.v) + '"' + (sel.has(o.v) ? ' checked' : '') + '>' +
+      '<span class="ms-box"></span>' +
+      '<span class="ms-text">' + escapeHtml(o.label) + '</span>' +
+      (o.count !== undefined ? '<span class="ms-count">' + Number(o.count).toLocaleString('en-US') + '</span>' : '') +
+    '</label>'
+  ).join('');
+}
+
+function msFootHtml(key){
+  const sel = FILTER_SETS[key];
+  const total = (MS_OPTIONS[key] || []).length;
+  const matched = msFilteredOpts(key).length;
+  const capped = matched > MS_RENDER_CAP
+    ? ' · แสดง ' + MS_RENDER_CAP + ' รายการแรก พิมพ์ค้นหาเพื่อแคบลง' : '';
+  if(sel.size) return 'เลือกอยู่ <b>' + sel.size + '</b> จาก ' + total + ' รายการ' + capped;
+  if((MS_SEARCH[key] || '').trim()) return 'ตรงคำค้น <b>' + matched + '</b> จาก ' + total + ' รายการ' + capped;
+  return 'ไม่เลือก = แสดงทั้งหมด' + capped;
+}
+
 function renderMultiSelect(key){
   const host = document.querySelector('.ms[data-key="' + key + '"]');
   if(!host) return;
-  const opts = MS_OPTIONS[key] || [];
   const sel = FILTER_SETS[key];
-
-  let label = 'All';
-  if(sel.size === 1){
-    const only = [...sel][0];
-    const found = opts.find(o => o.v === only);
-    label = found ? found.label : only;
-  } else if(sel.size > 1){
-    label = 'เลือก ' + sel.size + ' รายการ';
-  }
+  const searchable = MS_SEARCHABLE.has(key);
 
   const wasOpen = host.classList.contains('open');
   const prevList = host.querySelector('.ms-list');
   const prevScroll = prevList ? prevList.scrollTop : 0;
   host.innerHTML =
     '<button type="button" class="ms-trigger' + (sel.size ? ' has-value' : '') + '" data-ms-trigger>' +
-      '<span>' + escapeHtml(label) + '</span><span class="ms-caret">▼</span></button>' +
+      '<span>' + escapeHtml(msTriggerLabel(key)) + '</span><span class="ms-caret">▼</span></button>' +
     '<div class="ms-panel">' +
       '<div class="ms-head">' +
         '<span class="ms-head-title">ติ๊กได้หลายค่า</span>' +
@@ -1625,23 +1694,33 @@ function renderMultiSelect(key){
           '<button type="button" class="danger" data-ms-none>ล้าง</button>' +
         '</span>' +
       '</div>' +
-      '<div class="ms-list">' +
-        opts.map(o =>
-          '<label class="ms-opt' + (sel.has(o.v) ? ' on' : '') + '">' +
-            '<input type="checkbox" value="' + escapeHtml(o.v) + '"' + (sel.has(o.v) ? ' checked' : '') + '>' +
-            '<span class="ms-box"></span>' +
-            '<span class="ms-text">' + escapeHtml(o.label) + '</span>' +
-            (o.count !== undefined ? '<span class="ms-count">' + Number(o.count).toLocaleString('en-US') + '</span>' : '') +
-          '</label>'
-        ).join('') +
-      '</div>' +
-      (sel.size
-        ? '<div class="ms-foot">เลือกอยู่ <b>' + sel.size + '</b> จาก ' + opts.length + ' รายการ</div>'
-        : '<div class="ms-foot">ไม่เลือก = แสดงทั้งหมด</div>') +
+      (searchable
+        ? '<div class="ms-search"><input type="text" data-ms-search placeholder="ค้นหาชื่อสินค้า..." ' +
+          'value="' + escapeHtml(MS_SEARCH[key] || '') + '" autocomplete="off" spellcheck="false"></div>'
+        : '') +
+      '<div class="ms-list">' + msListHtml(key) + '</div>' +
+      '<div class="ms-foot">' + msFootHtml(key) + '</div>' +
     '</div>';
   if(wasOpen) host.classList.add('open');
   const list = host.querySelector('.ms-list');
   if(list && prevScroll) list.scrollTop = prevScroll;
+}
+
+/* อัปเดตเฉพาะรายการ + ป้ายบนปุ่ม โดยไม่แตะช่องค้นหา
+   จำเป็นเพราะถ้า re-render ทั้งพาเนลตอนพิมพ์ cursor จะกระเด็นออกจากช่องทุกตัวอักษร */
+function updateMsBody(key){
+  const host = document.querySelector('.ms[data-key="' + key + '"]');
+  if(!host) return;
+  const list = host.querySelector('.ms-list');
+  if(list) list.innerHTML = msListHtml(key);
+  const foot = host.querySelector('.ms-foot');
+  if(foot) foot.innerHTML = msFootHtml(key);
+  const trig = host.querySelector('.ms-trigger');
+  if(trig){
+    trig.classList.toggle('has-value', FILTER_SETS[key].size > 0);
+    const span = trig.querySelector('span');
+    if(span) span.textContent = msTriggerLabel(key);
+  }
 }
 
 /* ---------- ปฏิทิน ---------- */
@@ -1721,11 +1800,12 @@ document.addEventListener('click', (e) => {
     const key = inMs.dataset.key;
     if(e.target.closest('[data-ms-trigger]')){ inMs.classList.toggle('open'); return; }
     if(e.target.closest('[data-ms-all]')){
-      (MS_OPTIONS[key] || []).forEach(o => FILTER_SETS[key].add(o.v));
-      renderMultiSelect(key); onFilterChange(); return;
+      // v83: กำลังค้นหาอยู่ → "ทั้งหมด" หมายถึงทุกรายการที่ตรงคำค้น (ไม่ใช่ทั้งชีต)
+      msFilteredOpts(key).forEach(o => FILTER_SETS[key].add(o.v));
+      updateMsBody(key); onFilterChange(); return;
     }
     if(e.target.closest('[data-ms-none]')){
-      FILTER_SETS[key].clear(); renderMultiSelect(key); onFilterChange(); return;
+      FILTER_SETS[key].clear(); updateMsBody(key); onFilterChange(); return;
     }
     return;
   }
@@ -1772,8 +1852,18 @@ document.addEventListener('change', (e) => {
   const key = host.dataset.key;
   const v = e.target.value;
   if(e.target.checked) FILTER_SETS[key].add(v); else FILTER_SETS[key].delete(v);
-  renderMultiSelect(key);
+  updateMsBody(key);        // v83: ไม่ re-render ทั้งพาเนล คำค้น/ตำแหน่ง scroll จึงอยู่ที่เดิม
   onFilterChange();
+});
+
+// v83: พิมพ์ในช่องค้นหาของพาเนล — กรองรายการทันทีโดยไม่ปิดพาเนลและไม่เสีย focus
+document.addEventListener('input', (e) => {
+  const box = e.target.closest('[data-ms-search]');
+  if(!box) return;
+  const host = box.closest('.ms');
+  if(!host) return;
+  MS_SEARCH[host.dataset.key] = box.value;
+  updateMsBody(host.dataset.key);
 });
 
 // กด Esc ปิด panel ที่เปิดอยู่
@@ -1832,6 +1922,14 @@ function populateFilterOptions(){
   MS_OPTIONS.channel1 = [{ v:'platform', label:'Platform' }, { v:'walkin', label:'Walk-in' }];
   MS_OPTIONS.whstatus = [{ v:'ontime', label:'On time' }, { v:'early', label:'Early' }, { v:'late', label:'Late' }];
 
+  /* v83: ตัวเลือกสินค้าสำหรับติ๊กหลายรายการ
+     ALL_ROWS ถูกกรอง Box/ค่าส่ง/คูปอง/ส่วนลด/Product Card/เอกสาร ออกไปแล้วตอนโหลด
+     เรียงตามจำนวนแถวมาก→น้อย เพราะของที่ออกบ่อยคือของที่ต้องดูบ่อย ให้อยู่บนสุด */
+  const productCounts = countBy(r => (r.product || '').trim());
+  const productNames = Object.keys(productCounts)
+    .sort((a,b) => productCounts[b] - productCounts[a] || a.localeCompare(b, 'th'));
+  MS_OPTIONS.product2 = productNames.map(p => ({ v:p, label:p, count:productCounts[p] }));
+
   // ค่าที่เลือกไว้แต่ไม่มีในข้อมูลชุดใหม่แล้ว ต้องเอาออก ไม่งั้นกรองจนว่างเปล่าแบบไม่มีสาเหตุ
   const prune = (key, valid) => {
     [...FILTER_SETS[key]].forEach(v => { if(!valid.has(v)) FILTER_SETS[key].delete(v); });
@@ -1840,6 +1938,7 @@ function populateFilterOptions(){
   prune('month1', monthSet); prune('month2', monthSet);
   prune('week1', weekSet);   prune('week2', weekSet);
   prune('day1', AVAILABLE_DAYS); prune('day2', AVAILABLE_DAYS);
+  prune('product2', new Set(productNames));
 
   Object.keys(CAL_VIEW).forEach(k => { delete CAL_VIEW[k]; });   // ให้ปฏิทินคำนวณเดือนเริ่มต้นใหม่
   renderAllFilterControls();
@@ -1847,14 +1946,15 @@ function populateFilterOptions(){
 
 function onFilterChange(){
   filters.orderRef = document.getElementById('f1_orderRef').value;
-  filters.product  = document.getElementById('f2_product').value;
   renderAll();
 }
 
 function clearFilters(){
   Object.keys(FILTER_SETS).forEach(k => { FILTER_SETS[k].clear(); CAL_LAST[k] = null; });
-  ['f1_orderRef','f2_product'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
-  filters.orderRef = ''; filters.product = '';
+  Object.keys(MS_SEARCH).forEach(k => { MS_SEARCH[k] = ''; });   // v83: ล้างคำค้นในพาเนลด้วย
+  const orderRefEl = document.getElementById('f1_orderRef');
+  if(orderRefEl) orderRefEl.value = '';
+  filters.orderRef = '';
   renderAllFilterControls();
   renderAll();
 }
@@ -2432,7 +2532,7 @@ function getTab2Rows(){
     setsAllow('week2', r.week) &&
     setsAllow('day2', rowDayKey(r)) &&
     setsAllow('whstatus', classify(r.whStatus)) &&
-    (!filters.product || r.product.toLowerCase().includes(filters.product.toLowerCase()))
+    setsAllow('product2', (r.product || '').trim())   // v83: ติ๊กเลือกสินค้าได้หลายรายการ
   );
 }
 
