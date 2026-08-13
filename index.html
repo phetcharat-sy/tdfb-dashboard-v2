@@ -393,6 +393,9 @@
   body.exporting .stat-icon{width:56px !important;height:56px !important;}
   body.exporting .stat-icon svg{width:29px !important;height:29px !important;}
   body.exporting details{display:none !important;}              /* กล่อง "วิธีคิด" ที่พับอยู่ ไม่ต้องพิมพ์ */
+  body.exporting .bowl{filter:none !important;}                  /* v104: drop-shadow เรนเดอร์เป็นบิตแมปฟุ้ง */
+  body.exporting .stat-card, body.exporting .chart-panel,
+  body.exporting .table-panel{box-shadow:none !important;}       /* v104: เงาทำให้ขอบการ์ดดูไม่คม */
   body.exporting{background-image:none !important;}               /* v88: ลายใบชาไม่ต้องติดไปในภาพ export */
   body.exporting .calc-note{display:none !important;}            /* v84: กล่องวิธีคำนวณ ไม่ต้องติดไปในภาพ export */
 
@@ -431,7 +434,7 @@
     <div class="meta-right">
       Last fetched<br><span id="lastUpdated">—</span>
       <div id="dataFreshness" class="freshness"></div>
-      <div id="buildTag" style="font-size:calc(13.6px * var(--type-scale));color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-13-v103-no-input-hint</div>
+      <div id="buildTag" style="font-size:calc(13.6px * var(--type-scale));color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-13-v104-sharper-png</div>
       <div>
         <button class="btn-plain" id="refreshBtn" onclick="loadData()">Refresh</button>
         <button class="btn-plain" id="saveImgBtn" onclick="saveTabAsPNG()" style="margin-left:14px;">Save as PNG (แนวนอน, คมชัด)</button>
@@ -1399,7 +1402,7 @@ function buildExportHeader(activeTab){
 
 // v61: ด่านสุดท้าย — ถ้าหน้าไหนยังหลุดเพดาน (เช่นหน้าที่ยาวผิดปกติ) ให้ย่อลงก่อนเซฟ
 // ป้องกันเคส Google Slides / Docs ปฏิเสธไฟล์เพราะเกิน 25 MP
-function fitToLimit(canvas, maxMP = 20, maxSide = 8000){
+function fitToLimit(canvas, maxMP = 24, maxSide = 8000){
   const mp = canvas.width * canvas.height / 1e6;
   const ratio = Math.min(1, Math.sqrt(maxMP / mp), maxSide / canvas.width, maxSide / canvas.height);
   if(ratio >= 0.999) return canvas;
@@ -1452,23 +1455,27 @@ async function saveTabAsPNG(){
     // v61: Google Slides / Docs รับภาพได้สูงสุด 25 ล้านพิกเซล (MP) ต่อรูป
     // ถ้าเกิน จะอัปโหลดไม่ได้และขึ้น "เกิดข้อผิดพลาด" แบบไม่บอกเหตุผล
     // จึงคำนวณ scale ให้แต่ละหน้าอยู่ใต้เพดานตั้งแต่ตอน capture แทนการ fix scale=3
-    const MAX_MP   = 20;    // เผื่อจากลิมิตจริง 25 MP
+    const MAX_MP   = 24;    // เผื่อจากลิมิตจริง 25 MP
     const MAX_SIDE = 8000;  // กันด้านยาวเกินสำหรับโปรแกรมอื่น
     // v67: ทุกหน้าที่ export ออกมาต้องเป็น 16:9 เป๊ะ
     // เพราะพอเอาไปวางเป็น "พื้นหลังสไลด์" ใน Google Slides มันจะยืดรูปให้เต็มสไลด์เสมอ
     // ของเดิม 1.5:1 โดนยืดออกด้านกว้าง 1.19 เท่า วงกลม 100.00% เลยกลายเป็นวงรี
     const SLIDE_ASPECT = 16/9;
-    const MARGIN_CSS = 20, HEADER_CSS = 160;
+    const MARGIN_CSS = 20;
 
     const tabRect  = activeTab.getBoundingClientRect();
-    const pageGuess = Math.max(1, Math.round(tabRect.height / (tabRect.width / SLIDE_ASPECT)));
-    const pageCssArea = (tabRect.width + MARGIN_CSS*2)
-                      * (tabRect.height / pageGuess + MARGIN_CSS*2 + HEADER_CSS);
-
-    let scale = Math.sqrt((MAX_MP * 1e6) / pageCssArea);
-    scale = Math.min(3, Math.max(1.5, scale));                        // ไม่คมเกินจำเป็น ไม่แตกเกินไป
-    scale = Math.min(scale, MAX_SIDE / (tabRect.width + MARGIN_CSS*2));
-    scale = Math.round(scale * 100) / 100;
+    /*
+      v104: ภาพเบลอเพราะถูก resample สองรอบ
+        รอบ 1 = drawImage ย่อให้พอดีหน้า (fit)  รอบ 2 = fitToLimit ย่อเพราะเกินเพดาน MP
+      ตัวหนังสือที่ถูกย่อสองรอบจะฟุ้งชัดเจน แก้โดยคำนวณ scale จากเพดานโดยตรง
+      หน้าสุดท้ายมีขนาด PAGE_W x PAGE_W*9/16 ดังนั้น PAGE_W สูงสุด = sqrt(MAX_MP * 16/9)
+      เลือก scale ให้ชนเพดานพอดี → fitToLimit ไม่ต้องทำงานเลย เหลือ resample แค่รอบเดียว
+    */
+    // เผื่อ 4% เพราะ PAGE_W ถูกปัดขึ้นให้หาร 16 ลงตัว ถ้าไม่เผื่อจะล้นเพดานเล็กน้อยแล้วโดนย่อซ้ำ
+    const maxPageW = Math.min(MAX_SIDE, Math.sqrt(MAX_MP * 0.96 * 1e6 * SLIDE_ASPECT));
+    let scale = maxPageW / (tabRect.width + MARGIN_CSS*2);
+    scale = Math.min(4, Math.max(1.5, scale));      // เพิ่มเพดานจาก 3 เป็น 4 ให้ตัวหนังสือคมขึ้น
+    scale = Math.floor(scale * 100) / 100;          // ปัดลง กันล้นเพดานเพราะเศษทศนิยม
 
     const captured = await html2canvas(activeTab, {
       backgroundColor: '#F6F2E7',
@@ -1497,9 +1504,9 @@ async function saveTabAsPNG(){
             ทำให้ดึงเนื้อหาก้อนถัดไปขึ้นมาอยู่หน้าเดียวกันได้ แทนที่จะทิ้งที่ว่างครึ่งหน้าแล้วขึ้นหน้าใหม่
         (ค) ข้อมูลชุดเดียวกันต้องอยู่ด้วยกัน — เพราะจุดตัดชั้นหลักอยู่ที่ขอบ section เสมอ
     */
-    // v72: ทุกครั้งที่ย่อ ตัวหนังสือบนจอใหญ่จะเล็กลงตรงๆ จึงยอมให้ย่อได้แค่ 15%
-    // แลกกับการที่หน้าเต็มเกือบ 100% ไม่มีพื้นที่ว่างเป็นแถบใหญ่ และจำนวนแผ่นน้อยลง
-    const MIN_FIT = 0.85;
+    // v104: การย่อบิตแมปคือต้นเหตุความเบลอหลัก ยิ่งย่อมากยิ่งฟุ้ง
+    // เดิมยอมย่อได้ถึง 15% รอบนี้เหลือ 5% — แลกกับจำนวนแผ่นที่อาจเพิ่มขึ้นเล็กน้อย
+    const MIN_FIT = 0.95;
     const MAX_CONTENT = AVAIL_H / MIN_FIT;       // ความสูงเนื้อหาสูงสุดที่ยัดลงหนึ่งหน้าได้
 
     const containerRect = activeTab.getBoundingClientRect();
