@@ -17,7 +17,7 @@
     --paper:#F6F2E7; --panel:#FFFDF5; --ink:#18240F; --ink-soft:#3F4C37; --ink-faint:#6B7561;
     --hairline:#DED6BD; --hairline-strong:#C9BF9E;
     --matcha:#7A9A3F; --matcha-deep:#4C6B26; --bamboo:#C89B4A; --azuki:#A6432E;
-    --page-max:1900px;   /* v89: ความกว้างเนื้อหาสูงสุด — อยากกว้าง/แคบกว่านี้ แก้บรรทัดนี้ค่าเดียว */
+    --page-max:2400px;   /* v89: ความกว้างเนื้อหาสูงสุด — อยากกว้าง/แคบกว่านี้ แก้บรรทัดนี้ค่าเดียว */
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
@@ -37,31 +37,31 @@
   }
   /* v89: เดิมกางเต็มจอ ทำให้ตารางกับกราฟยืดกว้างเกินไปบนจอใหญ่ สายตาต้องกวาดไกล
      จึงล็อกความกว้างสูงสุดแล้วจัดกลาง — ปรับค่าได้ที่ --page-max ที่เดียว */
-  .wrap{max-width:var(--page-max);width:100%;margin:0 auto;padding:48px clamp(32px,5vw,104px) 80px;}
+  .wrap{max-width:var(--page-max);width:100%;margin:0 auto;padding:48px clamp(28px,3.5vw,76px) 80px;}
 
   .brand-header{display:flex;align-items:center;gap:14px;margin-bottom:16px;}
   .brand-logo{flex-shrink:0;}
-  .brand-name{font-family:'Zen Maru Gothic',sans-serif;font-weight:700;font-size:32.1px;color:#3f4a30;line-height:1.2;}
+  .brand-name{font-family:'Zen Maru Gothic',sans-serif;font-weight:700;font-size:36.9px;color:#3f4a30;line-height:1.2;}
 
-  .eyebrow{font-family:'IBM Plex Mono',monospace;font-size:18.6px;letter-spacing:.2em;color:var(--matcha-deep);text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:7px;}
+  .eyebrow{font-family:'IBM Plex Mono',monospace;font-size:21.4px;letter-spacing:.2em;color:var(--matcha-deep);text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:7px;}
   .eyebrow svg{width:13px;height:13px;}
   .header-row{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap;padding-bottom:24px;margin-bottom:30px;border-bottom:2px solid var(--matcha);}
-  h1{font-family:'Zen Maru Gothic',sans-serif;font-weight:900;font-size:72.9px;margin:0 0 8px;letter-spacing:-.015em;line-height:1.05;
+  h1{font-family:'Zen Maru Gothic',sans-serif;font-weight:900;font-size:83.8px;margin:0 0 8px;letter-spacing:-.015em;line-height:1.05;
      background:linear-gradient(100deg, var(--matcha-deep) 10%, var(--matcha) 55%, var(--bamboo) 100%);
      -webkit-background-clip:text;background-clip:text;color:transparent;display:inline-block;}
-  .subtitle{font-size:22.8px;color:var(--ink-soft);font-weight:500;}
-  .meta-right{text-align:right;font-family:'IBM Plex Mono',monospace;font-size:18.6px;color:var(--ink-faint);}
+  .subtitle{font-size:26.2px;color:var(--ink-soft);font-weight:500;}
+  .meta-right{text-align:right;font-family:'IBM Plex Mono',monospace;font-size:21.4px;color:var(--ink-faint);}
   .meta-right #lastUpdated{color:var(--ink-soft);}
   /* v81: "Last fetched" คือเวลาที่เบราว์เซอร์ดึง CSV ไม่ใช่ความสดของข้อมูลในชีต
      ถ้าชีตค้างตั้งแต่เช้า ตัวเลขเดิมจะดูเหมือนสดทั้งที่ขาดข้อมูลครึ่งวัน จึงต้องโชว์แยก */
-  .freshness{margin-top:4px;font-family:'IBM Plex Mono',monospace;font-size:16.9px;line-height:1.5;}
+  .freshness{margin-top:4px;font-family:'IBM Plex Mono',monospace;font-size:19.4px;line-height:1.5;}
   .freshness .ok{color:var(--matcha-deep);}
   .freshness .stale{color:var(--azuki);font-weight:600;}
-  .btn-plain{font-family:'IBM Plex Mono',monospace;font-size:18.6px;font-weight:700;background:none;color:var(--matcha-deep);border:none;border-bottom:1.5px solid var(--matcha-deep);padding:2px 0;cursor:pointer;margin-top:8px;letter-spacing:.04em;}
+  .btn-plain{font-family:'IBM Plex Mono',monospace;font-size:21.4px;font-weight:700;background:none;color:var(--matcha-deep);border:none;border-bottom:1.5px solid var(--matcha-deep);padding:2px 0;cursor:pointer;margin-top:8px;letter-spacing:.04em;}
   .btn-plain:hover{opacity:.65;}
   .btn-plain:disabled{opacity:.4;cursor:wait;}
 
-  .latest-line{font-family:'IBM Plex Mono',monospace;font-size:19.5px;color:var(--ink-faint);margin-bottom:32px;display:flex;gap:10px;align-items:center;}
+  .latest-line{font-family:'IBM Plex Mono',monospace;font-size:22.4px;color:var(--ink-faint);margin-bottom:32px;display:flex;gap:10px;align-items:center;}
   .latest-line b{color:var(--ink-soft);font-weight:600;}
   .status-dot{width:7px;height:7px;border-radius:50%;display:inline-block;}
   .status-dot.ontime{background:var(--matcha);}
@@ -69,8 +69,8 @@
   .status-dot.late{background:var(--azuki);}
 
   .tabs{display:flex;gap:8px;margin-bottom:36px;}
-  .tab-btn{font-family:'Zen Maru Gothic',sans-serif;font-weight:700;font-size:29.7px;background:var(--panel);border:1.5px solid var(--hairline-strong);color:var(--ink-soft);padding:24px 46px;cursor:pointer;border-radius:26px;transition:all .15s ease;}
-  .tab-btn span.cap{display:block;font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:16.9px;letter-spacing:.1em;color:var(--ink-faint);text-transform:uppercase;margin-top:4px;}
+  .tab-btn{font-family:'Zen Maru Gothic',sans-serif;font-weight:700;font-size:34.2px;background:var(--panel);border:1.5px solid var(--hairline-strong);color:var(--ink-soft);padding:24px 46px;cursor:pointer;border-radius:26px;transition:all .15s ease;}
+  .tab-btn span.cap{display:block;font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:19.4px;letter-spacing:.1em;color:var(--ink-faint);text-transform:uppercase;margin-top:4px;}
   .tab-btn.active{color:#fff;background:linear-gradient(135deg, var(--matcha) 0%, var(--matcha-deep) 100%);border-color:transparent;box-shadow:0 6px 16px rgba(76,107,38,.25);}
   .tab-btn.active span.cap{color:rgba(255,255,255,.75);}
   .tab-btn:hover:not(.active){border-color:var(--matcha);color:var(--ink);}
@@ -84,17 +84,17 @@
   .bowl-fill{fill:none;stroke:var(--matcha);stroke-width:15;stroke-linecap:round;transition:stroke-dashoffset 1.15s cubic-bezier(.16,.8,.24,1);}
   .bowl-fill.below-target{stroke:var(--azuki);}
   .bowl-label{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
-  .bowl-number{font-family:'Zen Maru Gothic',sans-serif;font-weight:900;font-size:87.4px;color:var(--ink);}
+  .bowl-number{font-family:'Zen Maru Gothic',sans-serif;font-weight:900;font-size:100.5px;color:var(--ink);}
   .bowl-number.below-target{color:var(--azuki);}
-  .hero-caption{font-family:'IBM Plex Mono',monospace;font-size:19.5px;letter-spacing:.14em;color:var(--ink-faint);text-transform:uppercase;margin-top:16px;}
+  .hero-caption{font-family:'IBM Plex Mono',monospace;font-size:22.4px;letter-spacing:.14em;color:var(--ink-faint);text-transform:uppercase;margin-top:16px;}
   .hero-caption b{color:var(--matcha-deep);}
 
   .filter-row{display:flex;gap:22px;flex-wrap:wrap;align-items:flex-end;padding:16px 20px;border-radius:14px;background:var(--panel);border:1px solid var(--hairline);margin-bottom:28px;}
   .filter-field{display:flex;flex-direction:column;gap:5px;}
-  .filter-field > label{font-size:16.9px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;}
-  .filter-field select, .filter-field input{background:transparent;border:none;border-bottom:1.5px solid var(--hairline-strong);color:var(--ink);padding:8px 2px;font-size:22.1px;font-family:'IBM Plex Sans Thai';min-width:170px;}
+  .filter-field > label{font-size:19.4px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;}
+  .filter-field select, .filter-field input{background:transparent;border:none;border-bottom:1.5px solid var(--hairline-strong);color:var(--ink);padding:8px 2px;font-size:25.4px;font-family:'IBM Plex Sans Thai';min-width:170px;}
   .filter-field select:focus, .filter-field input:focus{outline:none;border-bottom-color:var(--matcha-deep);}
-  .filter-clear{font-family:'IBM Plex Mono',monospace;font-size:17.8px;color:var(--ink-faint);background:none;border:none;cursor:pointer;text-decoration:underline;text-underline-offset:3px;}
+  .filter-clear{font-family:'IBM Plex Mono',monospace;font-size:20.5px;color:var(--ink-faint);background:none;border:none;cursor:pointer;text-decoration:underline;text-underline-offset:3px;}
   .filter-clear:hover{color:var(--azuki);}
 
   /* ===== v77: ตัวกรองติ๊กหลายค่า + ปฏิทิน =====
@@ -106,12 +106,12 @@
   .ms-trigger, .cal-trigger{
     display:flex;align-items:center;justify-content:space-between;gap:12px;
     background:transparent;border:none;border-bottom:1.5px solid var(--hairline-strong);
-    color:var(--ink);padding:7px 2px;font-size:22.1px;font-weight:500;
+    color:var(--ink);padding:7px 2px;font-size:25.4px;font-weight:500;
     font-family:'IBM Plex Sans Thai',sans-serif;min-width:186px;max-width:280px;
     text-align:left;cursor:pointer;white-space:nowrap;transition:border-color .14s ease,color .14s ease;}
   .ms-trigger:hover, .cal-trigger:hover{border-bottom-color:var(--matcha);}
   .ms-trigger > span, .cal-trigger > span{overflow:hidden;text-overflow:ellipsis;}
-  .ms-caret{flex-shrink:0;color:var(--ink-faint);font-size:13px;line-height:1;transition:transform .16s ease;}
+  .ms-caret{flex-shrink:0;color:var(--ink-faint);font-size:14.9px;line-height:1;transition:transform .16s ease;}
   .ms.open .ms-caret, .cal.open .ms-caret{transform:rotate(180deg);}
   .ms-trigger.has-value, .cal-trigger.has-value{color:var(--matcha-deep);font-weight:600;border-bottom-color:var(--matcha-deep);}
   .ms-trigger.has-value .ms-caret, .cal-trigger.has-value .ms-caret{color:var(--matcha-deep);}
@@ -126,17 +126,17 @@
 
   .ms-head{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:8px 12px 10px;
     border-bottom:1px solid var(--hairline);margin-bottom:6px;}
-  .ms-head-title{font-family:'IBM Plex Mono',monospace;font-size:15px;letter-spacing:.07em;
+  .ms-head-title{font-family:'IBM Plex Mono',monospace;font-size:17.2px;letter-spacing:.07em;
     text-transform:uppercase;color:var(--ink-faint);white-space:nowrap;}
   .ms-head-actions{display:flex;gap:14px;flex-shrink:0;}
-  .ms-head-actions button{font-family:'IBM Plex Sans Thai',sans-serif;font-size:17px;background:none;border:none;
+  .ms-head-actions button{font-family:'IBM Plex Sans Thai',sans-serif;font-size:19.5px;background:none;border:none;
     color:var(--matcha-deep);cursor:pointer;padding:0;border-bottom:1px solid transparent;}
   .ms-head-actions button:hover{border-bottom-color:currentColor;}
   .ms-head-actions button.danger{color:var(--azuki);}
 
   .ms-list{max-height:314px;overflow-y:auto;padding:2px;}
   .ms-opt{display:flex;align-items:center;gap:13px;padding:10px 11px;border-radius:11px;cursor:pointer;
-    font-family:'IBM Plex Sans Thai',sans-serif;font-size:21px;font-weight:400;letter-spacing:0;
+    font-family:'IBM Plex Sans Thai',sans-serif;font-size:24.1px;font-weight:400;letter-spacing:0;
     text-transform:none;color:var(--ink-soft);transition:background .12s ease;}
   .ms-opt:hover{background:rgba(122,154,63,.10);}
   .ms-opt.on{background:rgba(122,154,63,.15);color:var(--ink);font-weight:600;}
@@ -149,24 +149,24 @@
     transform-origin:center;transition:transform .13s cubic-bezier(.2,.9,.3,1.3);}
   .ms-opt input:checked + .ms-box::after{transform:rotate(45deg) scale(1);}
   .ms-text{flex:1;text-align:left;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .ms-count{flex-shrink:0;font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:500;
+  .ms-count{flex-shrink:0;font-family:'IBM Plex Mono',monospace;font-size:17.2px;font-weight:500;
     color:var(--ink-faint);background:rgba(31,46,26,.05);border-radius:6px;padding:3px 8px;}
   .ms-opt.on .ms-count{color:var(--matcha-deep);background:rgba(122,154,63,.18);}
 
   .ms-foot{padding:9px 12px 4px;margin-top:4px;border-top:1px solid var(--hairline);
-    font-family:'IBM Plex Mono',monospace;font-size:15px;color:var(--ink-faint);}
+    font-family:'IBM Plex Mono',monospace;font-size:17.2px;color:var(--ink-faint);}
   .ms-foot b{color:var(--matcha-deep);}
 
   /* ===== v83: ช่องค้นหาในพาเนล — ใช้กับช่องที่มีรายการเยอะ (สินค้า) ===== */
   .ms-search{padding:2px 4px 8px;}
   .ms-search input{width:100%;min-width:0;box-sizing:border-box;
     background:var(--paper);border:1.5px solid var(--hairline-strong);border-radius:11px;
-    padding:9px 12px;font-family:'IBM Plex Sans Thai',sans-serif;font-size:19px;color:var(--ink);}
+    padding:9px 12px;font-family:'IBM Plex Sans Thai',sans-serif;font-size:21.8px;color:var(--ink);}
   .ms-search input:focus{outline:none;border-color:var(--matcha-deep);
     box-shadow:0 0 0 3px rgba(122,154,63,.16);}
   .ms-search input::placeholder{color:var(--ink-faint);}
   .ms-empty{padding:18px 12px;text-align:center;color:var(--ink-faint);
-    font-family:'IBM Plex Sans Thai',sans-serif;font-size:19px;}
+    font-family:'IBM Plex Sans Thai',sans-serif;font-size:21.8px;}
   /* ชื่อสินค้ายาว จึงต้องกางพาเนลกว้างกว่าช่องอื่น */
   .ms-wide .ms-panel{min-width:560px;max-width:min(560px,88vw);}
   .ms-wide .ms-list{max-height:392px;}
@@ -175,16 +175,16 @@
   .cal-panel{min-width:372px;padding:10px;}
   .cal-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:4px 4px 12px;}
   .cal-head button{background:none;border:1.5px solid var(--hairline-strong);border-radius:11px;
-    width:38px;height:38px;cursor:pointer;color:var(--matcha-deep);font-size:20px;line-height:1;
+    width:38px;height:38px;cursor:pointer;color:var(--matcha-deep);font-size:23px;line-height:1;
     display:flex;align-items:center;justify-content:center;transition:all .12s ease;}
   .cal-head button:hover:not(:disabled){border-color:var(--matcha);background:rgba(122,154,63,.10);}
   .cal-head button:disabled{opacity:.28;cursor:default;}
-  .cal-title{font-family:'Zen Maru Gothic',sans-serif;font-weight:700;font-size:23px;color:var(--ink);}
+  .cal-title{font-family:'Zen Maru Gothic',sans-serif;font-weight:700;font-size:26.4px;color:var(--ink);}
   .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
-  .cal-dow{font-family:'IBM Plex Mono',monospace;font-size:14px;letter-spacing:.04em;color:var(--ink-faint);
+  .cal-dow{font-family:'IBM Plex Mono',monospace;font-size:16.1px;letter-spacing:.04em;color:var(--ink-faint);
     text-align:center;padding:2px 0 6px;}
   .cal-day{border:1.5px solid transparent;background:none;border-radius:11px;height:42px;
-    font-family:'IBM Plex Sans Thai',sans-serif;font-size:19px;font-weight:500;color:var(--ink-soft);cursor:pointer;
+    font-family:'IBM Plex Sans Thai',sans-serif;font-size:21.8px;font-weight:500;color:var(--ink-soft);cursor:pointer;
     transition:all .12s ease;}
   .cal-day:disabled{color:var(--hairline-strong);cursor:default;}
   .cal-day.on{background:var(--matcha);border-color:var(--matcha);color:#fff;font-weight:700;
@@ -192,22 +192,22 @@
   .cal-day:not(:disabled):not(.on):hover{background:rgba(122,154,63,.14);border-color:rgba(122,154,63,.35);}
   .cal-actions{display:flex;justify-content:space-between;align-items:center;gap:14px;
     padding:11px 4px 2px;margin-top:10px;border-top:1px solid var(--hairline);}
-  .cal-hint{font-family:'IBM Plex Mono',monospace;font-size:14px;color:var(--ink-faint);line-height:1.5;}
+  .cal-hint{font-family:'IBM Plex Mono',monospace;font-size:16.1px;color:var(--ink-faint);line-height:1.5;}
   .cal-actions button{font-family:'IBM Plex Sans Thai',sans-serif;background:none;border:none;color:var(--azuki);
-    cursor:pointer;font-size:17px;padding:0;flex-shrink:0;border-bottom:1px solid transparent;}
+    cursor:pointer;font-size:19.5px;padding:0;flex-shrink:0;border-bottom:1px solid transparent;}
   .cal-actions button:hover{border-bottom-color:currentColor;}
 
   /* ตอน export เป็นภาพ ไม่ต้องให้ panel ที่เปิดอยู่ติดไปในรูป */
   /* v80: กล่องกระทบยอดรายวัน */
   .daycheck{margin-top:12px;padding:14px 18px;background:rgba(200,155,74,.10);
     border:1px solid rgba(200,155,74,.35);border-radius:12px;
-    font-family:'IBM Plex Sans Thai',sans-serif;font-size:19.5px;color:var(--ink-soft);line-height:1.75;}
+    font-family:'IBM Plex Sans Thai',sans-serif;font-size:22.4px;color:var(--ink-soft);line-height:1.75;}
   .daycheck b{color:var(--matcha-deep);}
 
   /* v78: ปุ่มสลับว่า "วัน" ในตัวกรองหมายถึงวันที่คอลัมน์ไหน */
   .seg{display:inline-flex;gap:4px;background:rgba(31,46,26,.055);border-radius:13px;padding:4px;}
   .seg button{border:none;background:none;border-radius:10px;padding:7px 14px;
-    font-family:'IBM Plex Sans Thai',sans-serif;font-size:18px;color:var(--ink-soft);cursor:pointer;white-space:nowrap;}
+    font-family:'IBM Plex Sans Thai',sans-serif;font-size:20.7px;color:var(--ink-soft);cursor:pointer;white-space:nowrap;}
   .seg button:hover{color:var(--ink);}
   .seg button.on{background:var(--panel);color:var(--matcha-deep);font-weight:600;box-shadow:0 2px 7px rgba(31,46,26,.12);}
 
@@ -225,19 +225,19 @@
   .stat-icon.i-azuki{background:rgba(166,67,46,.13);color:var(--azuki);}
   .stat-icon.i-bamboo{background:rgba(200,155,74,.16);color:#8a6a2f;}
   .stat-icon.i-gray{background:rgba(140,148,130,.15);color:var(--ink-faint);}
-  .stat-label{font-family:'IBM Plex Mono',monospace;font-size:18.4px;letter-spacing:.05em;color:var(--ink-faint);text-transform:uppercase;}
-  .stat-value{font-family:'Zen Maru Gothic',sans-serif;font-weight:900;font-size:46.6px;color:var(--ink);}
+  .stat-label{font-family:'IBM Plex Mono',monospace;font-size:21.2px;letter-spacing:.05em;color:var(--ink-faint);text-transform:uppercase;}
+  .stat-value{font-family:'Zen Maru Gothic',sans-serif;font-weight:900;font-size:53.6px;color:var(--ink);}
   .stat-value.c-matcha{color:var(--matcha-deep);}
   .stat-value.c-azuki{color:var(--azuki);}
   .stat-value.c-bamboo{color:#8a6a2f;}
 
   .section{margin-bottom:42px;}
-  .section-title{font-family:'Zen Maru Gothic',sans-serif;font-weight:700;font-size:36px;color:var(--ink);margin:0 0 5px;display:flex;align-items:center;gap:11px;}
+  .section-title{font-family:'Zen Maru Gothic',sans-serif;font-weight:700;font-size:41.4px;color:var(--ink);margin:0 0 5px;display:flex;align-items:center;gap:11px;}
   /* v88: ไอคอนหัวข้อเปลี่ยนจากหยดน้ำเป็นใบชา ใส่วงกลมสีมัทฉะรองให้เป็นจุดนำสายตา */
   .section-title svg{width:25px;height:25px;color:var(--matcha-deep);flex-shrink:0;}
   .section-title .sec-mark{width:44px;height:44px;border-radius:14px;flex-shrink:0;
     background:rgba(122,154,63,.15);display:flex;align-items:center;justify-content:center;}
-  .section-desc{font-size:20.5px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-bottom:18px;line-height:1.55;}
+  .section-desc{font-size:23.6px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-bottom:18px;line-height:1.55;}
   .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
   .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;}
   @media (max-width:900px){.grid-2,.grid-3{grid-template-columns:1fr;}}
@@ -245,31 +245,31 @@
   .chart-box{position:relative;height:250px;}
 
   .table-panel{background:var(--panel);border:1px solid var(--hairline);border-radius:26px;padding:30px;box-shadow:0 3px 12px rgba(31,46,26,.05);}
-  table.data-table{width:100%;border-collapse:collapse;font-size:22.1px;}
-  table.data-table thead th{text-align:left;font-family:'IBM Plex Mono',monospace;font-size:16.9px;letter-spacing:.06em;color:var(--ink-faint);text-transform:uppercase;font-weight:600;padding:8px 12px 10px;border-bottom:1.5px solid var(--hairline-strong);position:sticky;top:0;background:var(--panel);}
+  table.data-table{width:100%;border-collapse:collapse;font-size:25.4px;}
+  table.data-table thead th{text-align:left;font-family:'IBM Plex Mono',monospace;font-size:19.4px;letter-spacing:.06em;color:var(--ink-faint);text-transform:uppercase;font-weight:600;padding:8px 12px 10px;border-bottom:1.5px solid var(--hairline-strong);position:sticky;top:0;background:var(--panel);}
   table.data-table tbody td{padding:10px 12px;border-bottom:1px solid var(--hairline);color:var(--ink-soft);}
   table.data-table tbody td.strong{color:var(--ink);font-weight:600;font-family:'IBM Plex Mono',monospace;}
   .qty-highlight{display:inline-block;background:rgba(166,67,46,.14);color:var(--azuki);font-weight:700;font-family:'IBM Plex Mono',monospace;padding:3px 10px;border-radius:6px;}
   table.data-table tbody tr:hover{background:rgba(122,154,63,.06);}
   .table-scroll{max-height:340px;overflow-y:auto;}
   .remark-scroll{max-height:420px;}
-  .status-text{display:inline-flex;align-items:center;gap:6px;font-size:18.6px;font-weight:600;}
+  .status-text{display:inline-flex;align-items:center;gap:6px;font-size:21.4px;font-weight:600;}
   .status-text.ontime{color:var(--matcha-deep);}
   .status-text.early{color:#8a6a2f;}
   .status-text.late{color:var(--azuki);}
   .status-text.unknown{color:var(--ink-faint);}
-  .empty-state{padding:32px;text-align:center;color:var(--ink-faint);font-size:19.5px;}
-  .pagination{display:flex;justify-content:flex-end;align-items:center;gap:12px;margin-top:12px;font-family:'IBM Plex Mono',monospace;font-size:17.8px;color:var(--ink-faint);}
-  .pagination button{background:none;border:1px solid var(--hairline-strong);color:var(--matcha-deep);border-radius:6px;width:70px;height:70px;cursor:pointer;font-size:18.6px;}
+  .empty-state{padding:32px;text-align:center;color:var(--ink-faint);font-size:22.4px;}
+  .pagination{display:flex;justify-content:flex-end;align-items:center;gap:12px;margin-top:12px;font-family:'IBM Plex Mono',monospace;font-size:20.5px;color:var(--ink-faint);}
+  .pagination button{background:none;border:1px solid var(--hairline-strong);color:var(--matcha-deep);border-radius:6px;width:70px;height:70px;cursor:pointer;font-size:21.4px;}
   .pagination button:disabled{opacity:.3;cursor:default;}
 
   .loading-overlay{position:fixed;inset:0;background:var(--paper);z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;}
   .spinner{width:49px;height:49px;border-radius:50%;border:3px solid var(--hairline-strong);border-top-color:var(--matcha);animation:spin .8s linear infinite;}
   @keyframes spin{to{transform:rotate(360deg);}}
-  .loading-text{font-family:'IBM Plex Mono',monospace;font-size:18.6px;color:var(--ink-faint);}
-  .error-box{background:#F7E7E3;border:1px solid rgba(166,67,46,.25);border-radius:10px;padding:18px 20px;margin-bottom:24px;font-size:19.5px;color:var(--azuki);}
+  .loading-text{font-family:'IBM Plex Mono',monospace;font-size:21.4px;color:var(--ink-faint);}
+  .error-box{background:#F7E7E3;border:1px solid rgba(166,67,46,.25);border-radius:10px;padding:18px 20px;margin-bottom:24px;font-size:22.4px;color:var(--azuki);}
   .error-box b{display:block;margin-bottom:4px;color:var(--ink);}
-  .footer-note{font-size:17.8px;color:var(--ink-faint);margin-top:8px;font-family:'IBM Plex Mono',monospace;}
+  .footer-note{font-size:20.5px;color:var(--ink-faint);margin-top:8px;font-family:'IBM Plex Mono',monospace;}
 
   /* v59: กล่อง "วิธีคิด" แบบกดกางได้ */
   details summary::-webkit-details-marker{display:none;}
@@ -278,44 +278,44 @@
   details summary:hover{color:var(--matcha-deep);}
 
   /* v84: วิธีคำนวณ — เลิกพับซ่อน โชว์เป็นตัวเล็กใต้หัวข้อเลย ไม่ต้องกด */
-  .calc-note{background:var(--panel);border:1px solid var(--hairline);border-left:4px solid var(--matcha);border-radius:10px;padding:14px 20px;margin:-6px 0 16px;font-size:17.5px;color:var(--ink-soft);line-height:1.75;}
+  .calc-note{background:var(--panel);border:1px solid var(--hairline);border-left:4px solid var(--matcha);border-radius:10px;padding:14px 20px;margin:-6px 0 16px;font-size:20.1px;color:var(--ink-soft);line-height:1.75;}
   /* v90: พับกล่องวิธีคิดทั้งใบ — ปิดไว้เป็นค่าเริ่มต้น กดที่หัวข้อจึงกางออก */
-  .calc-note > summary.cn-head{cursor:pointer;font-weight:700;color:var(--matcha-deep);font-size:18.5px;list-style:none;}
+  .calc-note > summary.cn-head{cursor:pointer;font-weight:700;color:var(--matcha-deep);font-size:21.3px;list-style:none;}
   .calc-note > summary.cn-head:hover{color:var(--matcha);}
   .calc-note[open] > summary.cn-head{margin-bottom:8px;padding-bottom:7px;border-bottom:1px solid var(--hairline);}
   .calc-note .cn-list > div{margin-bottom:3px;}
   .calc-note .cn-dim{color:var(--ink-faint);}
-  .calc-note .cn-formula{margin-top:9px;padding:8px 12px;background:var(--paper);border-radius:6px;font-family:'IBM Plex Mono',monospace;font-size:15.8px;color:var(--ink-soft);line-height:1.8;}
-  .calc-note .cn-warn{margin-top:9px;padding:9px 13px;background:rgba(200,155,74,.16);border-radius:6px;font-size:17px;color:var(--ink-soft);}
+  .calc-note .cn-formula{margin-top:9px;padding:8px 12px;background:var(--paper);border-radius:6px;font-family:'IBM Plex Mono',monospace;font-size:18.2px;color:var(--ink-soft);line-height:1.8;}
+  .calc-note .cn-warn{margin-top:9px;padding:9px 13px;background:rgba(200,155,74,.16);border-radius:6px;font-size:19.5px;color:var(--ink-soft);}
   /* v85: ช่องสูตร (ซ้าย) คู่กับช่องตัวเลขจริงที่คำนวณได้ (ขวา) เทียบกันได้ทันทีว่าสูตรแทนค่าอะไรลงไป */
   .cn-split{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start;margin-top:9px;}
   .cn-split > *{margin-top:0 !important;}
-  .cn-live{padding:10px 13px;background:var(--paper);border:1px dashed var(--hairline-strong);border-radius:6px;font-size:15.8px;color:var(--ink-soft);line-height:1.7;}
-  .cn-live .cl-title{font-family:'IBM Plex Mono',monospace;font-size:13px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:5px;}
-  .cn-live .cl-var{font-family:'IBM Plex Mono',monospace;font-size:14px;color:var(--matcha-deep);font-weight:600;}
+  .cn-live{padding:10px 13px;background:var(--paper);border:1px dashed var(--hairline-strong);border-radius:6px;font-size:18.2px;color:var(--ink-soft);line-height:1.7;}
+  .cn-live .cl-title{font-family:'IBM Plex Mono',monospace;font-size:14.9px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:5px;}
+  .cn-live .cl-var{font-family:'IBM Plex Mono',monospace;font-size:16.1px;color:var(--matcha-deep);font-weight:600;}
   .cn-live .cl-row{display:flex;gap:8px;justify-content:space-between;border-bottom:1px dotted var(--hairline);padding:2px 0;}
   .cn-live .cl-row:last-child{border-bottom:none;}
-  .cn-live .cl-calc{font-family:'IBM Plex Mono',monospace;font-size:14.8px;color:var(--ink-soft);}
+  .cn-live .cl-calc{font-family:'IBM Plex Mono',monospace;font-size:17px;color:var(--ink-soft);}
   .cn-live .cl-out{font-weight:700;color:var(--ink);white-space:nowrap;}
   .cn-live .cl-dd{color:#A6432E;}
   /* v86: ช่องตัวเลขจริงเปลี่ยนเป็นพับได้ + แยกออเดอร์ / จำนวนชิ้น */
   .cn-livebox{background:var(--paper);border:1px dashed var(--hairline-strong);border-radius:6px;padding:8px 12px;}
-  .cn-livebox .cl-boxtitle{font-family:'IBM Plex Mono',monospace;font-size:15px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:7px;padding-bottom:6px;border-bottom:1px solid var(--hairline);}
+  .cn-livebox .cl-boxtitle{font-family:'IBM Plex Mono',monospace;font-size:17.2px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:7px;padding-bottom:6px;border-bottom:1px solid var(--hairline);}
   .cn-live + .cn-live{margin-top:9px;padding-top:8px;border-top:1px solid var(--hairline);}
-  .cn-live .cl-unit{font-family:'Zen Maru Gothic',sans-serif;font-weight:700;font-size:14.5px;color:var(--matcha-deep);margin-bottom:3px;}
+  .cn-live .cl-unit{font-family:'Zen Maru Gothic',sans-serif;font-weight:700;font-size:16.7px;color:var(--matcha-deep);margin-bottom:3px;}
   @media (max-width:1100px){ .cn-split{grid-template-columns:1fr;} }
 
   /* v65: legend ของ Sales Channel Share ทำเป็นกล่องมีกรอบแยกต่างหาก
      ไม่ใช้ legend ในตัว Chart.js เพราะปรับขนาด/กรอบ/จัดคอลัมน์ไม่ได้ ตัวเลขเลยเล็กจนอ่านยาก */
   .channel-wrap{display:flex;gap:32px;align-items:center;flex-wrap:wrap;}
   .channel-legend{border:1.5px solid var(--hairline-strong);border-radius:22px;padding:22px 26px;background:var(--paper);min-width:340px;flex-shrink:0;}
-  .ch-legend-title{font-family:'IBM Plex Mono',monospace;font-size:16.9px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);padding-bottom:12px;border-bottom:1.5px solid var(--hairline-strong);margin-bottom:6px;}
+  .ch-legend-title{font-family:'IBM Plex Mono',monospace;font-size:19.4px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);padding-bottom:12px;border-bottom:1.5px solid var(--hairline-strong);margin-bottom:6px;}
   .ch-row{display:flex;align-items:center;gap:16px;padding:14px 0;border-bottom:1px solid var(--hairline);}
   .ch-row:last-child{border-bottom:none;padding-bottom:2px;}
   .ch-dot{width:18px;height:18px;border-radius:6px;flex-shrink:0;}
-  .ch-name{flex:1;font-size:24.5px;font-weight:600;color:var(--ink);line-height:1.25;}
-  .ch-sub{font-family:'IBM Plex Mono',monospace;font-size:17.8px;font-weight:400;color:var(--ink-faint);margin-top:3px;}
-  .ch-pct{font-family:'Zen Maru Gothic',sans-serif;font-weight:900;font-size:36px;color:var(--matcha-deep);white-space:nowrap;}
+  .ch-name{flex:1;font-size:28.2px;font-weight:600;color:var(--ink);line-height:1.25;}
+  .ch-sub{font-family:'IBM Plex Mono',monospace;font-size:20.5px;font-weight:400;color:var(--ink-faint);margin-top:3px;}
+  .ch-pct{font-family:'Zen Maru Gothic',sans-serif;font-weight:900;font-size:41.4px;color:var(--matcha-deep);white-space:nowrap;}
 
   /* v72: โหมดสำหรับ export เป็นภาพขึ้นจอใหญ่ — บีบส่วนที่กินที่แต่ไม่ให้ข้อมูล
      เพื่อให้เนื้อหาจริงเต็มหน้ามากขึ้นและตัวหนังสือใหญ่ที่สุดเท่าที่ทำได้
@@ -387,7 +387,7 @@
     <div class="meta-right">
       Last fetched<br><span id="lastUpdated">—</span>
       <div id="dataFreshness" class="freshness"></div>
-      <div style="font-size:11.8px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-13-v90-collapse-calcnote</div>
+      <div style="font-size:13.6px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-13-v91-wider-bigger-type</div>
       <div>
         <button class="btn-plain" id="refreshBtn" onclick="loadData()">Refresh</button>
         <button class="btn-plain" id="saveImgBtn" onclick="saveTabAsPNG()" style="margin-left:14px;">Save as PNG (แนวนอน, คมชัด)</button>
@@ -567,7 +567,7 @@
     </div>
 
     <div class="section">
-      <div class="section-title"><span class="sec-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 3.4C10.7 4.5 3.9 10.8 3.3 19.2c-.1 1.4 1.1 2.4 2.4 2.1 8.3-2.1 14.1-8.8 14.9-17.9z"/><path d="M17.5 6.5C12.2 9.6 8.3 14.4 6.5 20.2"/><path d="M11.4 7.6c.5 1.7.5 3.4 0 5.1"/><path d="M14.9 12.7c-1.7.3-3.3 1-4.7 2"/></svg></span>รายการที่ต้องเติม Stock <span style="font-size:19.5px;font-weight:400;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;">(ไม่รวมที่ไม่มีโควต้า / ไม่มี Raw Material)</span></div>
+      <div class="section-title"><span class="sec-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 3.4C10.7 4.5 3.9 10.8 3.3 19.2c-.1 1.4 1.1 2.4 2.4 2.1 8.3-2.1 14.1-8.8 14.9-17.9z"/><path d="M17.5 6.5C12.2 9.6 8.3 14.4 6.5 20.2"/><path d="M11.4 7.6c.5 1.7.5 3.4 0 5.1"/><path d="M14.9 12.7c-1.7.3-3.3 1-4.7 2"/></svg></span>รายการที่ต้องเติม Stock <span style="font-size:22.4px;font-weight:400;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;">(ไม่รวมที่ไม่มีโควต้า / ไม่มี Raw Material)</span></div>
       <div class="section-desc">เรียงตามคะแนนขายดี · ไม่นับสินค้าที่ Remark ระบุว่า "ไม่มีโควต้า" หรือ "ไม่มี Raw Material"</div>
       <div class="table-panel">
         <div class="table-scroll remark-scroll">
@@ -644,11 +644,11 @@
       </details>
       <div class="grid-2">
         <div class="chart-panel">
-          <div style="font-size:18.6px;color:var(--ink-soft);font-weight:600;margin-bottom:8px;">จำนวนออเดอร์ / สัปดาห์</div>
+          <div style="font-size:21.4px;color:var(--ink-soft);font-weight:600;margin-bottom:8px;">จำนวนออเดอร์ / สัปดาห์</div>
           <div class="chart-box" style="height:280px;"><canvas id="chart_forecast_weekly_orders"></canvas></div>
         </div>
         <div class="chart-panel">
-          <div style="font-size:18.6px;color:var(--ink-soft);font-weight:600;margin-bottom:8px;">จำนวนสินค้า (ชิ้น) / สัปดาห์</div>
+          <div style="font-size:21.4px;color:var(--ink-soft);font-weight:600;margin-bottom:8px;">จำนวนสินค้า (ชิ้น) / สัปดาห์</div>
           <div class="chart-box" style="height:280px;"><canvas id="chart_forecast_weekly_qty"></canvas></div>
         </div>
       </div>
@@ -680,11 +680,11 @@
       </details>
       <div class="grid-2">
         <div class="chart-panel">
-          <div style="font-size:18.6px;color:var(--ink-soft);font-weight:600;margin-bottom:8px;">จำนวนออเดอร์ / วัน</div>
+          <div style="font-size:21.4px;color:var(--ink-soft);font-weight:600;margin-bottom:8px;">จำนวนออเดอร์ / วัน</div>
           <div class="chart-box" style="height:280px;"><canvas id="chart_forecast_daily_orders"></canvas></div>
         </div>
         <div class="chart-panel">
-          <div style="font-size:18.6px;color:var(--ink-soft);font-weight:600;margin-bottom:8px;">จำนวนสินค้า (ชิ้น) / วัน</div>
+          <div style="font-size:21.4px;color:var(--ink-soft);font-weight:600;margin-bottom:8px;">จำนวนสินค้า (ชิ้น) / วัน</div>
           <div class="chart-box" style="height:280px;"><canvas id="chart_forecast_daily_qty"></canvas></div>
         </div>
       </div>
@@ -703,11 +703,11 @@
       </details>
       <div class="grid-2">
         <div class="table-panel">
-          <div style="font-size:18.6px;color:var(--ink-soft);font-weight:600;margin-bottom:8px;">Packing / Delivery <span style="font-size:13.8px;color:var(--ink-faint);font-weight:400;">(เริ่มกะ 09:00 น.)</span></div>
+          <div style="font-size:21.4px;color:var(--ink-soft);font-weight:600;margin-bottom:8px;">Packing / Delivery <span style="font-size:15.9px;color:var(--ink-faint);font-weight:400;">(เริ่มกะ 09:00 น.)</span></div>
           <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px;padding:12px 14px;background:var(--paper);border:1px solid var(--hairline);border-radius:10px;">
-            <div class="filter-field"><label style="font-size:19px;">วันที่</label><select id="staffing_delivery_date" onchange="onDeliveryStaffingChange()" style="font-size:24px;"></select></div>
-            <div class="filter-field"><label style="font-size:19px;">จำนวนคนที่มีจริง</label><input type="number" min="1" id="staffing_delivery_staff" placeholder="เช่น 2" oninput="onDeliveryStaffingChange()" style="max-width:110px;font-size:24px;"></div>
-            <div id="staffing_delivery_result" style="font-family:'IBM Plex Sans Thai';font-size:21px;color:var(--ink-soft);flex:1;min-width:220px;"></div>
+            <div class="filter-field"><label style="font-size:21.8px;">วันที่</label><select id="staffing_delivery_date" onchange="onDeliveryStaffingChange()" style="font-size:27.6px;"></select></div>
+            <div class="filter-field"><label style="font-size:21.8px;">จำนวนคนที่มีจริง</label><input type="number" min="1" id="staffing_delivery_staff" placeholder="เช่น 2" oninput="onDeliveryStaffingChange()" style="max-width:110px;font-size:27.6px;"></div>
+            <div id="staffing_delivery_result" style="font-family:'IBM Plex Sans Thai';font-size:24.1px;color:var(--ink-soft);flex:1;min-width:220px;"></div>
           </div>
           <div class="table-scroll">
             <table class="data-table">
@@ -723,11 +723,11 @@
           </div>
         </div>
         <div class="table-panel">
-          <div style="font-size:18.6px;color:var(--ink-soft);font-weight:600;margin-bottom:8px;">WH <span style="font-size:13.8px;color:var(--ink-faint);font-weight:400;">(เริ่มกะ 08:00 น.)</span></div>
+          <div style="font-size:21.4px;color:var(--ink-soft);font-weight:600;margin-bottom:8px;">WH <span style="font-size:15.9px;color:var(--ink-faint);font-weight:400;">(เริ่มกะ 08:00 น.)</span></div>
           <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px;padding:12px 14px;background:var(--paper);border:1px solid var(--hairline);border-radius:10px;">
-            <div class="filter-field"><label style="font-size:19px;">วันที่</label><select id="staffing_wh_date" onchange="onWhStaffingChange()" style="font-size:24px;"></select></div>
-            <div class="filter-field"><label style="font-size:19px;">จำนวนคนที่มีจริง</label><input type="number" min="1" id="staffing_wh_staff" placeholder="เช่น 2" oninput="onWhStaffingChange()" style="max-width:110px;font-size:24px;"></div>
-            <div id="staffing_wh_result" style="font-family:'IBM Plex Sans Thai';font-size:21px;color:var(--ink-soft);flex:1;min-width:220px;"></div>
+            <div class="filter-field"><label style="font-size:21.8px;">วันที่</label><select id="staffing_wh_date" onchange="onWhStaffingChange()" style="font-size:27.6px;"></select></div>
+            <div class="filter-field"><label style="font-size:21.8px;">จำนวนคนที่มีจริง</label><input type="number" min="1" id="staffing_wh_staff" placeholder="เช่น 2" oninput="onWhStaffingChange()" style="max-width:110px;font-size:27.6px;"></div>
+            <div id="staffing_wh_result" style="font-family:'IBM Plex Sans Thai';font-size:24.1px;color:var(--ink-soft);flex:1;min-width:220px;"></div>
           </div>
           <div class="table-scroll">
             <table class="data-table">
@@ -2774,10 +2774,10 @@ function statusText(cls){
 function baseChartOptions({legend=true}={}){
   return {
     responsive:true, maintainAspectRatio:false,
-    plugins:{ legend:{ display:legend, labels:{ color:'#4E5C46', font:{size:17.8, family:"'IBM Plex Sans Thai'"} } }, tooltip: tooltipStyle() },
+    plugins:{ legend:{ display:legend, labels:{ color:'#4E5C46', font:{size:20.5, family:"'IBM Plex Sans Thai'"} } }, tooltip: tooltipStyle() },
     scales:{
-      x:{ ticks:{ color:'#4E5C46', font:{size:16.9} }, grid:{ display:false } },
-      y:{ ticks:{ color:'#4E5C46', font:{size:16.9} }, grid:{ color:'rgba(31,46,26,0.06)' }, beginAtZero:true }
+      x:{ ticks:{ color:'#4E5C46', font:{size:19.4} }, grid:{ display:false } },
+      y:{ ticks:{ color:'#4E5C46', font:{size:19.4} }, grid:{ color:'rgba(31,46,26,0.06)' }, beginAtZero:true }
     }
   };
 }
@@ -3255,8 +3255,8 @@ function buildForecastItems(forecastRows, weeks){
 function buildForecastChartOpts(items){
   const opts = baseChartOptions({ legend:true });
   opts.indexAxis = 'y';
-  opts.scales.x = { stacked:true, ticks:{ color:'#8C9482', font:{size:16.9} }, grid:{ color:'rgba(31,46,26,0.06)' }, beginAtZero:true };
-  opts.scales.y = { stacked:true, ticks:{ color:'#4E5C46', font:{size:16.9, family:"'IBM Plex Sans Thai'"} }, grid:{ display:false } };
+  opts.scales.x = { stacked:true, ticks:{ color:'#8C9482', font:{size:19.4} }, grid:{ color:'rgba(31,46,26,0.06)' }, beginAtZero:true };
+  opts.scales.y = { stacked:true, ticks:{ color:'#4E5C46', font:{size:19.4, family:"'IBM Plex Sans Thai'"} }, grid:{ display:false } };
   opts.plugins.tooltip = {
     ...tooltipStyle(),
     callbacks:{
@@ -3325,7 +3325,7 @@ function renderStaffingForecast(dailyOrdersSeries, dailyQtySeries){
   const ddRowStyle = ' style="background:rgba(166,67,46,.10);"';
 
   deliveryBody.innerHTML = rows.map(r => {
-    const ddTag = r.isDD ? ' <span style="font-size:13.8px;color:var(--azuki);">⚡ Double Day</span>' : '';
+    const ddTag = r.isDD ? ' <span style="font-size:15.9px;color:var(--azuki);">⚡ Double Day</span>' : '';
     return '<tr' + (r.isDD ? ddRowStyle : '') + '>' +
       '<td class="strong">' + escapeHtml(r.label) + ddTag + '</td>' +
       '<td>' + r.forecastedOrders.toLocaleString('en-US') + '</td>' +
@@ -3336,9 +3336,9 @@ function renderStaffingForecast(dailyOrdersSeries, dailyQtySeries){
   }).join('');
 
   whBody.innerHTML = rows.map(r => {
-    const ddTag = r.isDD ? ' <span style="font-size:13.8px;color:var(--azuki);">⚡ Double Day</span>' : '';
+    const ddTag = r.isDD ? ' <span style="font-size:15.9px;color:var(--azuki);">⚡ Double Day</span>' : '';
     const whCell = r.whExceedsHandhelds
-      ? '<span class="qty-highlight">' + r.whStaff + '</span> <span style="font-size:13.8px;color:var(--azuki);">(เกิน 3 เครื่อง ต้องหมุนเวียน)</span>'
+      ? '<span class="qty-highlight">' + r.whStaff + '</span> <span style="font-size:15.9px;color:var(--azuki);">(เกิน 3 เครื่อง ต้องหมุนเวียน)</span>'
       : r.whStaff;
     return '<tr' + (r.isDD ? ddRowStyle : '') + '>' +
       '<td class="strong">' + escapeHtml(r.label) + ddTag + '</td>' +
@@ -3482,7 +3482,7 @@ function renderForecastTable(forecastRows){
                 : w !== null && w < 4 ? ' style="background:rgba(200,155,74,.06);"' : '';
     const remark = (r.remark3||'').trim();
     const remarkHtml = remark
-      ? '<span style="font-size:18.6px;color:var(--azuki);">' + escapeHtml(remark) + '</span>'
+      ? '<span style="font-size:21.4px;color:var(--azuki);">' + escapeHtml(remark) + '</span>'
       : '<span style="color:var(--ink-faint);">—</span>';
     return '<tr' + rowBg + '>' +
       '<td class="strong">' + escapeHtml(r.product) + '</td>' +
