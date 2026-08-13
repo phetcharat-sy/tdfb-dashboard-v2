@@ -371,7 +371,7 @@
     <div class="meta-right">
       Last fetched<br><span id="lastUpdated">—</span>
       <div id="dataFreshness" class="freshness"></div>
-      <div style="font-size:11.8px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-13-v86-calc-live-split</div>
+      <div style="font-size:11.8px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-13-v87-blocked-tile</div>
       <div>
         <button class="btn-plain" id="refreshBtn" onclick="loadData()">Refresh</button>
         <button class="btn-plain" id="saveImgBtn" onclick="saveTabAsPNG()" style="margin-left:14px;">Save as PNG (แนวนอน, คมชัด)</button>
@@ -545,6 +545,7 @@
     <div class="stat-grid">
       <div class="stat-card"><div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6v6H9z"/></svg></div><div class="stat-label">สินค้าทั้งหมด</div><div class="stat-value" id="m3_total">—</div></div>
       <div class="stat-card"><div class="stat-icon i-azuki"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l10 18H2L12 3z"/><path d="M12 9v5"/><path d="M12 17h.01"/></svg></div><div class="stat-label">ต้องเติม Stock</div><div class="stat-value c-azuki" id="m3_need">—</div></div>
+      <div class="stat-card"><div class="stat-icon i-bamboo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div><div class="stat-label">ติดโควต้า/Raw Material</div><div class="stat-value c-bamboo" id="m3_blocked">—</div></div>
       <div class="stat-card"><div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12l2.5 2.5L16 9"/></svg></div><div class="stat-label">ไม่ต้องเติม</div><div class="stat-value c-matcha" id="m3_nonneed">—</div></div>
       <div class="stat-card"><div class="stat-icon i-bamboo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20"/></svg></div><div class="stat-label">จำนวนรวมที่ต้องเติม</div><div class="stat-value c-bamboo" id="m3_qty">—</div></div>
     </div>
@@ -2015,6 +2016,7 @@ function renderTab3(){
 
   document.getElementById('m3_total').textContent = rows.length.toLocaleString('en-US');
   document.getElementById('m3_need').textContent = actionableRows.length.toLocaleString('en-US');
+  document.getElementById('m3_blocked').textContent = blockedRows.length.toLocaleString('en-US');  // v87: ของที่ต้องเติมแต่สั่งไม่ได้ ทำให้ 4+2+90 = 96 ครบพอดี
   document.getElementById('m3_nonneed').textContent = nonNeedRows.length.toLocaleString('en-US');
   document.getElementById('m3_qty').textContent = totalQty.toLocaleString('en-US');
 
