@@ -281,6 +281,13 @@
   .cn-live .cl-calc{font-family:'IBM Plex Mono',monospace;font-size:13.5px;color:var(--ink-faint);}
   .cn-live .cl-out{font-weight:700;color:var(--ink);white-space:nowrap;}
   .cn-live .cl-dd{color:#A6432E;}
+  /* v86: ช่องตัวเลขจริงเปลี่ยนเป็นพับได้ + แยกออเดอร์ / จำนวนชิ้น */
+  .cn-livebox{background:var(--paper);border:1px dashed var(--hairline-strong);border-radius:6px;padding:8px 12px;}
+  .cn-livebox > summary{cursor:pointer;font-family:'IBM Plex Mono',monospace;font-size:13.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-faint);list-style:none;}
+  .cn-livebox > summary:hover{color:var(--matcha-deep);}
+  .cn-livebox[open] > summary{margin-bottom:7px;padding-bottom:6px;border-bottom:1px solid var(--hairline);}
+  .cn-live + .cn-live{margin-top:9px;padding-top:8px;border-top:1px solid var(--hairline);}
+  .cn-live .cl-unit{font-family:'Zen Maru Gothic',sans-serif;font-weight:700;font-size:14.5px;color:var(--matcha-deep);margin-bottom:3px;}
   @media (max-width:1100px){ .cn-split{grid-template-columns:1fr;} }
 
   /* v65: legend ของ Sales Channel Share ทำเป็นกล่องมีกรอบแยกต่างหาก
@@ -364,7 +371,7 @@
     <div class="meta-right">
       Last fetched<br><span id="lastUpdated">—</span>
       <div id="dataFreshness" class="freshness"></div>
-      <div style="font-size:11.8px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-13-v85-calc-live-values</div>
+      <div style="font-size:11.8px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-13-v86-calc-live-split</div>
       <div>
         <button class="btn-plain" id="refreshBtn" onclick="loadData()">Refresh</button>
         <button class="btn-plain" id="saveImgBtn" onclick="saveTabAsPNG()" style="margin-left:14px;">Save as PNG (แนวนอน, คมชัด)</button>
@@ -611,7 +618,11 @@
         </div>
         <div class="cn-split">
           <div class="cn-formula">สูตรเต็ม: <code>พยากรณ์(h สัปดาห์ข้างหน้า) = avg4 + slope × h</code> + Double Day boost</div>
-          <div class="cn-live" id="calc_live_weekly"><div class="cl-title">แทนค่าจริงตอนนี้</div>กำลังคำนวณ…</div>
+          <details class="cn-livebox">
+            <summary>ดูตัวเลขจริงที่แทนค่าลงในสูตร (กดเพื่อดู)</summary>
+            <div class="cn-live" id="calc_live_weekly_orders">กำลังคำนวณ…</div>
+            <div class="cn-live" id="calc_live_weekly_qty">กำลังคำนวณ…</div>
+          </details>
         </div>
       </div>
       <div class="grid-2">
@@ -643,7 +654,11 @@
             <code>Trend(t) = 0.15 × (Level(t) − Level(t-1)) + 0.85 × Trend(t-1)</code><br>
             <code>พยากรณ์(h วันข้างหน้า) = Level + Trend × h</code>
           </div>
-          <div class="cn-live" id="calc_live_daily"><div class="cl-title">แทนค่าจริงตอนนี้</div>กำลังคำนวณ…</div>
+          <details class="cn-livebox">
+            <summary>ดูตัวเลขจริงที่แทนค่าลงในสูตร (กดเพื่อดู)</summary>
+            <div class="cn-live" id="calc_live_daily_orders">กำลังคำนวณ…</div>
+            <div class="cn-live" id="calc_live_daily_qty">กำลังคำนวณ…</div>
+          </details>
         </div>
       </div>
       <div class="grid-2">
@@ -2867,19 +2882,21 @@ function renderTab4(){
     weekDateRange, weeklyOrdersDD
   );
   renderTrendLineChart('chart_forecast_weekly_orders', 'forecastWeeklyOrders', weeklyOrdersSeries, 'จำนวนออเดอร์');
-  renderWeeklyCalcLive(weeklyOrdersSeries);
+  renderWeeklyCalcLive('calc_live_weekly_orders', weeklyOrdersSeries, 'ใบ', 'จำนวนออเดอร์');
   lastDoubleDayInfo = { multiplier: weeklyOrdersDD.multiplier, samples: weeklyOrdersDD.samples };
 
   const weeklyQtyDD = learnDoubleDayMultiplierByValue(qtyByDate);
   const weeklyQtySeries = computeWeeklyForecastSeries(weekList, qtyByWeekTotal, weekDateRange, weeklyQtyDD);
   renderTrendLineChart('chart_forecast_weekly_qty', 'forecastWeeklyQty', weeklyQtySeries, 'จำนวนสินค้า (ชิ้น)');
+  renderWeeklyCalcLive('calc_live_weekly_qty', weeklyQtySeries, 'ชิ้น', 'จำนวนสินค้า (ชิ้น)');
 
   const dailyOrdersSeries = computeDailyForecastSeries(mapSetToSize(ordersByDate));
   if(dailyOrdersSeries) renderTrendLineChart('chart_forecast_daily_orders', 'forecastDailyOrders', dailyOrdersSeries, 'จำนวนออเดอร์');
-  renderDailyCalcLive(dailyOrdersSeries);
+  renderDailyCalcLive('calc_live_daily_orders', dailyOrdersSeries, 'ใบ', 'จำนวนออเดอร์');
 
   const dailyQtySeries = computeDailyForecastSeries(qtyByDate);
   if(dailyQtySeries) renderTrendLineChart('chart_forecast_daily_qty', 'forecastDailyQty', dailyQtySeries, 'จำนวนสินค้า (ชิ้น)');
+  renderDailyCalcLive('calc_live_daily_qty', dailyQtySeries, 'ชิ้น', 'จำนวนสินค้า (ชิ้น)');
 
   renderStaffingForecast(dailyOrdersSeries, dailyQtySeries);
 
@@ -3095,19 +3112,20 @@ function computeDailyForecastSeries(valueByDateKey){
 function nfmt(v, d){ return Number(v).toLocaleString('en-US', {minimumFractionDigits:d||0, maximumFractionDigits:d||0}); }
 function signed(v, d){ return (v >= 0 ? '+' : '−') + nfmt(Math.abs(v), d); }
 
-function renderWeeklyCalcLive(series){
-  const el = document.getElementById('calc_live_weekly');
-  if(!el || !series) return;
+function renderWeeklyCalcLive(elId, series, unitName, unitLabel){
+  const el = document.getElementById(elId);
+  if(!el) return;
+  if(!series){ el.innerHTML = '<div class="cl-unit">' + unitLabel + '</div>ไม่มีข้อมูลพอคำนวณ'; return; }
   const { avg4, slope, dailyBaseline, ddCountPerForecast, weeksUsed, DOUBLE_DAY_BOOST, ddSamples, forecastLabels, forecastData } = series;
   const ddPerDay = DOUBLE_DAY_BOOST > 1 ? dailyBaseline * (DOUBLE_DAY_BOOST - 1) : 0;
 
-  let h = '<div class="cl-title">แทนค่าจริงตอนนี้ · จำนวนออเดอร์</div>';
-  h += '<div><span class="cl-var">avg4</span> = <b>' + nfmt(avg4) + '</b> ใบ <span style="color:var(--ink-faint);">(เฉลี่ย 4 สัปดาห์ล่าสุด)</span></div>';
-  h += '<div><span class="cl-var">slope</span> = <b>' + signed(slope) + '</b> ใบ/สัปดาห์ <span style="color:var(--ink-faint);">(ทาบเส้นผ่าน ' + weeksUsed + ' สัปดาห์)</span></div>';
+  let h = '<div class="cl-unit">' + unitLabel + '</div>';
+  h += '<div><span class="cl-var">avg4</span> = <b>' + nfmt(avg4) + '</b> ' + unitName + ' <span style="color:var(--ink-faint);">(เฉลี่ย 4 สัปดาห์ล่าสุด)</span></div>';
+  h += '<div><span class="cl-var">slope</span> = <b>' + signed(slope) + '</b> ' + unitName + '/สัปดาห์ <span style="color:var(--ink-faint);">(ทาบเส้นผ่าน ' + weeksUsed + ' สัปดาห์)</span></div>';
   h += '<div>' + (DOUBLE_DAY_BOOST > 1
-        ? '<span class="cl-var cl-dd">Double Day</span> = ×' + DOUBLE_DAY_BOOST.toFixed(2) + ' <span style="color:var(--ink-faint);">(เรียนรู้จาก ' + ddSamples + ' ครั้ง)</span> → บวก <b>' + nfmt(ddPerDay) + '</b> ใบ/วันที่เข้าเงื่อนไข'
+        ? '<span class="cl-var cl-dd">Double Day</span> = ×' + DOUBLE_DAY_BOOST.toFixed(2) + ' <span style="color:var(--ink-faint);">(เรียนรู้จาก ' + ddSamples + ' ครั้ง)</span> → บวก <b>' + nfmt(ddPerDay) + '</b> ' + unitName + '/วันที่เข้าเงื่อนไข'
         : '<span class="cl-var">Double Day</span> = <b>ไม่บวก</b> <span style="color:var(--ink-faint);">(เจอในอดีตแค่ ' + ddSamples + ' ครั้ง ยังน้อยเกินไป)</span>') + '</div>';
-  h += '<div style="margin-top:6px;border-top:1px solid var(--hairline);padding-top:4px;">';
+  h += '<div style="margin-top:6px;">';
   (forecastLabels || []).forEach((lb, idx) => {
     const hh = idx + 1;
     const dd = (ddCountPerForecast && ddCountPerForecast[idx]) || 0;
@@ -3119,18 +3137,19 @@ function renderWeeklyCalcLive(series){
   el.innerHTML = h;
 }
 
-function renderDailyCalcLive(series){
-  const el = document.getElementById('calc_live_daily');
-  if(!el || !series) return;
+function renderDailyCalcLive(elId, series, unitName, unitLabel){
+  const el = document.getElementById(elId);
+  if(!el) return;
+  if(!series){ el.innerHTML = '<div class="cl-unit">' + unitLabel + '</div>ไม่มีข้อมูลพอคำนวณ'; return; }
   const { level, trend, ALPHA, BETA, daysUsed, DOUBLE_DAY_BOOST, ddSamples, forecastLabels, forecastData, ddFlagPerForecast } = series;
 
-  let h = '<div class="cl-title">แทนค่าจริงตอนนี้ · จำนวนออเดอร์</div>';
-  h += '<div><span class="cl-var">Level</span> ล่าสุด = <b>' + nfmt(level) + '</b> ใบ/วัน <span style="color:var(--ink-faint);">(α=' + ALPHA + ')</span></div>';
-  h += '<div><span class="cl-var">Trend</span> ล่าสุด = <b>' + signed(trend, 1) + '</b> ใบ/วัน <span style="color:var(--ink-faint);">(β=' + BETA + ' · fit จาก ' + nfmt(daysUsed) + ' วัน)</span></div>';
+  let h = '<div class="cl-unit">' + unitLabel + '</div>';
+  h += '<div><span class="cl-var">Level</span> ล่าสุด = <b>' + nfmt(level) + '</b> ' + unitName + '/วัน <span style="color:var(--ink-faint);">(α=' + ALPHA + ')</span></div>';
+  h += '<div><span class="cl-var">Trend</span> ล่าสุด = <b>' + signed(trend, 1) + '</b> ' + unitName + '/วัน <span style="color:var(--ink-faint);">(β=' + BETA + ' · fit จาก ' + nfmt(daysUsed) + ' วัน)</span></div>';
   h += '<div>' + (DOUBLE_DAY_BOOST > 1
         ? '<span class="cl-var cl-dd">Double Day</span> = คูณ ×' + DOUBLE_DAY_BOOST.toFixed(2) + ' <span style="color:var(--ink-faint);">(เรียนรู้จาก ' + ddSamples + ' ครั้ง)</span>'
         : '<span class="cl-var">Double Day</span> = <b>ไม่คูณ</b> <span style="color:var(--ink-faint);">(เจอในอดีตแค่ ' + ddSamples + ' ครั้ง)</span>') + '</div>';
-  h += '<div style="margin-top:6px;border-top:1px solid var(--hairline);padding-top:4px;">';
+  h += '<div style="margin-top:6px;">';
   (forecastLabels || []).forEach((lb, idx) => {
     const hh = idx + 1;
     const isDD = ddFlagPerForecast && ddFlagPerForecast[idx];
