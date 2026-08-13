@@ -315,6 +315,14 @@
   body.present .bowl{width:660px;height:660px;}
   body.present .bowl-number{font-size:calc(100.5px * 1.28);}
   body.present .hero{padding:6px 0 24px;}
+  /* v97: h1 โตตาม type-scale เป็น ~136px กว้างเกือบ 1,600px จนดันบล็อค "Last fetched"
+     ให้ตกลงมาบรรทัดล่างและไปกองซ้าย — ในโหมดพรีเซนต์หัวเรื่องไม่ต้องใหญ่เท่าตัวเลข
+     จึงหน่วง h1/subtitle ไว้ แล้วห้าม header-row ตัดบรรทัด */
+  body.present h1{font-size:calc(83.8px * 1.10);}
+  body.present .subtitle{font-size:calc(26.2px * 1.10);}
+  body.present .header-row{flex-wrap:nowrap;align-items:flex-start;}
+  body.present .meta-right{flex-shrink:0;}
+  body.present #buildTag{display:none;}
   body.present .filter-row,
   body.present .calc-note,
   body.present .footer-note,
@@ -326,6 +334,11 @@
   body.present .section{margin-bottom:30px;}
   body.present .stat-card{padding:26px 20px;}
   body.present #presentBtn{color:var(--azuki);border-bottom-color:var(--azuki);}
+
+  /* v98: คำอธิบายใต้ช่องกรอก — บอกกติกาตรงจุดที่กรอก ไม่ต้องไปกางกล่องวิธีคิด */
+  .input-hint{margin-top:5px;font-family:'IBM Plex Sans Thai',sans-serif;
+    font-size:calc(15.5px * var(--type-scale));color:var(--ink-faint);line-height:1.45;max-width:230px;}
+  .input-hint b{color:var(--azuki);font-weight:600;}
 
   .cn-livebox{background:var(--paper);border:1px dashed var(--hairline-strong);border-radius:6px;padding:8px 12px;}
   .cn-livebox .cl-boxtitle{font-family:'IBM Plex Mono',monospace;font-size:calc(17.2px * var(--type-scale));letter-spacing:.04em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:7px;padding-bottom:6px;border-bottom:1px solid var(--hairline);}
@@ -415,7 +428,7 @@
     <div class="meta-right">
       Last fetched<br><span id="lastUpdated">—</span>
       <div id="dataFreshness" class="freshness"></div>
-      <div style="font-size:calc(13.6px * var(--type-scale));color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-13-v96-fix-overflow</div>
+      <div id="buildTag" style="font-size:calc(13.6px * var(--type-scale));color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-13-v101-lunch-always</div>
       <div>
         <button class="btn-plain" id="refreshBtn" onclick="loadData()">Refresh</button>
         <button class="btn-plain" id="saveImgBtn" onclick="saveTabAsPNG()" style="margin-left:14px;">Save as PNG (แนวนอน, คมชัด)</button>
@@ -728,14 +741,23 @@
           <div><b>ทีม Packing</b> — 1 คนแพ็คได้ <b>200 ออเดอร์/วัน</b> (ทำงาน 6 ชม. = 33 ออเดอร์/ชม.) <span class="cn-dim">+ คนท้ายไลน์แยกพัสดุอีก 1 คนเสมอ ไม่ว่ายอดจะน้อยแค่ไหน</span></div>
           <div><b>ทีม WH หยิบของ</b> — 1 คนหยิบได้ <b>88 ชิ้น/ชม.</b> (ทำงาน 6 ชม. = 528 ชิ้น/วัน) <span class="cn-dim">มี handheld แค่ 3 เครื่อง ถ้าคำนวณได้เกิน 3 คน จะขึ้นเตือนว่าต้องหมุนเวียนใช้เครื่อง</span></div>
         </div>
-        <div class="cn-formula"><code>Packing (คน) = ceil(ออเดอร์ ÷ 200) + 1</code><br><code>WH (คน) = ceil(จำนวนสินค้า ÷ 528)</code></div>
+        <div class="cn-warn"><b>ช่อง "จำนวนคนที่มาทำงานจริง" ตอบคนละคำถามกับตารางข้างล่าง</b> — ตารางบอกว่า<u>ควรมีกี่คน</u> ส่วนช่องกรอกบอกว่า<u>ถ้ามาเท่านี้จะเสร็จกี่โมง</u><br>
+          ทั้งสองที่คิด<b>เฉพาะคนแพ็ค</b>เท่านั้น · คนท้ายไลน์ต้องมี 1 คนแน่ๆ แต่<b>ไม่นับเข้ากำลังการแพ็ค</b> เพราะแค่แยกของ ไม่ได้แพ็ค</div>
+        <div class="cn-warn"><b>เรื่องชั่วโมง — 6 กับ 7 ไม่ตีกัน</b><br>
+          <b>6 ชม.</b> = เวลาแพ็คสุทธิที่ใช้คิดอัตรา 200 ออเดอร์/คน (<u>หักพักเที่ยงไปแล้ว</u>) จึงห้ามหักพักซ้ำอีก<br>
+          <b>7 ชม.</b> = เวลาแพ็คสุทธิที่มีให้ในวันปกติ (09:00–17:00 = 8 ชม. หักพักเที่ยง 1 ชม.) ถ้างานต้องใช้เกิน 7 ชม. ส่วนเกินคือ <b>OT</b><br>
+          <span class="cn-dim">พักเที่ยงจะบวกเข้าเวลาเลิกเฉพาะวันที่งานยังไม่จบก่อนเที่ยง — ถ้าออเดอร์น้อยจบ 11:00 ก็ไม่ต้องบวก</span><br>
+          <span class="cn-dim">กติกาข้อนี้ใช้กับ <b>ฝั่ง Packing เท่านั้น</b> · ฝั่ง WH ยังใช้สูตรเดิม (ไม่หักคนท้ายไลน์ ไม่บวกพักเที่ยง OT นับจากเกิน 6 ชม.)</span></div>
+        <div class="cn-formula">ตาราง (ควรมีกี่คน): <code>Packing = ceil(ออเดอร์ ÷ 200) + 1 ท้ายไลน์</code> · <code>WH = ceil(ชิ้น ÷ 528)</code><br>
+          ช่องกรอก (เสร็จกี่โมง): <code>คนแพ็ค = คนที่ใส่ − 1</code> · <code>เวลาสุทธิ = ออเดอร์ ÷ (คนแพ็ค × 33)</code><br>
+          <code>เวลาเลิก = 09:00 + เวลาสุทธิ + พักเที่ยง 1 ชม.</code> · <code>OT = ส่วนที่เลย 17:00</code></div>
       </details>
       <div class="grid-2">
         <div class="table-panel">
           <div style="font-size:calc(21.4px * var(--type-scale));color:var(--ink-soft);font-weight:600;margin-bottom:8px;">Packing / Delivery <span style="font-size:calc(15.9px * var(--type-scale));color:var(--ink-faint);font-weight:400;">(เริ่มกะ 09:00 น.)</span></div>
           <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px;padding:12px 14px;background:var(--paper);border:1px solid var(--hairline);border-radius:10px;">
             <div class="filter-field"><label style="font-size:calc(21.8px * var(--type-scale));">วันที่</label><select id="staffing_delivery_date" onchange="onDeliveryStaffingChange()" style="font-size:calc(27.6px * var(--type-scale));"></select></div>
-            <div class="filter-field"><label style="font-size:calc(21.8px * var(--type-scale));">จำนวนคนที่มีจริง</label><input type="number" min="1" id="staffing_delivery_staff" placeholder="เช่น 2" oninput="onDeliveryStaffingChange()" style="max-width:110px;font-size:calc(27.6px * var(--type-scale));"></div>
+            <div class="filter-field"><label style="font-size:calc(21.8px * var(--type-scale));">จำนวนคนที่มาทำงานจริง</label><input type="number" min="2" id="staffing_delivery_staff" placeholder="เช่น 4" oninput="onDeliveryStaffingChange()" style="max-width:110px;font-size:calc(27.6px * var(--type-scale));"><div class="input-hint">ใส่ยอดคนทั้งกะ ระบบ <b>−1 คนท้ายไลน์</b> ให้เอง (คนนั้นแยกของ ไม่ได้แพ็ค)<br><span style="color:var(--ink-faint);">แพ็คได้ 7 ชม. (09:00–17:00 หักพักเที่ยง) · เกินจากนั้นเป็น OT</span></div></div>
             <div id="staffing_delivery_result" style="font-family:'IBM Plex Sans Thai';font-size:calc(24.1px * var(--type-scale));color:var(--ink-soft);flex:1;min-width:220px;"></div>
           </div>
           <div class="table-scroll">
@@ -3251,8 +3273,8 @@ function renderTrendLineChart(canvasId, chartKey, series, seriesLabel){
     display: true,
     boundaryIndex,
     everyNth: Math.max(1, Math.ceil(historical.length / 8)),
-    // รายสัปดาห์มี 4 จุด โชว์ครบได้ · รายวันมี 7 จุด ต้องเว้น ไม่งั้นเลขทับกันอ่านไม่ออก
-    forecastEveryNth: forecastData.length > 4 ? 3 : 1
+    // v97: โชว์ครบทุกวันที่พยากรณ์ตามที่ต้องการ (ตัวเลขเล็กพอ + มีระบบไล่หลบไม่ให้ทับกัน)
+    forecastEveryNth: 1
   };
   opts.layout = { padding:{ top:34, right:52, bottom:16, left:6 } };
 
@@ -3342,7 +3364,14 @@ const STAFFING_CRITERIA = {
   endOfLineStaff: 1,
   whItemsPerPersonPerHour: 88,
   whHours: 6,
-  whMaxHandhelds: 3
+  whMaxHandhelds: 3,
+  /* v99: เลข 200 ออเดอร์/6 ชม. เป็นเวลาแพ็ค "สุทธิ" — หักพักเที่ยงออกไปแล้ว
+     ดังนั้นห้ามหักพักซ้ำอีกในอัตราการผลิต ให้ไปบวกเป็นเวลาบนนาฬิกาตอนคิดว่าเลิกกี่โมง
+     และบวกเฉพาะกรณีที่งานยังไม่จบก่อนเที่ยง (จบก่อนเที่ยงก็ไม่ต้องพัก)
+     ผลลัพธ์: วันปกติมีเวลาแพ็คสุทธิ 7 ชม. (09:00-17:00 หักพัก 1 ชม.) เกินจากนี้คือ OT */
+  lunchStartTime: '12:00',
+  lunchHours: 1,
+  otAfterTime: '17:00'
 };
 
 function renderStaffingForecast(dailyOrdersSeries, dailyQtySeries){
@@ -3385,7 +3414,7 @@ function renderStaffingForecast(dailyOrdersSeries, dailyQtySeries){
   deliveryBody.innerHTML = rows.map(r => {
     const ddTag = r.isDD ? ' <span style="font-size:calc(15.9px * var(--type-scale));color:var(--azuki);">⚡ Double Day</span>' : '';
     return '<tr' + (r.isDD ? ddRowStyle : '') + '>' +
-      '<td class="strong">' + escapeHtml(r.label) + ddTag + '</td>' +
+      '<td class="strong"><span style="white-space:nowrap;">' + escapeHtml(r.label) + '</span>' + ddTag + '</td>' +
       '<td>' + r.forecastedOrders.toLocaleString('en-US') + '</td>' +
       '<td>' + r.packingStaff + '</td>' +
       '<td>' + r.endOfLineStaff + '</td>' +
@@ -3399,7 +3428,7 @@ function renderStaffingForecast(dailyOrdersSeries, dailyQtySeries){
       ? '<span class="qty-highlight">' + r.whStaff + '</span> <span style="font-size:calc(15.9px * var(--type-scale));color:var(--azuki);">(เกิน 3 เครื่อง ต้องหมุนเวียน)</span>'
       : r.whStaff;
     return '<tr' + (r.isDD ? ddRowStyle : '') + '>' +
-      '<td class="strong">' + escapeHtml(r.label) + ddTag + '</td>' +
+      '<td class="strong"><span style="white-space:nowrap;">' + escapeHtml(r.label) + '</span>' + ddTag + '</td>' +
       '<td>' + r.forecastedQty.toLocaleString('en-US') + '</td>' +
       '<td>' + whCell + '</td>' +
       '</tr>';
@@ -3420,25 +3449,83 @@ function renderStaffingForecast(dailyOrdersSeries, dailyQtySeries){
 
 let STAFFING_ROWS = [];
 
-function addHoursToTime(startHHMM, hours){
-  const [h, m] = startHHMM.split(':').map(Number);
-  const totalMinutes = h*60 + m + Math.round(hours*60);
-  const days = Math.floor(totalMinutes / (24*60));
-  let mins = totalMinutes % (24*60);
-  if(mins < 0) mins += 24*60;
-  const hh = String(Math.floor(mins/60)).padStart(2,'0');
-  const mm = String(mins%60).padStart(2,'0');
-  return hh + ':' + mm + (days > 0 ? ' (+' + days + 'd)' : '');
+function timeToMinutes(hhmm){
+  const [h, m] = hhmm.split(':').map(Number);
+  return h*60 + m;
+}
+function minutesToTime(mins){
+  const days = Math.floor(mins / (24*60));
+  let mm = mins % (24*60);
+  if(mm < 0) mm += 24*60;
+  const hh = String(Math.floor(mm/60)).padStart(2,'0');
+  const nn = String(mm%60).padStart(2,'0');
+  return hh + ':' + nn + (days > 0 ? ' (+' + days + 'd)' : '');
 }
 
-function computeShiftOutcome(forecastedAmount, staffAvailable, ratePerPersonPerHour, shiftStart, shiftHours, maxConcurrent){
+/* v97: คิดเวลาเลิกงานจริงจากจำนวนคนที่มาทำงาน
+   กติกา 3 ข้อที่เปลี่ยนจากเดิม
+   1. ฝั่งแพ็ค — คนท้ายไลน์แยกพัสดุไม่ได้แพ็ค ต้องหักออก 1 คนก่อนคิดกำลังการผลิต
+   2. หักเวลาพัก 1 ชม. — เป็นเวลาที่เดินอยู่บนนาฬิกาแต่ไม่ได้ผลิตงาน จึงบวกเข้าไปในเวลาเลิก
+   3. OT วัดจากนาฬิกา ไม่ใช่จำนวนชั่วโมง — เสร็จหลัง 17:00 เท่าไหร่ ส่วนเกินนั้นคือ OT */
+function computeShiftOutcome(amount, staffAvailable, ratePerPersonPerHour, shiftStart, opts){
+  opts = opts || {};
   if(!staffAvailable || staffAvailable <= 0) return null;
-  const effectiveStaff = maxConcurrent ? Math.min(staffAvailable, maxConcurrent) : staffAvailable;
-  const totalHours = forecastedAmount / (effectiveStaff * ratePerPersonPerHour);
-  const otHours = Math.max(0, totalHours - shiftHours);
-  const finishTime = addHoursToTime(shiftStart, totalHours);
-  const idleStaff = maxConcurrent && staffAvailable > maxConcurrent ? staffAvailable - maxConcurrent : 0;
-  return { totalHours, otHours, finishTime, effectiveStaff, idleStaff };
+
+  const excludeEndOfLine = !!opts.excludeEndOfLine;
+  const excluded    = excludeEndOfLine ? STAFFING_CRITERIA.endOfLineStaff : 0;
+  const lunchHours  = (opts.lunchHours === undefined) ? STAFFING_CRITERIA.lunchHours : opts.lunchHours;
+  const otAfter     = opts.otAfter || STAFFING_CRITERIA.otAfterTime;
+  const maxConcurrent = opts.maxConcurrent || null;
+
+  const workingStaff = staffAvailable - excluded;
+  if(workingStaff <= 0){
+    return { notEnough:true, staffAvailable, excluded, workingStaff };
+  }
+  const effectiveStaff = maxConcurrent ? Math.min(workingStaff, maxConcurrent) : workingStaff;
+  const workHours = amount / (effectiveStaff * ratePerPersonPerHour);
+
+  const startMin = timeToMinutes(shiftStart);
+  const lunchAt  = timeToMinutes(STAFFING_CRITERIA.lunchStartTime);
+  let   finishMin = startMin + Math.round(workHours * 60);
+  // v101: พักเที่ยงหักทุกวันไม่มีข้อยกเว้น — ทีมพักพร้อมกันตามเวลา ไม่ได้ขึ้นกับว่างานจบเมื่อไหร่
+  //       (lunchAt เก็บไว้เผื่อวันหลังอยากกลับไปหักเฉพาะวันที่งานคาบเกี่ยงเที่ยง)
+  const usedLunch = true;
+  finishMin += Math.round(lunchHours * 60);
+  const otMin = Math.max(0, finishMin - timeToMinutes(otAfter));
+  // เวลาแพ็คสุทธิที่มีให้ก่อนเข้า OT = ช่วงเข้ากะถึงเลิกงาน หักพักเที่ยง
+  const netHoursBeforeOT = (timeToMinutes(otAfter) - startMin) / 60 - lunchHours;
+
+  return {
+    notEnough:false, staffAvailable, excluded, workingStaff, effectiveStaff,
+    workHours, lunchHours: usedLunch ? lunchHours : 0, usedLunch, netHoursBeforeOT,
+    idleStaff: (maxConcurrent && workingStaff > maxConcurrent) ? workingStaff - maxConcurrent : 0,
+    finishTime: minutesToTime(finishMin),
+    otHours: otMin / 60,
+    otAfter
+  };
+}
+
+// ข้อความสรุปท้ายบรรทัด ใช้ร่วมกันทั้งฝั่งแพ็คและฝั่ง WH
+function shiftOutcomeText(result, verb){
+  const parts = [];
+  if(result.excluded > 0){
+    parts.push('คิดจาก <b>' + result.workingStaff + ' คน</b> ' +
+      '<span style="color:var(--ink-faint);">(ใส่มา ' + result.staffAvailable +
+      ' − คนท้ายไลน์ ' + result.excluded + ')</span>');
+  } else {
+    parts.push('คิดจาก <b>' + result.workingStaff + ' คน</b>');
+  }
+  parts.push('เวลาทำงานสุทธิ <b>' + result.workHours.toFixed(1) + ' ชม.</b>' +
+    ' <span style="color:var(--ink-faint);">/ มีให้ ' + result.netHoursBeforeOT.toFixed(0) + ' ชม.' +
+    (result.usedLunch ? ' + พักเที่ยง ' + result.lunchHours + ' ชม.' : ' (จบก่อนเที่ยง ไม่ต้องพัก)') +
+    '</span>');
+  parts.push(verb + 'เสร็จ <b style="color:' + (result.otHours > 0 ? 'var(--azuki)' : 'var(--matcha-deep)') +
+    ';">' + result.finishTime + '</b>');
+  parts.push(result.otHours > 0
+    ? 'OT <b style="color:var(--azuki);">' + result.otHours.toFixed(1) + ' ชม.</b>' +
+      ' <span style="color:var(--ink-faint);">(เลย ' + result.otAfter + ')</span>'
+    : '<span style="color:var(--matcha-deep);">ไม่ต้องทำ OT</span>');
+  return parts.join(' · ');
 }
 
 function onDeliveryStaffingChange(){
@@ -3451,14 +3538,15 @@ function onDeliveryStaffingChange(){
   if(!row || !staffCount){ resultEl.textContent = ''; return; }
 
   const ratePerPersonPerHour = STAFFING_CRITERIA.ordersPerPersonPerDay / STAFFING_CRITERIA.packingHours;
-  const result = computeShiftOutcome(row.forecastedOrders, staffCount, ratePerPersonPerHour, '09:00', STAFFING_CRITERIA.packingHours, null);
+  const result = computeShiftOutcome(row.forecastedOrders, staffCount, ratePerPersonPerHour, '09:00', { excludeEndOfLine:true });
   if(!result){ resultEl.textContent = ''; return; }
-
-  resultEl.innerHTML = 'ใช้เวลาทำงานรวม <b>' + result.totalHours.toFixed(1) + ' ชม.</b>' +
-    (result.otHours > 0
-      ? ' (ต้องทำ OT <b style="color:var(--azuki);">' + result.otHours.toFixed(1) + ' ชม.</b>)'
-      : ' (ไม่ต้องทำ OT)') +
-    ' · คาดว่าจะแพ็คเสร็จเวลา <b style="color:var(--matcha-deep);">' + result.finishTime + '</b>';
+  if(result.notEnough){
+    resultEl.innerHTML = '<span style="color:var(--azuki);">ใส่มา ' + result.staffAvailable +
+      ' คน แต่ต้องกันคนท้ายไลน์ไว้ ' + result.excluded + ' คน จึงไม่มีคนแพ็คเหลือ — ต้องมีอย่างน้อย ' +
+      (result.excluded + 1) + ' คน</span>';
+    return;
+  }
+  resultEl.innerHTML = shiftOutcomeText(result, 'แพ็ค');
 }
 
 function onWhStaffingChange(){
@@ -3470,20 +3558,24 @@ function onWhStaffingChange(){
   const staffCount = Number(staffInput.value);
   if(!row || !staffCount){ resultEl.textContent = ''; return; }
 
-  const result = computeShiftOutcome(
-    row.forecastedQty, staffCount, STAFFING_CRITERIA.whItemsPerPersonPerHour,
-    '08:00', STAFFING_CRITERIA.whHours, STAFFING_CRITERIA.whMaxHandhelds
-  );
-  if(!result){ resultEl.textContent = ''; return; }
+  // v100: ฝั่ง WH คงสูตรเดิมไว้ตามที่ต้องการ — ไม่หักคนท้ายไลน์ ไม่บวกพักเที่ยง
+  //        และ OT วัดจากจำนวนชั่วโมงที่เกิน 6 ชม. (ไม่ได้ผูกกับนาฬิกา 17:00 เหมือนฝั่งแพ็ค)
+  const { whItemsPerPersonPerHour, whHours, whMaxHandhelds } = STAFFING_CRITERIA;
+  const effectiveStaff = Math.min(staffCount, whMaxHandhelds);
+  const totalHours = row.forecastedQty / (effectiveStaff * whItemsPerPersonPerHour);
+  const otHours    = Math.max(0, totalHours - whHours);
+  const finishTime = minutesToTime(timeToMinutes('08:00') + Math.round(totalHours * 60));
+  const idleStaff  = staffCount > whMaxHandhelds ? staffCount - whMaxHandhelds : 0;
 
-  const idleNote = result.idleStaff > 0
-    ? ' <span style="color:var(--ink-faint);">(มี handheld แค่ 3 เครื่อง เลยใช้งานพร้อมกันได้แค่ ' + result.effectiveStaff + ' คน อีก ' + result.idleStaff + ' คนต้องหมุนเวียน)</span>'
+  const idleNote = idleStaff > 0
+    ? ' <span style="color:var(--ink-faint);">(มี handheld แค่ ' + whMaxHandhelds +
+      ' เครื่อง เลยใช้งานพร้อมกันได้แค่ ' + effectiveStaff + ' คน อีก ' + idleStaff + ' คนต้องหมุนเวียน)</span>'
     : '';
-  resultEl.innerHTML = 'ใช้เวลาทำงานรวม <b>' + result.totalHours.toFixed(1) + ' ชม.</b>' +
-    (result.otHours > 0
-      ? ' (ต้องทำ OT <b style="color:var(--azuki);">' + result.otHours.toFixed(1) + ' ชม.</b>)'
+  resultEl.innerHTML = 'ใช้เวลาทำงานรวม <b>' + totalHours.toFixed(1) + ' ชม.</b>' +
+    (otHours > 0
+      ? ' (ต้องทำ OT <b style="color:var(--azuki);">' + otHours.toFixed(1) + ' ชม.</b>)'
       : ' (ไม่ต้องทำ OT)') +
-    ' · คาดว่าจะหยิบของเสร็จเวลา <b style="color:var(--matcha-deep);">' + result.finishTime + '</b>' + idleNote;
+    ' · คาดว่าจะหยิบของเสร็จเวลา <b style="color:var(--matcha-deep);">' + finishTime + '</b>' + idleNote;
 }
 
 function renderForecast1wChart(forecastRows){
