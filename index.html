@@ -263,6 +263,14 @@
   details[open] summary::before{transform:rotate(90deg);}
   details summary:hover{color:var(--matcha-deep);}
 
+  /* v84: วิธีคำนวณ — เลิกพับซ่อน โชว์เป็นตัวเล็กใต้หัวข้อเลย ไม่ต้องกด */
+  .calc-note{background:var(--panel);border:1px solid var(--hairline);border-left:3px solid var(--matcha);border-radius:10px;padding:12px 18px;margin:-6px 0 16px;font-size:16px;color:var(--ink-soft);line-height:1.75;}
+  .calc-note .cn-head{font-weight:700;color:var(--matcha-deep);font-size:16.5px;margin-bottom:5px;}
+  .calc-note .cn-list > div{margin-bottom:3px;}
+  .calc-note .cn-dim{color:var(--ink-faint);}
+  .calc-note .cn-formula{margin-top:9px;padding:8px 12px;background:var(--paper);border-radius:6px;font-family:'IBM Plex Mono',monospace;font-size:14.5px;color:var(--ink-faint);line-height:1.8;}
+  .calc-note .cn-warn{margin-top:8px;padding:8px 12px;background:rgba(200,155,74,.10);border-radius:6px;font-size:15.5px;color:var(--ink-soft);}
+
   /* v65: legend ของ Sales Channel Share ทำเป็นกล่องมีกรอบแยกต่างหาก
      ไม่ใช้ legend ในตัว Chart.js เพราะปรับขนาด/กรอบ/จัดคอลัมน์ไม่ได้ ตัวเลขเลยเล็กจนอ่านยาก */
   .channel-wrap{display:flex;gap:32px;align-items:center;flex-wrap:wrap;}
@@ -307,6 +315,7 @@
   body.exporting .stat-icon{width:56px !important;height:56px !important;}
   body.exporting .stat-icon svg{width:29px !important;height:29px !important;}
   body.exporting details{display:none !important;}              /* กล่อง "วิธีคิด" ที่พับอยู่ ไม่ต้องพิมพ์ */
+  body.exporting .calc-note{display:none !important;}            /* v84: กล่องวิธีคำนวณ ไม่ต้องติดไปในภาพ export */
 
   ::-webkit-scrollbar{width:7px;height:7px;}
   ::-webkit-scrollbar-track{background:transparent;}
@@ -343,7 +352,7 @@
     <div class="meta-right">
       Last fetched<br><span id="lastUpdated">—</span>
       <div id="dataFreshness" class="freshness"></div>
-      <div style="font-size:11.8px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-12-v83-product-multiselect</div>
+      <div style="font-size:11.8px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-13-v84-calcnote-always-on</div>
       <div>
         <button class="btn-plain" id="refreshBtn" onclick="loadData()">Refresh</button>
         <button class="btn-plain" id="saveImgBtn" onclick="saveTabAsPNG()" style="margin-left:14px;">Save as PNG (แนวนอน, คมชัด)</button>
@@ -581,22 +590,15 @@
     <div class="section">
       <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>พยากรณ์รายสัปดาห์ (Weekly Forecast)</div>
       <div class="section-desc">ยอดจริงรายสัปดาห์ (นับตามวันที่ต้องการจัดส่ง) + ประมาณการ 4 สัปดาห์ข้างหน้า</div>
-      <details style="background:var(--panel);border:1px solid var(--hairline);border-radius:12px;padding:16px 22px;margin-bottom:16px;">
-        <summary style="cursor:pointer;font-size:20px;color:var(--ink-soft);font-weight:600;list-style:none;">
-          ตัวเลขพยากรณ์นี้มาจากไหน? <span style="font-size:16px;color:var(--ink-faint);font-weight:400;">(กดเพื่อดู)</span>
-        </summary>
-        <div style="font-size:20px;color:var(--ink-soft);line-height:2;margin-top:14px;">
-          <b style="color:var(--matcha-deep);">คิดจาก 3 อย่างบวกกัน</b>
-          <div style="margin:10px 0 0 4px;">
-            <div style="margin-bottom:8px;"><b>1. ยอดปกติ</b> — เอายอด <b>4 สัปดาห์ล่าสุด</b> มาเฉลี่ย ได้เป็นตัวตั้ง</div>
-            <div style="margin-bottom:8px;"><b>2. แนวโน้ม</b> — ดูจากข้อมูลทั้งหมดว่ายอดกำลัง<b>ขึ้นหรือลง</b>สัปดาห์ละกี่ออเดอร์ แล้วบวก/ลบตามระยะที่ทำนายไกลออกไป (ไกล 2 สัปดาห์ = คูณ 2)</div>
-            <div><b>3. Double Day</b> — ถ้าสัปดาห์นั้นมีวันเลขซ้ำ (1.1, 2.2, … 12.12) จะบวกเพิ่ม โดยดูจากอดีตว่าวันแบบนี้ยอดพุ่งกี่เท่า <span style="color:var(--ink-faint);">(สูงสุด 3 เท่า และต้องเคยเกิด ≥ 2 ครั้งถึงจะนับ ไม่งั้นไม่บวกเลย)</span></div>
-          </div>
-          <div style="margin-top:14px;padding:10px 14px;background:var(--paper);border-radius:8px;font-family:'IBM Plex Mono',monospace;font-size:17px;color:var(--ink-faint);">
-            สูตรเต็ม: <code>พยากรณ์(h สัปดาห์ข้างหน้า) = avg4 + slope × h</code> + Double Day boost
-          </div>
+      <div class="calc-note">
+        <div class="cn-head">วิธีคิด — บวกกัน 3 อย่าง</div>
+        <div class="cn-list">
+          <div><b>1. ยอดปกติ</b> — เอายอด <b>4 สัปดาห์ล่าสุด</b> มาเฉลี่ย ได้เป็นตัวตั้ง</div>
+          <div><b>2. แนวโน้ม</b> — ดูจากข้อมูลทั้งหมดว่ายอดกำลัง<b>ขึ้นหรือลง</b>สัปดาห์ละกี่ออเดอร์ แล้วบวก/ลบตามระยะที่ทำนายไกลออกไป (ไกล 2 สัปดาห์ = คูณ 2)</div>
+          <div><b>3. Double Day</b> — ถ้าสัปดาห์นั้นมีวันเลขซ้ำ (1.1, 2.2, … 12.12) จะบวกเพิ่ม โดยดูจากอดีตว่าวันแบบนี้ยอดพุ่งกี่เท่า <span class="cn-dim">(สูงสุด 3 เท่า และต้องเคยเกิด ≥ 2 ครั้งถึงจะนับ ไม่งั้นไม่บวกเลย)</span></div>
         </div>
-      </details>
+        <div class="cn-formula">สูตรเต็ม: <code>พยากรณ์(h สัปดาห์ข้างหน้า) = avg4 + slope × h</code> + Double Day boost</div>
+      </div>
       <div class="grid-2">
         <div class="chart-panel">
           <div style="font-size:18.6px;color:var(--ink-soft);font-weight:600;margin-bottom:8px;">จำนวนออเดอร์ / สัปดาห์</div>
@@ -612,28 +614,20 @@
     <div class="section">
       <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>พยากรณ์รายวัน (Daily Forecast)</div>
       <div class="section-desc">ยอดจริงตั้งแต่ ม.ค. 2569 ถึงวันล่าสุด (นับตามวันที่ต้องการจัดส่ง) + ประมาณการ 7 วันข้างหน้า</div>
-      <details style="background:var(--panel);border:1px solid var(--hairline);border-radius:12px;padding:16px 22px;margin-bottom:16px;">
-        <summary style="cursor:pointer;font-size:20px;color:var(--ink-soft);font-weight:600;list-style:none;">
-          ตัวเลขพยากรณ์นี้มาจากไหน? <span style="font-size:16px;color:var(--ink-faint);font-weight:400;">(กดเพื่อดู)</span>
-        </summary>
-        <div style="font-size:20px;color:var(--ink-soft);line-height:2;margin-top:14px;">
-          <b style="color:var(--matcha-deep);">หลักการง่ายๆ: ให้น้ำหนักวันใกล้มากกว่าวันไกล</b>
-          <div style="margin:10px 0 0 4px;">
-            <div style="margin-bottom:8px;"><b>1. ยอดฐาน</b> — ไม่ได้เฉลี่ยทุกวันเท่ากัน แต่<b>ให้ความสำคัญกับวันล่าสุดมากกว่า</b> ยอดเมื่อวานมีน้ำหนักมากกว่ายอดเมื่อ 3 เดือนก่อน <span style="color:var(--ink-faint);">(วันใหม่ 30% + ยอดฐานเดิม 70%)</span></div>
-            <div style="margin-bottom:8px;"><b>2. แนวโน้ม</b> — ติดตามว่ายอด<b>ไต่ขึ้นหรือไหลลง</b>วันละเท่าไหร่ แล้วปรับตามเรื่อยๆ ถ้าเทรนด์เปลี่ยนก็ตามทัน</div>
-            <div><b>3. Double Day</b> — วันที่ตรงกับเลขซ้ำจะคูณเพิ่มตามที่เคยเกิดในอดีต <span style="color:var(--ink-faint);">(สูงสุด 3 เท่า ต้องเคยเกิด ≥ 2 ครั้ง)</span></div>
-          </div>
-          <div style="margin-top:14px;padding:10px 14px;background:rgba(200,155,74,.10);border-radius:8px;font-size:18px;color:var(--ink-soft);">
-            ⚠️ <b>กราฟโชว์จุดทุก 5 วัน</b> เพื่อไม่ให้รก — แต่การคำนวณใช้ข้อมูล<b>ทุกวันจริง</b> ไม่ได้ข้ามนะครับ
-          </div>
-          <div style="margin-top:10px;padding:10px 14px;background:var(--paper);border-radius:8px;font-family:'IBM Plex Mono',monospace;font-size:17px;color:var(--ink-faint);line-height:1.9;">
-            สูตรเต็ม (Holt's Exponential Smoothing):<br>
-            <code>Level(t) = 0.3 × ค่าจริง(t) + 0.7 × (Level(t-1) + Trend(t-1))</code><br>
-            <code>Trend(t) = 0.15 × (Level(t) − Level(t-1)) + 0.85 × Trend(t-1)</code><br>
-            <code>พยากรณ์(h วันข้างหน้า) = Level + Trend × h</code>
-          </div>
+      <div class="calc-note">
+        <div class="cn-head">วิธีคิด — ให้น้ำหนักวันใกล้มากกว่าวันไกล</div>
+        <div class="cn-list">
+          <div><b>1. ยอดฐาน</b> — ไม่ได้เฉลี่ยทุกวันเท่ากัน แต่<b>ให้ความสำคัญกับวันล่าสุดมากกว่า</b> ยอดเมื่อวานมีน้ำหนักมากกว่ายอดเมื่อ 3 เดือนก่อน <span class="cn-dim">(วันใหม่ 30% + ยอดฐานเดิม 70%)</span></div>
+          <div><b>2. แนวโน้ม</b> — ติดตามว่ายอด<b>ไต่ขึ้นหรือไหลลง</b>วันละเท่าไหร่ แล้วปรับตามเรื่อยๆ ถ้าเทรนด์เปลี่ยนก็ตามทัน</div>
+          <div><b>3. Double Day</b> — วันที่ตรงกับเลขซ้ำจะคูณเพิ่มตามที่เคยเกิดในอดีต <span class="cn-dim">(สูงสุด 3 เท่า ต้องเคยเกิด ≥ 2 ครั้ง)</span></div>
         </div>
-      </details>
+        <div class="cn-warn">⚠️ <b>กราฟโชว์จุดทุก 5 วัน</b> เพื่อไม่ให้รก — แต่การคำนวณใช้ข้อมูล<b>ทุกวันจริง</b> ไม่ได้ข้ามนะครับ</div>
+        <div class="cn-formula">สูตรเต็ม (Holt's Exponential Smoothing):<br>
+          <code>Level(t) = 0.3 × ค่าจริง(t) + 0.7 × (Level(t-1) + Trend(t-1))</code><br>
+          <code>Trend(t) = 0.15 × (Level(t) − Level(t-1)) + 0.85 × Trend(t-1)</code><br>
+          <code>พยากรณ์(h วันข้างหน้า) = Level + Trend × h</code>
+        </div>
+      </div>
       <div class="grid-2">
         <div class="chart-panel">
           <div style="font-size:18.6px;color:var(--ink-soft);font-weight:600;margin-bottom:8px;">จำนวนออเดอร์ / วัน</div>
@@ -649,25 +643,14 @@
     <div class="section">
       <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>พยากรณ์อัตรากำลังคน (Staffing Forecast)</div>
       <div class="section-desc">คำนวณจากยอดพยากรณ์ 7 วันข้างหน้า (จากกราฟรายวันด้านบน) · แถวสีไฮไลท์ = วันที่ตรงกับ Double Day</div>
-      <details style="background:var(--panel);border:1px solid var(--hairline);border-radius:12px;padding:16px 22px;margin-bottom:16px;">
-        <summary style="cursor:pointer;font-size:20px;color:var(--ink-soft);font-weight:600;list-style:none;">
-          คิดจำนวนคนยังไง? <span style="font-size:16px;color:var(--ink-faint);font-weight:400;">(กดเพื่อดู)</span>
-        </summary>
-        <div style="font-size:20px;color:var(--ink-soft);line-height:2;margin-top:14px;">
-          <div style="margin-bottom:10px;">
-            <b style="color:var(--matcha-deep);">ทีม Packing</b> — 1 คนแพ็คได้ <b>200 ออเดอร์/วัน</b> (ทำงาน 6 ชม. = 33 ออเดอร์/ชม.)<br>
-            <span style="color:var(--ink-faint);">+ คนท้ายไลน์แยกพัสดุอีก 1 คนเสมอ ไม่ว่ายอดจะน้อยแค่ไหน</span>
-          </div>
-          <div>
-            <b style="color:var(--matcha-deep);">ทีม WH หยิบของ</b> — 1 คนหยิบได้ <b>88 ชิ้น/ชม.</b> (ทำงาน 6 ชม. = 528 ชิ้น/วัน)<br>
-            <span style="color:var(--ink-faint);">มี handheld แค่ 3 เครื่อง ถ้าคำนวณได้เกิน 3 คน จะขึ้นเตือนว่าต้องหมุนเวียนใช้เครื่อง</span>
-          </div>
-          <div style="margin-top:14px;padding:10px 14px;background:var(--paper);border-radius:8px;font-family:'IBM Plex Mono',monospace;font-size:17px;color:var(--ink-faint);line-height:1.9;">
-            <code>Packing (คน) = ceil(ออเดอร์ ÷ 200) + 1</code><br>
-            <code>WH (คน) = ceil(จำนวนสินค้า ÷ 528)</code>
-          </div>
+      <div class="calc-note">
+        <div class="cn-head">วิธีคิดจำนวนคน</div>
+        <div class="cn-list">
+          <div><b>ทีม Packing</b> — 1 คนแพ็คได้ <b>200 ออเดอร์/วัน</b> (ทำงาน 6 ชม. = 33 ออเดอร์/ชม.) <span class="cn-dim">+ คนท้ายไลน์แยกพัสดุอีก 1 คนเสมอ ไม่ว่ายอดจะน้อยแค่ไหน</span></div>
+          <div><b>ทีม WH หยิบของ</b> — 1 คนหยิบได้ <b>88 ชิ้น/ชม.</b> (ทำงาน 6 ชม. = 528 ชิ้น/วัน) <span class="cn-dim">มี handheld แค่ 3 เครื่อง ถ้าคำนวณได้เกิน 3 คน จะขึ้นเตือนว่าต้องหมุนเวียนใช้เครื่อง</span></div>
         </div>
-      </details>
+        <div class="cn-formula"><code>Packing (คน) = ceil(ออเดอร์ ÷ 200) + 1</code><br><code>WH (คน) = ceil(จำนวนสินค้า ÷ 528)</code></div>
+      </div>
       <div class="grid-2">
         <div class="table-panel">
           <div style="font-size:18.6px;color:var(--ink-soft);font-weight:600;margin-bottom:8px;">Packing / Delivery <span style="font-size:13.8px;color:var(--ink-faint);font-weight:400;">(เริ่มกะ 09:00 น.)</span></div>
