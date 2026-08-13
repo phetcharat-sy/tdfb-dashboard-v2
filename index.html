@@ -17,6 +17,7 @@
     --paper:#F6F2E7; --panel:#FFFDF5; --ink:#18240F; --ink-soft:#3F4C37; --ink-faint:#6B7561;
     --hairline:#DED6BD; --hairline-strong:#C9BF9E;
     --matcha:#7A9A3F; --matcha-deep:#4C6B26; --bamboo:#C89B4A; --azuki:#A6432E;
+    --page-max:1460px;   /* v89: ความกว้างเนื้อหาสูงสุด — อยากกว้าง/แคบกว่านี้ แก้บรรทัดนี้ค่าเดียว */
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
@@ -34,7 +35,9 @@
     background-attachment:fixed, fixed, fixed, fixed;
     color:var(--ink);font-family:'IBM Plex Sans Thai',sans-serif;min-height:100vh;
   }
-  .wrap{max-width:none;width:100%;margin:0 auto;padding:48px clamp(48px,8vw,160px) 80px;}
+  /* v89: เดิมกางเต็มจอ ทำให้ตารางกับกราฟยืดกว้างเกินไปบนจอใหญ่ สายตาต้องกวาดไกล
+     จึงล็อกความกว้างสูงสุดแล้วจัดกลาง — ปรับค่าได้ที่ --page-max ที่เดียว */
+  .wrap{max-width:var(--page-max);width:100%;margin:0 auto;padding:48px clamp(24px,4vw,64px) 80px;}
 
   .brand-header{display:flex;align-items:center;gap:14px;margin-bottom:16px;}
   .brand-logo{flex-shrink:0;}
@@ -383,7 +386,7 @@
     <div class="meta-right">
       Last fetched<br><span id="lastUpdated">—</span>
       <div id="dataFreshness" class="freshness"></div>
-      <div style="font-size:11.8px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-13-v88-matcha-theme</div>
+      <div style="font-size:11.8px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-13-v89-page-width</div>
       <div>
         <button class="btn-plain" id="refreshBtn" onclick="loadData()">Refresh</button>
         <button class="btn-plain" id="saveImgBtn" onclick="saveTabAsPNG()" style="margin-left:14px;">Save as PNG (แนวนอน, คมชัด)</button>
