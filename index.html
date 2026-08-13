@@ -17,7 +17,7 @@
     --paper:#F6F2E7; --panel:#FFFDF5; --ink:#18240F; --ink-soft:#3F4C37; --ink-faint:#6B7561;
     --hairline:#DED6BD; --hairline-strong:#C9BF9E;
     --matcha:#7A9A3F; --matcha-deep:#4C6B26; --bamboo:#C89B4A; --azuki:#A6432E;
-    --page-max:1460px;   /* v89: ความกว้างเนื้อหาสูงสุด — อยากกว้าง/แคบกว่านี้ แก้บรรทัดนี้ค่าเดียว */
+    --page-max:1900px;   /* v89: ความกว้างเนื้อหาสูงสุด — อยากกว้าง/แคบกว่านี้ แก้บรรทัดนี้ค่าเดียว */
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
@@ -37,7 +37,7 @@
   }
   /* v89: เดิมกางเต็มจอ ทำให้ตารางกับกราฟยืดกว้างเกินไปบนจอใหญ่ สายตาต้องกวาดไกล
      จึงล็อกความกว้างสูงสุดแล้วจัดกลาง — ปรับค่าได้ที่ --page-max ที่เดียว */
-  .wrap{max-width:var(--page-max);width:100%;margin:0 auto;padding:48px clamp(24px,4vw,64px) 80px;}
+  .wrap{max-width:var(--page-max);width:100%;margin:0 auto;padding:48px clamp(32px,5vw,104px) 80px;}
 
   .brand-header{display:flex;align-items:center;gap:14px;margin-bottom:16px;}
   .brand-logo{flex-shrink:0;}
@@ -279,7 +279,10 @@
 
   /* v84: วิธีคำนวณ — เลิกพับซ่อน โชว์เป็นตัวเล็กใต้หัวข้อเลย ไม่ต้องกด */
   .calc-note{background:var(--panel);border:1px solid var(--hairline);border-left:4px solid var(--matcha);border-radius:10px;padding:14px 20px;margin:-6px 0 16px;font-size:17.5px;color:var(--ink-soft);line-height:1.75;}
-  .calc-note .cn-head{font-weight:700;color:var(--matcha-deep);font-size:18.5px;margin-bottom:5px;}
+  /* v90: พับกล่องวิธีคิดทั้งใบ — ปิดไว้เป็นค่าเริ่มต้น กดที่หัวข้อจึงกางออก */
+  .calc-note > summary.cn-head{cursor:pointer;font-weight:700;color:var(--matcha-deep);font-size:18.5px;list-style:none;}
+  .calc-note > summary.cn-head:hover{color:var(--matcha);}
+  .calc-note[open] > summary.cn-head{margin-bottom:8px;padding-bottom:7px;border-bottom:1px solid var(--hairline);}
   .calc-note .cn-list > div{margin-bottom:3px;}
   .calc-note .cn-dim{color:var(--ink-faint);}
   .calc-note .cn-formula{margin-top:9px;padding:8px 12px;background:var(--paper);border-radius:6px;font-family:'IBM Plex Mono',monospace;font-size:15.8px;color:var(--ink-soft);line-height:1.8;}
@@ -297,9 +300,7 @@
   .cn-live .cl-dd{color:#A6432E;}
   /* v86: ช่องตัวเลขจริงเปลี่ยนเป็นพับได้ + แยกออเดอร์ / จำนวนชิ้น */
   .cn-livebox{background:var(--paper);border:1px dashed var(--hairline-strong);border-radius:6px;padding:8px 12px;}
-  .cn-livebox > summary{cursor:pointer;font-family:'IBM Plex Mono',monospace;font-size:15px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-faint);list-style:none;}
-  .cn-livebox > summary:hover{color:var(--matcha-deep);}
-  .cn-livebox[open] > summary{margin-bottom:7px;padding-bottom:6px;border-bottom:1px solid var(--hairline);}
+  .cn-livebox .cl-boxtitle{font-family:'IBM Plex Mono',monospace;font-size:15px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:7px;padding-bottom:6px;border-bottom:1px solid var(--hairline);}
   .cn-live + .cn-live{margin-top:9px;padding-top:8px;border-top:1px solid var(--hairline);}
   .cn-live .cl-unit{font-family:'Zen Maru Gothic',sans-serif;font-weight:700;font-size:14.5px;color:var(--matcha-deep);margin-bottom:3px;}
   @media (max-width:1100px){ .cn-split{grid-template-columns:1fr;} }
@@ -386,7 +387,7 @@
     <div class="meta-right">
       Last fetched<br><span id="lastUpdated">—</span>
       <div id="dataFreshness" class="freshness"></div>
-      <div style="font-size:11.8px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-13-v89-page-width</div>
+      <div style="font-size:11.8px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-13-v90-collapse-calcnote</div>
       <div>
         <button class="btn-plain" id="refreshBtn" onclick="loadData()">Refresh</button>
         <button class="btn-plain" id="saveImgBtn" onclick="saveTabAsPNG()" style="margin-left:14px;">Save as PNG (แนวนอน, คมชัด)</button>
@@ -625,8 +626,8 @@
     <div class="section">
       <div class="section-title"><span class="sec-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 3.4C10.7 4.5 3.9 10.8 3.3 19.2c-.1 1.4 1.1 2.4 2.4 2.1 8.3-2.1 14.1-8.8 14.9-17.9z"/><path d="M17.5 6.5C12.2 9.6 8.3 14.4 6.5 20.2"/><path d="M11.4 7.6c.5 1.7.5 3.4 0 5.1"/><path d="M14.9 12.7c-1.7.3-3.3 1-4.7 2"/></svg></span>พยากรณ์รายสัปดาห์ (Weekly Forecast)</div>
       <div class="section-desc">ยอดจริงรายสัปดาห์ (นับตามวันที่ต้องการจัดส่ง) + ประมาณการ 4 สัปดาห์ข้างหน้า</div>
-      <div class="calc-note">
-        <div class="cn-head">วิธีคิด — บวกกัน 3 อย่าง</div>
+      <details class="calc-note">
+        <summary class="cn-head">วิธีคิด — บวกกัน 3 อย่าง</summary>
         <div class="cn-list">
           <div><b>1. ยอดปกติ</b> — เอายอด <b>4 สัปดาห์ล่าสุด</b> มาเฉลี่ย ได้เป็นตัวตั้ง</div>
           <div><b>2. แนวโน้ม</b> — ดูจากข้อมูลทั้งหมดว่ายอดกำลัง<b>ขึ้นหรือลง</b>สัปดาห์ละกี่ออเดอร์ แล้วบวก/ลบตามระยะที่ทำนายไกลออกไป (ไกล 2 สัปดาห์ = คูณ 2)</div>
@@ -634,13 +635,13 @@
         </div>
         <div class="cn-split">
           <div class="cn-formula">สูตรเต็ม: <code>พยากรณ์(h สัปดาห์ข้างหน้า) = avg4 + slope × h</code> + Double Day boost</div>
-          <details class="cn-livebox">
-            <summary>ดูตัวเลขจริงที่แทนค่าลงในสูตร (กดเพื่อดู)</summary>
+          <div class="cn-livebox">
+            <div class="cl-boxtitle">ตัวเลขจริงที่แทนค่าลงในสูตร</div>
             <div class="cn-live" id="calc_live_weekly_orders">กำลังคำนวณ…</div>
             <div class="cn-live" id="calc_live_weekly_qty">กำลังคำนวณ…</div>
-          </details>
+          </div>
         </div>
-      </div>
+      </details>
       <div class="grid-2">
         <div class="chart-panel">
           <div style="font-size:18.6px;color:var(--ink-soft);font-weight:600;margin-bottom:8px;">จำนวนออเดอร์ / สัปดาห์</div>
@@ -656,8 +657,8 @@
     <div class="section">
       <div class="section-title"><span class="sec-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 3.4C10.7 4.5 3.9 10.8 3.3 19.2c-.1 1.4 1.1 2.4 2.4 2.1 8.3-2.1 14.1-8.8 14.9-17.9z"/><path d="M17.5 6.5C12.2 9.6 8.3 14.4 6.5 20.2"/><path d="M11.4 7.6c.5 1.7.5 3.4 0 5.1"/><path d="M14.9 12.7c-1.7.3-3.3 1-4.7 2"/></svg></span>พยากรณ์รายวัน (Daily Forecast)</div>
       <div class="section-desc">ยอดจริงตั้งแต่ ม.ค. 2569 ถึงวันล่าสุด (นับตามวันที่ต้องการจัดส่ง) + ประมาณการ 7 วันข้างหน้า</div>
-      <div class="calc-note">
-        <div class="cn-head">วิธีคิด — ให้น้ำหนักวันใกล้มากกว่าวันไกล</div>
+      <details class="calc-note">
+        <summary class="cn-head">วิธีคิด — ให้น้ำหนักวันใกล้มากกว่าวันไกล</summary>
         <div class="cn-list">
           <div><b>1. ยอดฐาน</b> — ไม่ได้เฉลี่ยทุกวันเท่ากัน แต่<b>ให้ความสำคัญกับวันล่าสุดมากกว่า</b> ยอดเมื่อวานมีน้ำหนักมากกว่ายอดเมื่อ 3 เดือนก่อน <span class="cn-dim">(วันใหม่ 30% + ยอดฐานเดิม 70%)</span></div>
           <div><b>2. แนวโน้ม</b> — ติดตามว่ายอด<b>ไต่ขึ้นหรือไหลลง</b>วันละเท่าไหร่ แล้วปรับตามเรื่อยๆ ถ้าเทรนด์เปลี่ยนก็ตามทัน</div>
@@ -670,13 +671,13 @@
             <code>Trend(t) = 0.15 × (Level(t) − Level(t-1)) + 0.85 × Trend(t-1)</code><br>
             <code>พยากรณ์(h วันข้างหน้า) = Level + Trend × h</code>
           </div>
-          <details class="cn-livebox">
-            <summary>ดูตัวเลขจริงที่แทนค่าลงในสูตร (กดเพื่อดู)</summary>
+          <div class="cn-livebox">
+            <div class="cl-boxtitle">ตัวเลขจริงที่แทนค่าลงในสูตร</div>
             <div class="cn-live" id="calc_live_daily_orders">กำลังคำนวณ…</div>
             <div class="cn-live" id="calc_live_daily_qty">กำลังคำนวณ…</div>
-          </details>
+          </div>
         </div>
-      </div>
+      </details>
       <div class="grid-2">
         <div class="chart-panel">
           <div style="font-size:18.6px;color:var(--ink-soft);font-weight:600;margin-bottom:8px;">จำนวนออเดอร์ / วัน</div>
@@ -692,14 +693,14 @@
     <div class="section">
       <div class="section-title"><span class="sec-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 3.4C10.7 4.5 3.9 10.8 3.3 19.2c-.1 1.4 1.1 2.4 2.4 2.1 8.3-2.1 14.1-8.8 14.9-17.9z"/><path d="M17.5 6.5C12.2 9.6 8.3 14.4 6.5 20.2"/><path d="M11.4 7.6c.5 1.7.5 3.4 0 5.1"/><path d="M14.9 12.7c-1.7.3-3.3 1-4.7 2"/></svg></span>พยากรณ์อัตรากำลังคน (Staffing Forecast)</div>
       <div class="section-desc">คำนวณจากยอดพยากรณ์ 7 วันข้างหน้า (จากกราฟรายวันด้านบน) · แถวสีไฮไลท์ = วันที่ตรงกับ Double Day</div>
-      <div class="calc-note">
-        <div class="cn-head">วิธีคิดจำนวนคน</div>
+      <details class="calc-note">
+        <summary class="cn-head">วิธีคิดจำนวนคน</summary>
         <div class="cn-list">
           <div><b>ทีม Packing</b> — 1 คนแพ็คได้ <b>200 ออเดอร์/วัน</b> (ทำงาน 6 ชม. = 33 ออเดอร์/ชม.) <span class="cn-dim">+ คนท้ายไลน์แยกพัสดุอีก 1 คนเสมอ ไม่ว่ายอดจะน้อยแค่ไหน</span></div>
           <div><b>ทีม WH หยิบของ</b> — 1 คนหยิบได้ <b>88 ชิ้น/ชม.</b> (ทำงาน 6 ชม. = 528 ชิ้น/วัน) <span class="cn-dim">มี handheld แค่ 3 เครื่อง ถ้าคำนวณได้เกิน 3 คน จะขึ้นเตือนว่าต้องหมุนเวียนใช้เครื่อง</span></div>
         </div>
         <div class="cn-formula"><code>Packing (คน) = ceil(ออเดอร์ ÷ 200) + 1</code><br><code>WH (คน) = ceil(จำนวนสินค้า ÷ 528)</code></div>
-      </div>
+      </details>
       <div class="grid-2">
         <div class="table-panel">
           <div style="font-size:18.6px;color:var(--ink-soft);font-weight:600;margin-bottom:8px;">Packing / Delivery <span style="font-size:13.8px;color:var(--ink-faint);font-weight:400;">(เริ่มกะ 09:00 น.)</span></div>
