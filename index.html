@@ -12,18 +12,26 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
   :root{
-    --paper:#F6F2E7; --panel:#FFFDF5; --ink:#1F2E1A; --ink-soft:#4E5C46; --ink-faint:#8C9482;
-    --hairline:#E4DEC8; --hairline-strong:#D3CBAE;
+    /* v88: เพิ่มคอนทราสต์ — ink-faint เดิม #8C9482 อ่อนเกินไปบนพื้น #F6F2E7 (ratio ~2.6:1 ตกเกณฑ์)
+       ปรับเข้ม 2 ระดับให้ผ่าน ~4.7:1 ตัวหนังสือรองทั้งหน้าชัดขึ้นพร้อมกันหมด */
+    --paper:#F6F2E7; --panel:#FFFDF5; --ink:#18240F; --ink-soft:#3F4C37; --ink-faint:#6B7561;
+    --hairline:#DED6BD; --hairline-strong:#C9BF9E;
     --matcha:#7A9A3F; --matcha-deep:#4C6B26; --bamboo:#C89B4A; --azuki:#A6432E;
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
   body{
     background-color:var(--paper);
+    /* v88: ลายใบชาปูพื้น + ริ้วรอยตะกร้อคนมัทฉะ (chasen) — วางใต้ gradient เดิม
+       ตั้ง opacity ต่ำมากและ panel ทุกใบทึบแสง ตัวหนังสือจึงไม่ถูกลายรบกวน */
     background-image:
-      radial-gradient(900px 480px at 8% -8%, rgba(122,154,63,.08), transparent 60%),
-      radial-gradient(700px 460px at 100% 6%, rgba(200,155,74,.07), transparent 55%);
-    background-repeat:no-repeat, no-repeat;
+      radial-gradient(900px 480px at 8% -8%, rgba(122,154,63,.10), transparent 60%),
+      radial-gradient(700px 460px at 100% 6%, rgba(200,155,74,.09), transparent 55%),
+      repeating-linear-gradient(114deg, rgba(76,107,38,.030) 0 1.5px, transparent 1.5px 13px),
+      url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='170'%20height='170'%20viewBox='0%200%20170%20170'%3E%3Cg%20fill='none'%20stroke='%234C6B26'%20stroke-opacity='0.10'%20stroke-width='1.5'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cg%20transform='translate%2834%2036%29%20rotate%28-28%29%20scale%281.0%29'%3E%3Cpath%20d='M0,-17%20Q11,-6%200,17%20Q-11,-6%200,-17%20Z'/%3E%3Cpath%20d='M0,-14%20V14'/%3E%3Cpath%20d='M0,-7%20L6.5,-2'/%3E%3Cpath%20d='M0,-7%20L-6.5,-2'/%3E%3Cpath%20d='M0,1%20L6.5,6'/%3E%3Cpath%20d='M0,1%20L-6.5,6'/%3E%3C/g%3E%3Cg%20transform='translate%28122%2088%29%20rotate%2842%29%20scale%280.82%29'%3E%3Cpath%20d='M0,-17%20Q11,-6%200,17%20Q-11,-6%200,-17%20Z'/%3E%3Cpath%20d='M0,-14%20V14'/%3E%3Cpath%20d='M0,-7%20L6.5,-2'/%3E%3Cpath%20d='M0,-7%20L-6.5,-2'/%3E%3Cpath%20d='M0,1%20L6.5,6'/%3E%3Cpath%20d='M0,1%20L-6.5,6'/%3E%3C/g%3E%3Cg%20transform='translate%2870%20140%29%20rotate%28163%29%20scale%280.9%29'%3E%3Cpath%20d='M0,-17%20Q11,-6%200,17%20Q-11,-6%200,-17%20Z'/%3E%3Cpath%20d='M0,-14%20V14'/%3E%3Cpath%20d='M0,-7%20L6.5,-2'/%3E%3Cpath%20d='M0,-7%20L-6.5,-2'/%3E%3Cpath%20d='M0,1%20L6.5,6'/%3E%3Cpath%20d='M0,1%20L-6.5,6'/%3E%3C/g%3E%3Cg%20transform='translate%28152%2018%29%20rotate%28-70%29%20scale%280.6%29'%3E%3Cpath%20d='M0,-17%20Q11,-6%200,17%20Q-11,-6%200,-17%20Z'/%3E%3Cpath%20d='M0,-14%20V14'/%3E%3Cpath%20d='M0,-7%20L6.5,-2'/%3E%3Cpath%20d='M0,-7%20L-6.5,-2'/%3E%3Cpath%20d='M0,1%20L6.5,6'/%3E%3Cpath%20d='M0,1%20L-6.5,6'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    background-repeat:no-repeat, no-repeat, repeat, repeat;
+    background-size:auto, auto, auto, 170px 170px;
+    background-attachment:fixed, fixed, fixed, fixed;
     color:var(--ink);font-family:'IBM Plex Sans Thai',sans-serif;min-height:100vh;
   }
   .wrap{max-width:none;width:100%;margin:0 auto;padding:48px clamp(48px,8vw,160px) 80px;}
@@ -214,16 +222,19 @@
   .stat-icon.i-azuki{background:rgba(166,67,46,.13);color:var(--azuki);}
   .stat-icon.i-bamboo{background:rgba(200,155,74,.16);color:#8a6a2f;}
   .stat-icon.i-gray{background:rgba(140,148,130,.15);color:var(--ink-faint);}
-  .stat-label{font-family:'IBM Plex Mono',monospace;font-size:16.9px;letter-spacing:.05em;color:var(--ink-faint);text-transform:uppercase;}
+  .stat-label{font-family:'IBM Plex Mono',monospace;font-size:18.4px;letter-spacing:.05em;color:var(--ink-faint);text-transform:uppercase;}
   .stat-value{font-family:'Zen Maru Gothic',sans-serif;font-weight:900;font-size:46.6px;color:var(--ink);}
   .stat-value.c-matcha{color:var(--matcha-deep);}
   .stat-value.c-azuki{color:var(--azuki);}
   .stat-value.c-bamboo{color:#8a6a2f;}
 
   .section{margin-bottom:42px;}
-  .section-title{font-family:'Zen Maru Gothic',sans-serif;font-weight:700;font-size:32.1px;color:var(--ink);margin:0 0 4px;display:flex;align-items:center;gap:7px;}
-  .section-title svg{width:26px;height:26px;color:var(--matcha);flex-shrink:0;}
-  .section-desc{font-size:18.6px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-bottom:16px;}
+  .section-title{font-family:'Zen Maru Gothic',sans-serif;font-weight:700;font-size:36px;color:var(--ink);margin:0 0 5px;display:flex;align-items:center;gap:11px;}
+  /* v88: ไอคอนหัวข้อเปลี่ยนจากหยดน้ำเป็นใบชา ใส่วงกลมสีมัทฉะรองให้เป็นจุดนำสายตา */
+  .section-title svg{width:25px;height:25px;color:var(--matcha-deep);flex-shrink:0;}
+  .section-title .sec-mark{width:44px;height:44px;border-radius:14px;flex-shrink:0;
+    background:rgba(122,154,63,.15);display:flex;align-items:center;justify-content:center;}
+  .section-desc{font-size:20.5px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-bottom:18px;line-height:1.55;}
   .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
   .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;}
   @media (max-width:900px){.grid-2,.grid-3{grid-template-columns:1fr;}}
@@ -264,26 +275,26 @@
   details summary:hover{color:var(--matcha-deep);}
 
   /* v84: วิธีคำนวณ — เลิกพับซ่อน โชว์เป็นตัวเล็กใต้หัวข้อเลย ไม่ต้องกด */
-  .calc-note{background:var(--panel);border:1px solid var(--hairline);border-left:3px solid var(--matcha);border-radius:10px;padding:12px 18px;margin:-6px 0 16px;font-size:16px;color:var(--ink-soft);line-height:1.75;}
-  .calc-note .cn-head{font-weight:700;color:var(--matcha-deep);font-size:16.5px;margin-bottom:5px;}
+  .calc-note{background:var(--panel);border:1px solid var(--hairline);border-left:4px solid var(--matcha);border-radius:10px;padding:14px 20px;margin:-6px 0 16px;font-size:17.5px;color:var(--ink-soft);line-height:1.75;}
+  .calc-note .cn-head{font-weight:700;color:var(--matcha-deep);font-size:18.5px;margin-bottom:5px;}
   .calc-note .cn-list > div{margin-bottom:3px;}
   .calc-note .cn-dim{color:var(--ink-faint);}
-  .calc-note .cn-formula{margin-top:9px;padding:8px 12px;background:var(--paper);border-radius:6px;font-family:'IBM Plex Mono',monospace;font-size:14.5px;color:var(--ink-faint);line-height:1.8;}
-  .calc-note .cn-warn{margin-top:8px;padding:8px 12px;background:rgba(200,155,74,.10);border-radius:6px;font-size:15.5px;color:var(--ink-soft);}
+  .calc-note .cn-formula{margin-top:9px;padding:8px 12px;background:var(--paper);border-radius:6px;font-family:'IBM Plex Mono',monospace;font-size:15.8px;color:var(--ink-soft);line-height:1.8;}
+  .calc-note .cn-warn{margin-top:9px;padding:9px 13px;background:rgba(200,155,74,.16);border-radius:6px;font-size:17px;color:var(--ink-soft);}
   /* v85: ช่องสูตร (ซ้าย) คู่กับช่องตัวเลขจริงที่คำนวณได้ (ขวา) เทียบกันได้ทันทีว่าสูตรแทนค่าอะไรลงไป */
   .cn-split{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start;margin-top:9px;}
   .cn-split > *{margin-top:0 !important;}
-  .cn-live{padding:8px 12px;background:var(--paper);border:1px dashed var(--hairline-strong);border-radius:6px;font-size:14.5px;color:var(--ink-soft);line-height:1.7;}
+  .cn-live{padding:10px 13px;background:var(--paper);border:1px dashed var(--hairline-strong);border-radius:6px;font-size:15.8px;color:var(--ink-soft);line-height:1.7;}
   .cn-live .cl-title{font-family:'IBM Plex Mono',monospace;font-size:13px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:5px;}
   .cn-live .cl-var{font-family:'IBM Plex Mono',monospace;font-size:14px;color:var(--matcha-deep);font-weight:600;}
   .cn-live .cl-row{display:flex;gap:8px;justify-content:space-between;border-bottom:1px dotted var(--hairline);padding:2px 0;}
   .cn-live .cl-row:last-child{border-bottom:none;}
-  .cn-live .cl-calc{font-family:'IBM Plex Mono',monospace;font-size:13.5px;color:var(--ink-faint);}
+  .cn-live .cl-calc{font-family:'IBM Plex Mono',monospace;font-size:14.8px;color:var(--ink-soft);}
   .cn-live .cl-out{font-weight:700;color:var(--ink);white-space:nowrap;}
   .cn-live .cl-dd{color:#A6432E;}
   /* v86: ช่องตัวเลขจริงเปลี่ยนเป็นพับได้ + แยกออเดอร์ / จำนวนชิ้น */
   .cn-livebox{background:var(--paper);border:1px dashed var(--hairline-strong);border-radius:6px;padding:8px 12px;}
-  .cn-livebox > summary{cursor:pointer;font-family:'IBM Plex Mono',monospace;font-size:13.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-faint);list-style:none;}
+  .cn-livebox > summary{cursor:pointer;font-family:'IBM Plex Mono',monospace;font-size:15px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-faint);list-style:none;}
   .cn-livebox > summary:hover{color:var(--matcha-deep);}
   .cn-livebox[open] > summary{margin-bottom:7px;padding-bottom:6px;border-bottom:1px solid var(--hairline);}
   .cn-live + .cn-live{margin-top:9px;padding-top:8px;border-top:1px solid var(--hairline);}
@@ -334,6 +345,7 @@
   body.exporting .stat-icon{width:56px !important;height:56px !important;}
   body.exporting .stat-icon svg{width:29px !important;height:29px !important;}
   body.exporting details{display:none !important;}              /* กล่อง "วิธีคิด" ที่พับอยู่ ไม่ต้องพิมพ์ */
+  body.exporting{background-image:none !important;}               /* v88: ลายใบชาไม่ต้องติดไปในภาพ export */
   body.exporting .calc-note{display:none !important;}            /* v84: กล่องวิธีคำนวณ ไม่ต้องติดไปในภาพ export */
 
   ::-webkit-scrollbar{width:7px;height:7px;}
@@ -371,7 +383,7 @@
     <div class="meta-right">
       Last fetched<br><span id="lastUpdated">—</span>
       <div id="dataFreshness" class="freshness"></div>
-      <div style="font-size:11.8px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-13-v87-blocked-tile</div>
+      <div style="font-size:11.8px;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-13-v88-matcha-theme</div>
       <div>
         <button class="btn-plain" id="refreshBtn" onclick="loadData()">Refresh</button>
         <button class="btn-plain" id="saveImgBtn" onclick="saveTabAsPNG()" style="margin-left:14px;">Save as PNG (แนวนอน, คมชัด)</button>
@@ -429,19 +441,19 @@
     </div>
 
     <div class="section">
-      <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>Weekly Order Volume</div>
+      <div class="section-title"><span class="sec-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 3.4C10.7 4.5 3.9 10.8 3.3 19.2c-.1 1.4 1.1 2.4 2.4 2.1 8.3-2.1 14.1-8.8 14.9-17.9z"/><path d="M17.5 6.5C12.2 9.6 8.3 14.4 6.5 20.2"/><path d="M11.4 7.6c.5 1.7.5 3.4 0 5.1"/><path d="M14.9 12.7c-1.7.3-3.3 1-4.7 2"/></svg></span>Weekly Order Volume</div>
       <div class="section-desc">Unique orders per week · จุดสีแดง = สัปดาห์ที่มี Double Day (1.1, 2.2, ... 12.12)</div>
       <div class="chart-panel"><div class="chart-box" style="height:270px;"><canvas id="chart_weekly"></canvas></div></div>
     </div>
 
     <div class="grid-3">
-      <div class="section"><div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>Packing On-Time</div><div class="section-desc">Target ≥ 98%</div><div class="chart-panel"><div class="chart-box"><canvas id="chart_packing"></canvas></div></div></div>
-      <div class="section"><div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>Orders by Platform</div><div class="section-desc">Platform vs walk-in</div><div class="chart-panel"><div class="chart-box"><canvas id="chart_platform"></canvas></div></div></div>
-      <div class="section"><div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>Shipping Method</div><div class="section-desc">Share by delivery type</div><div class="chart-panel"><div class="chart-box"><canvas id="chart_urgent"></canvas></div></div></div>
+      <div class="section"><div class="section-title"><span class="sec-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 3.4C10.7 4.5 3.9 10.8 3.3 19.2c-.1 1.4 1.1 2.4 2.4 2.1 8.3-2.1 14.1-8.8 14.9-17.9z"/><path d="M17.5 6.5C12.2 9.6 8.3 14.4 6.5 20.2"/><path d="M11.4 7.6c.5 1.7.5 3.4 0 5.1"/><path d="M14.9 12.7c-1.7.3-3.3 1-4.7 2"/></svg></span>Packing On-Time</div><div class="section-desc">Target ≥ 98%</div><div class="chart-panel"><div class="chart-box"><canvas id="chart_packing"></canvas></div></div></div>
+      <div class="section"><div class="section-title"><span class="sec-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 3.4C10.7 4.5 3.9 10.8 3.3 19.2c-.1 1.4 1.1 2.4 2.4 2.1 8.3-2.1 14.1-8.8 14.9-17.9z"/><path d="M17.5 6.5C12.2 9.6 8.3 14.4 6.5 20.2"/><path d="M11.4 7.6c.5 1.7.5 3.4 0 5.1"/><path d="M14.9 12.7c-1.7.3-3.3 1-4.7 2"/></svg></span>Orders by Platform</div><div class="section-desc">Platform vs walk-in</div><div class="chart-panel"><div class="chart-box"><canvas id="chart_platform"></canvas></div></div></div>
+      <div class="section"><div class="section-title"><span class="sec-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 3.4C10.7 4.5 3.9 10.8 3.3 19.2c-.1 1.4 1.1 2.4 2.4 2.1 8.3-2.1 14.1-8.8 14.9-17.9z"/><path d="M17.5 6.5C12.2 9.6 8.3 14.4 6.5 20.2"/><path d="M11.4 7.6c.5 1.7.5 3.4 0 5.1"/><path d="M14.9 12.7c-1.7.3-3.3 1-4.7 2"/></svg></span>Shipping Method</div><div class="section-desc">Share by delivery type</div><div class="chart-panel"><div class="chart-box"><canvas id="chart_urgent"></canvas></div></div></div>
     </div>
 
     <div class="section">
-      <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>Sales Channel Share</div>
+      <div class="section-title"><span class="sec-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 3.4C10.7 4.5 3.9 10.8 3.3 19.2c-.1 1.4 1.1 2.4 2.4 2.1 8.3-2.1 14.1-8.8 14.9-17.9z"/><path d="M17.5 6.5C12.2 9.6 8.3 14.4 6.5 20.2"/><path d="M11.4 7.6c.5 1.7.5 3.4 0 5.1"/><path d="M14.9 12.7c-1.7.3-3.3 1-4.7 2"/></svg></span>Sales Channel Share</div>
       <div class="section-desc">Orders by Sender Name</div>
       <div class="chart-panel">
         <div class="channel-wrap">
@@ -452,7 +464,7 @@
     </div>
 
     <div class="section">
-      <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>Order Detail</div>
+      <div class="section-title"><span class="sec-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 3.4C10.7 4.5 3.9 10.8 3.3 19.2c-.1 1.4 1.1 2.4 2.4 2.1 8.3-2.1 14.1-8.8 14.9-17.9z"/><path d="M17.5 6.5C12.2 9.6 8.3 14.4 6.5 20.2"/><path d="M11.4 7.6c.5 1.7.5 3.4 0 5.1"/><path d="M14.9 12.7c-1.7.3-3.3 1-4.7 2"/></svg></span>Order Detail</div>
       <div class="section-desc">แสดงเฉพาะรายการที่ไม่ใช่ "ส่งในวัน" (ก่อนกำหนด/ล่าช้า/ไม่ระบุ) · เรียง Remark Team notes ก่อน แล้วตามด้วยล่าสุด</div>
       <div class="table-panel">
         <div class="table-scroll remark-scroll">
@@ -500,18 +512,18 @@
     </div>
 
     <div class="section">
-      <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>Weekly Line Items</div>
+      <div class="section-title"><span class="sec-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 3.4C10.7 4.5 3.9 10.8 3.3 19.2c-.1 1.4 1.1 2.4 2.4 2.1 8.3-2.1 14.1-8.8 14.9-17.9z"/><path d="M17.5 6.5C12.2 9.6 8.3 14.4 6.5 20.2"/><path d="M11.4 7.6c.5 1.7.5 3.4 0 5.1"/><path d="M14.9 12.7c-1.7.3-3.3 1-4.7 2"/></svg></span>Weekly Line Items</div>
       <div class="section-desc">จำนวนสินค้าที่ออกต่อสัปดาห์ (รวม quantity) · จุดสีแดง = สัปดาห์ที่มี Double Day (1.1, 2.2, ... 12.12)</div>
       <div class="chart-panel"><div class="chart-box" style="height:270px;"><canvas id="chart_weekly2"></canvas></div></div>
     </div>
 
     <div class="grid-2">
-      <div class="section"><div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>Top 5 Products</div><div class="section-desc">Highest line-item count</div><div class="chart-panel"><div class="chart-box" style="height:270px;"><canvas id="chart_top5"></canvas></div></div></div>
-      <div class="section"><div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>Out-of-Stock Rate</div><div class="section-desc">Target ≥ 99% · % คิดจาก WH ส่งของให้ PK ภายในกี่วันที่ต้องส่ง (ว่าง/ไม่ระบุ = Late)</div><div class="chart-panel"><div class="chart-box" style="height:270px;"><canvas id="chart_oos"></canvas></div></div></div>
+      <div class="section"><div class="section-title"><span class="sec-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 3.4C10.7 4.5 3.9 10.8 3.3 19.2c-.1 1.4 1.1 2.4 2.4 2.1 8.3-2.1 14.1-8.8 14.9-17.9z"/><path d="M17.5 6.5C12.2 9.6 8.3 14.4 6.5 20.2"/><path d="M11.4 7.6c.5 1.7.5 3.4 0 5.1"/><path d="M14.9 12.7c-1.7.3-3.3 1-4.7 2"/></svg></span>Top 5 Products</div><div class="section-desc">Highest line-item count</div><div class="chart-panel"><div class="chart-box" style="height:270px;"><canvas id="chart_top5"></canvas></div></div></div>
+      <div class="section"><div class="section-title"><span class="sec-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 3.4C10.7 4.5 3.9 10.8 3.3 19.2c-.1 1.4 1.1 2.4 2.4 2.1 8.3-2.1 14.1-8.8 14.9-17.9z"/><path d="M17.5 6.5C12.2 9.6 8.3 14.4 6.5 20.2"/><path d="M11.4 7.6c.5 1.7.5 3.4 0 5.1"/><path d="M14.9 12.7c-1.7.3-3.3 1-4.7 2"/></svg></span>Out-of-Stock Rate</div><div class="section-desc">Target ≥ 99% · % คิดจาก WH ส่งของให้ PK ภายในกี่วันที่ต้องส่ง (ว่าง/ไม่ระบุ = Late)</div><div class="chart-panel"><div class="chart-box" style="height:270px;"><canvas id="chart_oos"></canvas></div></div></div>
     </div>
 
     <div class="section">
-      <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>Order Detail</div>
+      <div class="section-title"><span class="sec-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 3.4C10.7 4.5 3.9 10.8 3.3 19.2c-.1 1.4 1.1 2.4 2.4 2.1 8.3-2.1 14.1-8.8 14.9-17.9z"/><path d="M17.5 6.5C12.2 9.6 8.3 14.4 6.5 20.2"/><path d="M11.4 7.6c.5 1.7.5 3.4 0 5.1"/><path d="M14.9 12.7c-1.7.3-3.3 1-4.7 2"/></svg></span>Order Detail</div>
       <div class="section-desc">แสดงเฉพาะรายการที่ไม่ใช่ "ส่งในวัน" (ก่อนกำหนด/ล่าช้า/ไม่ระบุ) · เรียง Remark Team notes ก่อน แล้วตามด้วยล่าสุด</div>
       <div class="table-panel">
         <div class="table-scroll remark-scroll">
@@ -551,7 +563,7 @@
     </div>
 
     <div class="section">
-      <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>รายการที่ต้องเติม Stock <span style="font-size:19.5px;font-weight:400;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;">(ไม่รวมที่ไม่มีโควต้า / ไม่มี Raw Material)</span></div>
+      <div class="section-title"><span class="sec-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 3.4C10.7 4.5 3.9 10.8 3.3 19.2c-.1 1.4 1.1 2.4 2.4 2.1 8.3-2.1 14.1-8.8 14.9-17.9z"/><path d="M17.5 6.5C12.2 9.6 8.3 14.4 6.5 20.2"/><path d="M11.4 7.6c.5 1.7.5 3.4 0 5.1"/><path d="M14.9 12.7c-1.7.3-3.3 1-4.7 2"/></svg></span>รายการที่ต้องเติม Stock <span style="font-size:19.5px;font-weight:400;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;">(ไม่รวมที่ไม่มีโควต้า / ไม่มี Raw Material)</span></div>
       <div class="section-desc">เรียงตามคะแนนขายดี · ไม่นับสินค้าที่ Remark ระบุว่า "ไม่มีโควต้า" หรือ "ไม่มี Raw Material"</div>
       <div class="table-panel">
         <div class="table-scroll remark-scroll">
@@ -564,7 +576,7 @@
     </div>
 
     <div class="section">
-      <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>สาเหตุที่ยังไม่ได้เติม</div>
+      <div class="section-title"><span class="sec-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 3.4C10.7 4.5 3.9 10.8 3.3 19.2c-.1 1.4 1.1 2.4 2.4 2.1 8.3-2.1 14.1-8.8 14.9-17.9z"/><path d="M17.5 6.5C12.2 9.6 8.3 14.4 6.5 20.2"/><path d="M11.4 7.6c.5 1.7.5 3.4 0 5.1"/><path d="M14.9 12.7c-1.7.3-3.3 1-4.7 2"/></svg></span>สาเหตุที่ยังไม่ได้เติม</div>
       <div class="section-desc">Products blocked, by reason</div>
       <div class="chart-panel"><div class="chart-box" style="height:270px;"><canvas id="chart_remark3"></canvas></div></div>
       <div class="table-panel" style="margin-top:14px;">
@@ -578,7 +590,7 @@
     </div>
 
     <div class="section">
-      <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>รวมทั้งหมด</div>
+      <div class="section-title"><span class="sec-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 3.4C10.7 4.5 3.9 10.8 3.3 19.2c-.1 1.4 1.1 2.4 2.4 2.1 8.3-2.1 14.1-8.8 14.9-17.9z"/><path d="M17.5 6.5C12.2 9.6 8.3 14.4 6.5 20.2"/><path d="M11.4 7.6c.5 1.7.5 3.4 0 5.1"/><path d="M14.9 12.7c-1.7.3-3.3 1-4.7 2"/></svg></span>รวมทั้งหมด</div>
       <div class="section-desc">ทุกสินค้า — เรียง "ต้องเติม" ก่อน แล้วเรียงตามคะแนนขายดีมาก→น้อยในแต่ละกลุ่ม</div>
       <div class="table-panel" style="overflow-x:auto;">
         <div class="table-scroll remark-scroll">
@@ -608,7 +620,7 @@
     </div>
 
     <div class="section">
-      <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>พยากรณ์รายสัปดาห์ (Weekly Forecast)</div>
+      <div class="section-title"><span class="sec-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 3.4C10.7 4.5 3.9 10.8 3.3 19.2c-.1 1.4 1.1 2.4 2.4 2.1 8.3-2.1 14.1-8.8 14.9-17.9z"/><path d="M17.5 6.5C12.2 9.6 8.3 14.4 6.5 20.2"/><path d="M11.4 7.6c.5 1.7.5 3.4 0 5.1"/><path d="M14.9 12.7c-1.7.3-3.3 1-4.7 2"/></svg></span>พยากรณ์รายสัปดาห์ (Weekly Forecast)</div>
       <div class="section-desc">ยอดจริงรายสัปดาห์ (นับตามวันที่ต้องการจัดส่ง) + ประมาณการ 4 สัปดาห์ข้างหน้า</div>
       <div class="calc-note">
         <div class="cn-head">วิธีคิด — บวกกัน 3 อย่าง</div>
@@ -639,7 +651,7 @@
     </div>
 
     <div class="section">
-      <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>พยากรณ์รายวัน (Daily Forecast)</div>
+      <div class="section-title"><span class="sec-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 3.4C10.7 4.5 3.9 10.8 3.3 19.2c-.1 1.4 1.1 2.4 2.4 2.1 8.3-2.1 14.1-8.8 14.9-17.9z"/><path d="M17.5 6.5C12.2 9.6 8.3 14.4 6.5 20.2"/><path d="M11.4 7.6c.5 1.7.5 3.4 0 5.1"/><path d="M14.9 12.7c-1.7.3-3.3 1-4.7 2"/></svg></span>พยากรณ์รายวัน (Daily Forecast)</div>
       <div class="section-desc">ยอดจริงตั้งแต่ ม.ค. 2569 ถึงวันล่าสุด (นับตามวันที่ต้องการจัดส่ง) + ประมาณการ 7 วันข้างหน้า</div>
       <div class="calc-note">
         <div class="cn-head">วิธีคิด — ให้น้ำหนักวันใกล้มากกว่าวันไกล</div>
@@ -675,7 +687,7 @@
     </div>
 
     <div class="section">
-      <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>พยากรณ์อัตรากำลังคน (Staffing Forecast)</div>
+      <div class="section-title"><span class="sec-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 3.4C10.7 4.5 3.9 10.8 3.3 19.2c-.1 1.4 1.1 2.4 2.4 2.1 8.3-2.1 14.1-8.8 14.9-17.9z"/><path d="M17.5 6.5C12.2 9.6 8.3 14.4 6.5 20.2"/><path d="M11.4 7.6c.5 1.7.5 3.4 0 5.1"/><path d="M14.9 12.7c-1.7.3-3.3 1-4.7 2"/></svg></span>พยากรณ์อัตรากำลังคน (Staffing Forecast)</div>
       <div class="section-desc">คำนวณจากยอดพยากรณ์ 7 วันข้างหน้า (จากกราฟรายวันด้านบน) · แถวสีไฮไลท์ = วันที่ตรงกับ Double Day</div>
       <div class="calc-note">
         <div class="cn-head">วิธีคิดจำนวนคน</div>
@@ -728,19 +740,19 @@
     </div>
 
     <div class="section">
-      <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>Stock vs Demand 1 สัปดาห์</div>
+      <div class="section-title"><span class="sec-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 3.4C10.7 4.5 3.9 10.8 3.3 19.2c-.1 1.4 1.1 2.4 2.4 2.1 8.3-2.1 14.1-8.8 14.9-17.9z"/><path d="M17.5 6.5C12.2 9.6 8.3 14.4 6.5 20.2"/><path d="M11.4 7.6c.5 1.7.5 3.4 0 5.1"/><path d="M14.9 12.7c-1.7.3-3.3 1-4.7 2"/></svg></span>Stock vs Demand 1 สัปดาห์</div>
       <div class="section-desc">เรียงตาม demand มากสุด → น้อยสุด · แท่งแดงคือส่วนที่ stock ไม่พอ 1 สัปดาห์ (คำนวณจากพฤติกรรมสั่งซื้อ ไม่ใช่ตัวเลขจากชีต Replenishment)</div>
       <div class="chart-panel"><div class="chart-box" style="height:400px;"><canvas id="chart_forecast_1w"></canvas></div></div>
     </div>
 
     <div class="section">
-      <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>Stock vs Demand 4 สัปดาห์ (1 เดือน)</div>
+      <div class="section-title"><span class="sec-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 3.4C10.7 4.5 3.9 10.8 3.3 19.2c-.1 1.4 1.1 2.4 2.4 2.1 8.3-2.1 14.1-8.8 14.9-17.9z"/><path d="M17.5 6.5C12.2 9.6 8.3 14.4 6.5 20.2"/><path d="M11.4 7.6c.5 1.7.5 3.4 0 5.1"/><path d="M14.9 12.7c-1.7.3-3.3 1-4.7 2"/></svg></span>Stock vs Demand 4 สัปดาห์ (1 เดือน)</div>
       <div class="section-desc">เรียงตาม demand มากสุด → น้อยสุด · แท่งแดงคือส่วนที่ stock ไม่พอใน 1 เดือน (คำนวณจากพฤติกรรมสั่งซื้อ ไม่ใช่ตัวเลขจากชีต Replenishment)</div>
       <div class="chart-panel"><div class="chart-box" style="height:400px;"><canvas id="chart_forecast_4w"></canvas></div></div>
     </div>
 
     <div class="section">
-      <div class="section-title"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8 6 6 10 6 13a6 6 0 0 0 12 0c0-3-2-7-6-11z"/></svg>Stock Depletion Forecast</div>
+      <div class="section-title"><span class="sec-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 3.4C10.7 4.5 3.9 10.8 3.3 19.2c-.1 1.4 1.1 2.4 2.4 2.1 8.3-2.1 14.1-8.8 14.9-17.9z"/><path d="M17.5 6.5C12.2 9.6 8.3 14.4 6.5 20.2"/><path d="M11.4 7.6c.5 1.7.5 3.4 0 5.1"/><path d="M14.9 12.7c-1.7.3-3.3 1-4.7 2"/></svg></span>Stock Depletion Forecast</div>
       <div class="section-desc">เรียงจากวิกฤตที่สุด — Avg weekly demand คำนวณจากข้อมูล order ย้อนหลัง</div>
       <div class="table-panel">
         <div class="table-scroll remark-scroll">
