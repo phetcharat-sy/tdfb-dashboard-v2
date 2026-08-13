@@ -336,9 +336,12 @@
   body.present #presentBtn{color:var(--azuki);border-bottom-color:var(--azuki);}
 
   /* v98: คำอธิบายใต้ช่องกรอก — บอกกติกาตรงจุดที่กรอก ไม่ต้องไปกางกล่องวิธีคิด */
-  .input-hint{margin-top:5px;font-family:'IBM Plex Sans Thai',sans-serif;
-    font-size:calc(15.5px * var(--type-scale));color:var(--ink-faint);line-height:1.45;max-width:230px;}
-  .input-hint b{color:var(--azuki);font-weight:600;}
+  /* v102: กล่องผลลัพธ์เวลาเลิกงาน — ไฮไลต์ให้เด่นเพราะเป็นคำตอบที่คนเปิดมาดู
+     แต่ย่อฟอนต์ลงจาก 24.1 เหลือ 18.5 เพราะของเดิมใหญ่กว่าหัวข้อแผงจนแย่งสายตา */
+  .staffing-result{flex:1;min-width:240px;font-family:'IBM Plex Sans Thai',sans-serif;
+    font-size:calc(18.5px * var(--type-scale));line-height:1.55;color:var(--ink-soft);}
+  .staffing-result:not(:empty){padding:10px 14px;border-radius:10px;
+    background:rgba(122,154,63,.15);border-left:4px solid var(--matcha);}
 
   .cn-livebox{background:var(--paper);border:1px dashed var(--hairline-strong);border-radius:6px;padding:8px 12px;}
   .cn-livebox .cl-boxtitle{font-family:'IBM Plex Mono',monospace;font-size:calc(17.2px * var(--type-scale));letter-spacing:.04em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:7px;padding-bottom:6px;border-bottom:1px solid var(--hairline);}
@@ -428,7 +431,7 @@
     <div class="meta-right">
       Last fetched<br><span id="lastUpdated">—</span>
       <div id="dataFreshness" class="freshness"></div>
-      <div id="buildTag" style="font-size:calc(13.6px * var(--type-scale));color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-13-v101-lunch-always</div>
+      <div id="buildTag" style="font-size:calc(13.6px * var(--type-scale));color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-13-v103-no-input-hint</div>
       <div>
         <button class="btn-plain" id="refreshBtn" onclick="loadData()">Refresh</button>
         <button class="btn-plain" id="saveImgBtn" onclick="saveTabAsPNG()" style="margin-left:14px;">Save as PNG (แนวนอน, คมชัด)</button>
@@ -743,22 +746,22 @@
         </div>
         <div class="cn-warn"><b>ช่อง "จำนวนคนที่มาทำงานจริง" ตอบคนละคำถามกับตารางข้างล่าง</b> — ตารางบอกว่า<u>ควรมีกี่คน</u> ส่วนช่องกรอกบอกว่า<u>ถ้ามาเท่านี้จะเสร็จกี่โมง</u><br>
           ทั้งสองที่คิด<b>เฉพาะคนแพ็ค</b>เท่านั้น · คนท้ายไลน์ต้องมี 1 คนแน่ๆ แต่<b>ไม่นับเข้ากำลังการแพ็ค</b> เพราะแค่แยกของ ไม่ได้แพ็ค</div>
-        <div class="cn-warn"><b>เรื่องชั่วโมง — 6 กับ 7 ไม่ตีกัน</b><br>
+        <div class="cn-warn"><b>เรื่องชั่วโมง — 6 กับ 8 ไม่ตีกัน</b><br>
           <b>6 ชม.</b> = เวลาแพ็คสุทธิที่ใช้คิดอัตรา 200 ออเดอร์/คน (<u>หักพักเที่ยงไปแล้ว</u>) จึงห้ามหักพักซ้ำอีก<br>
-          <b>7 ชม.</b> = เวลาแพ็คสุทธิที่มีให้ในวันปกติ (09:00–17:00 = 8 ชม. หักพักเที่ยง 1 ชม.) ถ้างานต้องใช้เกิน 7 ชม. ส่วนเกินคือ <b>OT</b><br>
+          <b>8 ชม.</b> = เวลาแพ็คสุทธิที่มีให้ในวันปกติ (08:00–17:00 = 9 ชม. หักพักเที่ยง 1 ชม.) ถ้างานต้องใช้เกิน 8 ชม. ส่วนเกินคือ <b>OT</b><br>
           <span class="cn-dim">พักเที่ยงจะบวกเข้าเวลาเลิกเฉพาะวันที่งานยังไม่จบก่อนเที่ยง — ถ้าออเดอร์น้อยจบ 11:00 ก็ไม่ต้องบวก</span><br>
           <span class="cn-dim">กติกาข้อนี้ใช้กับ <b>ฝั่ง Packing เท่านั้น</b> · ฝั่ง WH ยังใช้สูตรเดิม (ไม่หักคนท้ายไลน์ ไม่บวกพักเที่ยง OT นับจากเกิน 6 ชม.)</span></div>
         <div class="cn-formula">ตาราง (ควรมีกี่คน): <code>Packing = ceil(ออเดอร์ ÷ 200) + 1 ท้ายไลน์</code> · <code>WH = ceil(ชิ้น ÷ 528)</code><br>
           ช่องกรอก (เสร็จกี่โมง): <code>คนแพ็ค = คนที่ใส่ − 1</code> · <code>เวลาสุทธิ = ออเดอร์ ÷ (คนแพ็ค × 33)</code><br>
-          <code>เวลาเลิก = 09:00 + เวลาสุทธิ + พักเที่ยง 1 ชม.</code> · <code>OT = ส่วนที่เลย 17:00</code></div>
+          <code>เวลาเลิก = 08:00 + เวลาสุทธิ + พักเที่ยง 1 ชม.</code> · <code>OT = ส่วนที่เลย 17:00</code></div>
       </details>
       <div class="grid-2">
         <div class="table-panel">
-          <div style="font-size:calc(21.4px * var(--type-scale));color:var(--ink-soft);font-weight:600;margin-bottom:8px;">Packing / Delivery <span style="font-size:calc(15.9px * var(--type-scale));color:var(--ink-faint);font-weight:400;">(เริ่มกะ 09:00 น.)</span></div>
+          <div style="font-size:calc(21.4px * var(--type-scale));color:var(--ink-soft);font-weight:600;margin-bottom:8px;">Packing / Delivery <span style="font-size:calc(15.9px * var(--type-scale));color:var(--ink-faint);font-weight:400;">(เริ่มกะ 08:00 น.)</span></div>
           <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px;padding:12px 14px;background:var(--paper);border:1px solid var(--hairline);border-radius:10px;">
             <div class="filter-field"><label style="font-size:calc(21.8px * var(--type-scale));">วันที่</label><select id="staffing_delivery_date" onchange="onDeliveryStaffingChange()" style="font-size:calc(27.6px * var(--type-scale));"></select></div>
-            <div class="filter-field"><label style="font-size:calc(21.8px * var(--type-scale));">จำนวนคนที่มาทำงานจริง</label><input type="number" min="2" id="staffing_delivery_staff" placeholder="เช่น 4" oninput="onDeliveryStaffingChange()" style="max-width:110px;font-size:calc(27.6px * var(--type-scale));"><div class="input-hint">ใส่ยอดคนทั้งกะ ระบบ <b>−1 คนท้ายไลน์</b> ให้เอง (คนนั้นแยกของ ไม่ได้แพ็ค)<br><span style="color:var(--ink-faint);">แพ็คได้ 7 ชม. (09:00–17:00 หักพักเที่ยง) · เกินจากนั้นเป็น OT</span></div></div>
-            <div id="staffing_delivery_result" style="font-family:'IBM Plex Sans Thai';font-size:calc(24.1px * var(--type-scale));color:var(--ink-soft);flex:1;min-width:220px;"></div>
+            <div class="filter-field"><label style="font-size:calc(21.8px * var(--type-scale));">จำนวนคนที่มาทำงานจริง</label><input type="number" min="2" id="staffing_delivery_staff" placeholder="เช่น 4" oninput="onDeliveryStaffingChange()" style="max-width:110px;font-size:calc(27.6px * var(--type-scale));"></div>
+            <div id="staffing_delivery_result" class="staffing-result"></div>
           </div>
           <div class="table-scroll">
             <table class="data-table">
@@ -778,7 +781,7 @@
           <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px;padding:12px 14px;background:var(--paper);border:1px solid var(--hairline);border-radius:10px;">
             <div class="filter-field"><label style="font-size:calc(21.8px * var(--type-scale));">วันที่</label><select id="staffing_wh_date" onchange="onWhStaffingChange()" style="font-size:calc(27.6px * var(--type-scale));"></select></div>
             <div class="filter-field"><label style="font-size:calc(21.8px * var(--type-scale));">จำนวนคนที่มีจริง</label><input type="number" min="1" id="staffing_wh_staff" placeholder="เช่น 2" oninput="onWhStaffingChange()" style="max-width:110px;font-size:calc(27.6px * var(--type-scale));"></div>
-            <div id="staffing_wh_result" style="font-family:'IBM Plex Sans Thai';font-size:calc(24.1px * var(--type-scale));color:var(--ink-soft);flex:1;min-width:220px;"></div>
+            <div id="staffing_wh_result" class="staffing-result"></div>
           </div>
           <div class="table-scroll">
             <table class="data-table">
@@ -3368,7 +3371,7 @@ const STAFFING_CRITERIA = {
   /* v99: เลข 200 ออเดอร์/6 ชม. เป็นเวลาแพ็ค "สุทธิ" — หักพักเที่ยงออกไปแล้ว
      ดังนั้นห้ามหักพักซ้ำอีกในอัตราการผลิต ให้ไปบวกเป็นเวลาบนนาฬิกาตอนคิดว่าเลิกกี่โมง
      และบวกเฉพาะกรณีที่งานยังไม่จบก่อนเที่ยง (จบก่อนเที่ยงก็ไม่ต้องพัก)
-     ผลลัพธ์: วันปกติมีเวลาแพ็คสุทธิ 7 ชม. (09:00-17:00 หักพัก 1 ชม.) เกินจากนี้คือ OT */
+     ผลลัพธ์: วันปกติมีเวลาแพ็คสุทธิ 8 ชม. (08:00-17:00 = 9 ชม. หักพัก 1 ชม.) เกินจากนี้คือ OT */
   lunchStartTime: '12:00',
   lunchHours: 1,
   otAfterTime: '17:00'
@@ -3538,7 +3541,7 @@ function onDeliveryStaffingChange(){
   if(!row || !staffCount){ resultEl.textContent = ''; return; }
 
   const ratePerPersonPerHour = STAFFING_CRITERIA.ordersPerPersonPerDay / STAFFING_CRITERIA.packingHours;
-  const result = computeShiftOutcome(row.forecastedOrders, staffCount, ratePerPersonPerHour, '09:00', { excludeEndOfLine:true });
+  const result = computeShiftOutcome(row.forecastedOrders, staffCount, ratePerPersonPerHour, '08:00', { excludeEndOfLine:true });
   if(!result){ resultEl.textContent = ''; return; }
   if(result.notEnough){
     resultEl.innerHTML = '<span style="color:var(--azuki);">ใส่มา ' + result.staffAvailable +
