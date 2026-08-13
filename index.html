@@ -407,7 +407,7 @@
     <div class="meta-right">
       Last fetched<br><span id="lastUpdated">—</span>
       <div id="dataFreshness" class="freshness"></div>
-      <div style="font-size:calc(13.6px * var(--type-scale));color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-13-v94-present-mode</div>
+      <div style="font-size:calc(13.6px * var(--type-scale));color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-13-v95-forecast-labels</div>
       <div>
         <button class="btn-plain" id="refreshBtn" onclick="loadData()">Refresh</button>
         <button class="btn-plain" id="saveImgBtn" onclick="saveTabAsPNG()" style="margin-left:14px;">Save as PNG (แนวนอน, คมชัด)</button>
@@ -958,6 +958,9 @@ const lineDataLabelsPlugin = {
     const area = chart.chartArea;
     const boundaryIndex = (options.boundaryIndex === undefined) ? -1 : options.boundaryIndex;
     const everyNth      = (options.everyNth === undefined) ? 1 : options.everyNth;
+    // v95: ถ้าจุดพยากรณ์เยอะ (รายวัน 7 จุด) เลขจะเกาะกันเป็นพืด จึงเว้นแสดง
+    //      แต่จุดสุดท้ายต้องโชว์เสมอ เพราะเป็นตัวเลขที่คนดูจะเอาไปใช้วางแผน
+    const fcEveryNth    = (options.forecastEveryNth === undefined) ? 1 : options.forecastEveryNth;
     const showPeaks     = options.showPeaks !== false;
     const formatter     = options.formatter || (v => Number(v).toLocaleString('en-US'));
 
@@ -993,6 +996,9 @@ const lineDataLabelsPlugin = {
         let show;
         if(boundaryIndex < 0){
           show = everyNth <= 1 ? true : (index % everyNth === 0 || index === lastIdx);
+        } else if(isForecast && fcEveryNth > 1){
+          const step = index - boundaryIndex;
+          show = (step % fcEveryNth === 0) || index === lastIdx;
         } else if(emphasize){
           show = true;
         } else if(index === maxI || index === minI){
@@ -1003,19 +1009,21 @@ const lineDataLabelsPlugin = {
         if(!show) return;
 
         const text = formatter(value);
+        // v95: ย่อขนาดลงจาก 19/18/15 — เลขพยากรณ์เกาะกันแน่นที่ขอบขวา
+        //      ตัวเล็กลง = กล่องแคบลง = ซ้อนกันน้อยลงมาก (เลขพยากรณ์ยังเป็นตัวเอียงเหมือนเดิม)
         ctx.font = emphasize
-          ? (isForecast ? 'italic 700 ' + fz(19) + "px 'IBM Plex Mono', monospace"
-                        : '700 ' + fz(18) + "px 'IBM Plex Mono', monospace")
-          : '500 ' + fz(15) + "px 'IBM Plex Mono', monospace";
+          ? (isForecast ? 'italic 700 ' + fz(14.5) + "px 'IBM Plex Mono', monospace"
+                        : '700 ' + fz(15) + "px 'IBM Plex Mono', monospace")
+          : '500 ' + fz(12.5) + "px 'IBM Plex Mono', monospace";
         const w = ctx.measureText(text).width;
-        const h = emphasize ? fz(18) : fz(15);
+        const h = emphasize ? fz(15) : fz(12.5);
 
         const above = emphasize ? true : (index % 2 === 0);
         const baseY = above ? point.y - 9 : point.y + h + 8;
         const x = Math.max(area.left + w/2 + 2, Math.min(point.x, area.right - w/2 - 2));
 
         const hitTest = (yy) => {
-          const bx = { x1:x - w/2 - 3, x2:x + w/2 + 3, y1:yy - h - 2, y2:yy + 2 };
+          const bx = { x1:x - w/2 - 4, x2:x + w/2 + 4, y1:yy - h - 3, y2:yy + 3 };
           const clash = placed.some(p =>
             !(bx.x2 < p.x1 || bx.x1 > p.x2 || bx.y2 < p.y1 || bx.y1 > p.y2)
           );
@@ -1024,11 +1032,11 @@ const lineDataLabelsPlugin = {
 
         // ตัวสำคัญ (จุดคั่น/พยากรณ์) ห้ามหาย — ไล่ขยับขึ้นทีละแถวจนเจอที่ว่าง
         // ถ้าขึ้นชนเพดานแล้วยังไม่ว่าง ค่อยลองไล่ลงล่าง  ตัวธรรมดายังชนแล้วข้ามเหมือนเดิม
-        const STEP = h + 7;
+        const STEP = h + 5;
         let y = Math.max(area.top + h + 2, Math.min(baseY, area.bottom - 2));
         let res = hitTest(y);
         if(res.clash && emphasize){
-          for(let k = 1; k <= 10; k++){
+          for(let k = 1; k <= 16; k++){
             const up = baseY - STEP*k;
             if(up < area.top + h + 2) break;
             const t = hitTest(up);
@@ -1036,7 +1044,7 @@ const lineDataLabelsPlugin = {
           }
         }
         if(res.clash && emphasize){
-          for(let k = 1; k <= 6; k++){
+          for(let k = 1; k <= 10; k++){
             const dn = baseY + STEP*k;
             if(dn > area.bottom - 2) break;
             const t = hitTest(dn);
@@ -3234,7 +3242,9 @@ function renderTrendLineChart(canvasId, chartKey, series, seriesLabel){
   opts.plugins.lineDataLabels = {
     display: true,
     boundaryIndex,
-    everyNth: Math.max(1, Math.ceil(historical.length / 8))
+    everyNth: Math.max(1, Math.ceil(historical.length / 8)),
+    // รายสัปดาห์มี 4 จุด โชว์ครบได้ · รายวันมี 7 จุด ต้องเว้น ไม่งั้นเลขทับกันอ่านไม่ออก
+    forecastEveryNth: forecastData.length > 4 ? 3 : 1
   };
   opts.layout = { padding:{ top:34, right:52, bottom:16, left:6 } };
 
