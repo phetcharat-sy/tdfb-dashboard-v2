@@ -49,7 +49,11 @@
 
   .eyebrow{font-family:'IBM Plex Mono',monospace;font-size:calc(21.4px * var(--type-scale));letter-spacing:.2em;color:var(--matcha-deep);text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:7px;}
   .eyebrow svg{width:13px;height:13px;}
-  .header-row{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap;padding-bottom:24px;margin-bottom:30px;border-bottom:2px solid var(--matcha);}
+  /* v108: เดิม flex-wrap:wrap ทำให้บล็อคขวาตกลงมากองซ้ายเมื่อหัวเรื่องยาว
+     เปลี่ยนเป็น nowrap + ให้ฝั่งซ้ายย่อได้ (min-width:0) บล็อคขวาจึงอยู่ขวาเสมอ */
+  .header-row{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:nowrap;padding-bottom:24px;margin-bottom:30px;border-bottom:2px solid var(--matcha);}
+  .header-row > div:first-child{min-width:0;}
+  .meta-right{flex-shrink:0;}
   h1{font-family:'Zen Maru Gothic',sans-serif;font-weight:900;font-size:calc(83.8px * var(--type-scale));margin:0 0 8px;letter-spacing:-.015em;line-height:1.05;
      background:linear-gradient(100deg, var(--matcha-deep) 10%, var(--matcha) 55%, var(--bamboo) 100%);
      -webkit-background-clip:text;background-clip:text;color:transparent;display:inline-block;}
@@ -61,9 +65,24 @@
   .freshness{margin-top:4px;font-family:'IBM Plex Mono',monospace;font-size:calc(19.4px * var(--type-scale));line-height:1.5;}
   .freshness .ok{color:var(--matcha-deep);}
   .freshness .stale{color:var(--azuki);font-weight:600;}
-  .btn-plain{font-family:'IBM Plex Mono',monospace;font-size:calc(21.4px * var(--type-scale));font-weight:700;background:none;color:var(--matcha-deep);border:none;border-bottom:1.5px solid var(--matcha-deep);padding:2px 0;cursor:pointer;margin-top:8px;letter-spacing:.04em;}
-  .btn-plain:hover{opacity:.65;}
-  .btn-plain:disabled{opacity:.4;cursor:wait;}
+  /* v108: เดิมเป็นข้อความขีดเส้นใต้ ดูไม่ออกว่ากดได้ เปลี่ยนเป็นปุ่มจริง
+     มีพื้น มีขอบ มีมุมโค้ง มีไอคอนนำ และขยับตอนกด เพื่อให้รู้ว่าเป็นของที่กดได้ */
+  .btn-row{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:12px;}
+  .btn-plain{display:inline-flex;align-items:center;gap:8px;
+    font-family:'IBM Plex Sans Thai',sans-serif;font-size:calc(18.5px * var(--type-scale));font-weight:600;
+    background:var(--panel);color:var(--matcha-deep);border:1.5px solid var(--hairline-strong);
+    border-radius:10px;padding:9px 16px;cursor:pointer;letter-spacing:.01em;line-height:1.2;
+    box-shadow:0 1px 2px rgba(31,46,26,.06);transition:background .12s ease, border-color .12s ease, transform .06s ease;}
+  .btn-plain .bi{font-size:calc(19px * var(--type-scale));line-height:1;
+    font-family:'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif;}
+  .btn-plain:hover{background:rgba(122,154,63,.12);border-color:var(--matcha);}
+  .btn-plain:active{transform:translateY(1px);}
+  .btn-plain:disabled{opacity:.45;cursor:wait;}
+  /* ปุ่มหลัก = รีเฟรชข้อมูล ให้เด่นกว่าปุ่มอื่นเพราะเป็นสิ่งที่กดบ่อยสุด */
+  .btn-plain.btn-primary{background:var(--matcha-deep);color:#FFFDF5;border-color:var(--matcha-deep);}
+  .btn-plain.btn-primary:hover{background:var(--matcha);border-color:var(--matcha);}
+  /* v108: บรรทัดเตือนความสดของข้อมูลไม่ต้องแสดง (ยังคงคำนวณไว้เผื่ออนาคต) */
+  .freshness{display:none;}
 
   .latest-line{font-family:'IBM Plex Mono',monospace;font-size:calc(22.4px * var(--type-scale));color:var(--ink-faint);margin-bottom:32px;display:flex;gap:10px;align-items:center;}
   .latest-line b{color:var(--ink-soft);font-weight:600;}
@@ -237,10 +256,11 @@
 
   .section{margin-bottom:42px;}
   .section-title{font-family:'Zen Maru Gothic',sans-serif;font-weight:700;font-size:calc(41.4px * var(--type-scale));color:var(--ink);margin:0 0 5px;display:flex;align-items:center;gap:11px;}
-  /* v88: ไอคอนหัวข้อเปลี่ยนจากหยดน้ำเป็นใบชา ใส่วงกลมสีมัทฉะรองให้เป็นจุดนำสายตา */
-  .section-title svg{width:29px;height:29px;color:var(--matcha-deep);flex-shrink:0;}
-  .section-title .sec-mark{width:51px;height:51px;border-radius:16px;flex-shrink:0;
-    background:rgba(122,154,63,.15);display:flex;align-items:center;justify-content:center;}
+  /* v108: ไอคอนหัวข้อเป็นอิโมจิตามความหมายของแต่ละหัวข้อ แยกแยะ section ได้ด้วยสายตาเร็วกว่ารูปเดียวกันทุกอัน */
+  .section-title .sec-mark{width:52px;height:52px;border-radius:16px;flex-shrink:0;
+    background:rgba(122,154,63,.15);display:inline-flex;align-items:center;justify-content:center;
+    font-size:calc(26px * var(--type-scale));line-height:1;
+    font-family:'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif;}
   .section-desc{font-size:calc(23.6px * var(--type-scale));color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-bottom:18px;line-height:1.55;}
   /* v96: ต้องเป็น minmax(0,1fr) ไม่ใช่ 1fr เฉยๆ — เพราะ 1fr มีพื้นขั้นต่ำเป็น min-content
      พอฟอนต์หัวข้อใหญ่ขึ้น (47px + ไอคอน 51px) min-content ของคอลัมน์เลยกว้างเกิน
@@ -256,6 +276,9 @@
   table.data-table thead th{text-align:left;font-family:'IBM Plex Mono',monospace;font-size:calc(19.4px * var(--type-scale));letter-spacing:.06em;color:var(--ink-faint);text-transform:uppercase;font-weight:600;padding:8px 12px 10px;border-bottom:1.5px solid var(--hairline-strong);position:sticky;top:0;background:var(--panel);}
   table.data-table tbody td{padding:10px 12px;border-bottom:1px solid var(--hairline);color:var(--ink-soft);}
   table.data-table tbody td.strong{color:var(--ink);font-weight:600;font-family:'IBM Plex Mono',monospace;}
+  .remark-chip{display:inline-block;padding:4px 11px;border-radius:7px;font-weight:600;
+    font-family:'IBM Plex Sans Thai',sans-serif;line-height:1.4;}
+
   .qty-highlight{display:inline-block;background:rgba(166,67,46,.14);color:var(--azuki);font-weight:700;font-family:'IBM Plex Mono',monospace;padding:3px 10px;border-radius:6px;}
   table.data-table tbody tr:hover{background:rgba(122,154,63,.06);}
   .table-scroll{max-height:340px;overflow-y:auto;}
@@ -447,11 +470,11 @@
     <div class="meta-right">
       Last fetched<br><span id="lastUpdated">—</span>
       <div id="dataFreshness" class="freshness"></div>
-      <div id="buildTag" style="font-size:calc(13.6px * var(--type-scale));color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-14-v107-wider-margins</div>
-      <div>
-        <button class="btn-plain" id="refreshBtn" onclick="loadData()">Refresh</button>
-        <button class="btn-plain" id="saveImgBtn" onclick="saveTabAsPNG()" style="margin-left:14px;">Save as PNG (แนวนอน, คมชัด)</button>
-        <button class="btn-plain" id="presentBtn" onclick="togglePresentMode()" style="margin-left:14px;">โหมดพรีเซนต์</button>
+      <div id="buildTag" style="font-size:calc(13.6px * var(--type-scale));color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-14-v108-ui-polish</div>
+      <div class="btn-row">
+        <button class="btn-plain btn-primary" id="refreshBtn" onclick="loadData()"><span class="bi">↻</span>รีเฟรชข้อมูล</button>
+        <button class="btn-plain" id="saveImgBtn" onclick="saveTabAsPNG()"><span class="bi">🖼️</span>บันทึกเป็นภาพ</button>
+        <button class="btn-plain" id="presentBtn" onclick="togglePresentMode()"><span class="bi">🖥️</span>โหมดพรีเซนต์</button>
       </div>
     </div>
   </div>
@@ -506,19 +529,19 @@
     </div>
 
     <div class="section">
-      <div class="section-title"><span class="sec-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 3.4C10.7 4.5 3.9 10.8 3.3 19.2c-.1 1.4 1.1 2.4 2.4 2.1 8.3-2.1 14.1-8.8 14.9-17.9z"/><path d="M17.5 6.5C12.2 9.6 8.3 14.4 6.5 20.2"/><path d="M11.4 7.6c.5 1.7.5 3.4 0 5.1"/><path d="M14.9 12.7c-1.7.3-3.3 1-4.7 2"/></svg></span>Weekly Order Volume</div>
+      <div class="section-title"><span class="sec-mark">📈</span>Weekly Order Volume</div>
       <div class="section-desc">Unique orders per week · จุดสีแดง = สัปดาห์ที่มี Double Day (1.1, 2.2, ... 12.12)</div>
       <div class="chart-panel"><div class="chart-box" style="height:305px;"><canvas id="chart_weekly"></canvas></div></div>
     </div>
 
     <div class="grid-3">
-      <div class="section"><div class="section-title"><span class="sec-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 3.4C10.7 4.5 3.9 10.8 3.3 19.2c-.1 1.4 1.1 2.4 2.4 2.1 8.3-2.1 14.1-8.8 14.9-17.9z"/><path d="M17.5 6.5C12.2 9.6 8.3 14.4 6.5 20.2"/><path d="M11.4 7.6c.5 1.7.5 3.4 0 5.1"/><path d="M14.9 12.7c-1.7.3-3.3 1-4.7 2"/></svg></span>Packing On-Time</div><div class="section-desc">Target ≥ 98%</div><div class="chart-panel"><div class="chart-box"><canvas id="chart_packing"></canvas></div></div></div>
-      <div class="section"><div class="section-title"><span class="sec-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 3.4C10.7 4.5 3.9 10.8 3.3 19.2c-.1 1.4 1.1 2.4 2.4 2.1 8.3-2.1 14.1-8.8 14.9-17.9z"/><path d="M17.5 6.5C12.2 9.6 8.3 14.4 6.5 20.2"/><path d="M11.4 7.6c.5 1.7.5 3.4 0 5.1"/><path d="M14.9 12.7c-1.7.3-3.3 1-4.7 2"/></svg></span>Orders by Platform</div><div class="section-desc">Platform vs walk-in</div><div class="chart-panel"><div class="chart-box"><canvas id="chart_platform"></canvas></div></div></div>
-      <div class="section"><div class="section-title"><span class="sec-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 3.4C10.7 4.5 3.9 10.8 3.3 19.2c-.1 1.4 1.1 2.4 2.4 2.1 8.3-2.1 14.1-8.8 14.9-17.9z"/><path d="M17.5 6.5C12.2 9.6 8.3 14.4 6.5 20.2"/><path d="M11.4 7.6c.5 1.7.5 3.4 0 5.1"/><path d="M14.9 12.7c-1.7.3-3.3 1-4.7 2"/></svg></span>Shipping Method</div><div class="section-desc">Share by delivery type</div><div class="chart-panel"><div class="chart-box"><canvas id="chart_urgent"></canvas></div></div></div>
+      <div class="section"><div class="section-title"><span class="sec-mark">⏱️</span>Packing On-Time</div><div class="section-desc">Target ≥ 98%</div><div class="chart-panel"><div class="chart-box"><canvas id="chart_packing"></canvas></div></div></div>
+      <div class="section"><div class="section-title"><span class="sec-mark">🛒</span>Orders by Platform</div><div class="section-desc">Platform vs walk-in</div><div class="chart-panel"><div class="chart-box"><canvas id="chart_platform"></canvas></div></div></div>
+      <div class="section"><div class="section-title"><span class="sec-mark">🚚</span>Shipping Method</div><div class="section-desc">Share by delivery type</div><div class="chart-panel"><div class="chart-box"><canvas id="chart_urgent"></canvas></div></div></div>
     </div>
 
     <div class="section">
-      <div class="section-title"><span class="sec-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 3.4C10.7 4.5 3.9 10.8 3.3 19.2c-.1 1.4 1.1 2.4 2.4 2.1 8.3-2.1 14.1-8.8 14.9-17.9z"/><path d="M17.5 6.5C12.2 9.6 8.3 14.4 6.5 20.2"/><path d="M11.4 7.6c.5 1.7.5 3.4 0 5.1"/><path d="M14.9 12.7c-1.7.3-3.3 1-4.7 2"/></svg></span>Sales Channel Share</div>
+      <div class="section-title"><span class="sec-mark">🥧</span>Sales Channel Share</div>
       <div class="section-desc">Orders by Sender Name</div>
       <div class="chart-panel">
         <div class="channel-wrap">
@@ -529,7 +552,7 @@
     </div>
 
     <div class="section">
-      <div class="section-title"><span class="sec-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 3.4C10.7 4.5 3.9 10.8 3.3 19.2c-.1 1.4 1.1 2.4 2.4 2.1 8.3-2.1 14.1-8.8 14.9-17.9z"/><path d="M17.5 6.5C12.2 9.6 8.3 14.4 6.5 20.2"/><path d="M11.4 7.6c.5 1.7.5 3.4 0 5.1"/><path d="M14.9 12.7c-1.7.3-3.3 1-4.7 2"/></svg></span>Order Detail</div>
+      <div class="section-title"><span class="sec-mark">📋</span>Order Detail</div>
       <div class="section-desc">แสดงเฉพาะรายการที่ไม่ใช่ "ส่งในวัน" (ก่อนกำหนด/ล่าช้า/ไม่ระบุ) · เรียง Remark Team notes ก่อน แล้วตามด้วยล่าสุด</div>
       <div class="table-panel">
         <div class="table-scroll remark-scroll">
@@ -577,18 +600,18 @@
     </div>
 
     <div class="section">
-      <div class="section-title"><span class="sec-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 3.4C10.7 4.5 3.9 10.8 3.3 19.2c-.1 1.4 1.1 2.4 2.4 2.1 8.3-2.1 14.1-8.8 14.9-17.9z"/><path d="M17.5 6.5C12.2 9.6 8.3 14.4 6.5 20.2"/><path d="M11.4 7.6c.5 1.7.5 3.4 0 5.1"/><path d="M14.9 12.7c-1.7.3-3.3 1-4.7 2"/></svg></span>Weekly Line Items</div>
+      <div class="section-title"><span class="sec-mark">📦</span>Weekly Line Items</div>
       <div class="section-desc">จำนวนสินค้าที่ออกต่อสัปดาห์ (รวม quantity) · จุดสีแดง = สัปดาห์ที่มี Double Day (1.1, 2.2, ... 12.12)</div>
       <div class="chart-panel"><div class="chart-box" style="height:305px;"><canvas id="chart_weekly2"></canvas></div></div>
     </div>
 
     <div class="grid-2">
-      <div class="section"><div class="section-title"><span class="sec-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 3.4C10.7 4.5 3.9 10.8 3.3 19.2c-.1 1.4 1.1 2.4 2.4 2.1 8.3-2.1 14.1-8.8 14.9-17.9z"/><path d="M17.5 6.5C12.2 9.6 8.3 14.4 6.5 20.2"/><path d="M11.4 7.6c.5 1.7.5 3.4 0 5.1"/><path d="M14.9 12.7c-1.7.3-3.3 1-4.7 2"/></svg></span>Top 5 Products</div><div class="section-desc">Highest line-item count</div><div class="chart-panel"><div class="chart-box" style="height:305px;"><canvas id="chart_top5"></canvas></div></div></div>
-      <div class="section"><div class="section-title"><span class="sec-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 3.4C10.7 4.5 3.9 10.8 3.3 19.2c-.1 1.4 1.1 2.4 2.4 2.1 8.3-2.1 14.1-8.8 14.9-17.9z"/><path d="M17.5 6.5C12.2 9.6 8.3 14.4 6.5 20.2"/><path d="M11.4 7.6c.5 1.7.5 3.4 0 5.1"/><path d="M14.9 12.7c-1.7.3-3.3 1-4.7 2"/></svg></span>Out-of-Stock Rate</div><div class="section-desc">Target ≥ 99% · % คิดจาก WH ส่งของให้ PK ภายในกี่วันที่ต้องส่ง (ว่าง/ไม่ระบุ = Late)</div><div class="chart-panel"><div class="chart-box" style="height:305px;"><canvas id="chart_oos"></canvas></div></div></div>
+      <div class="section"><div class="section-title"><span class="sec-mark">🏆</span>Top 5 Products</div><div class="section-desc">Highest line-item count</div><div class="chart-panel"><div class="chart-box" style="height:305px;"><canvas id="chart_top5"></canvas></div></div></div>
+      <div class="section"><div class="section-title"><span class="sec-mark">⚠️</span>Out-of-Stock Rate</div><div class="section-desc">Target ≥ 99% · % คิดจาก WH ส่งของให้ PK ภายในกี่วันที่ต้องส่ง (ว่าง/ไม่ระบุ = Late)</div><div class="chart-panel"><div class="chart-box" style="height:305px;"><canvas id="chart_oos"></canvas></div></div></div>
     </div>
 
     <div class="section">
-      <div class="section-title"><span class="sec-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 3.4C10.7 4.5 3.9 10.8 3.3 19.2c-.1 1.4 1.1 2.4 2.4 2.1 8.3-2.1 14.1-8.8 14.9-17.9z"/><path d="M17.5 6.5C12.2 9.6 8.3 14.4 6.5 20.2"/><path d="M11.4 7.6c.5 1.7.5 3.4 0 5.1"/><path d="M14.9 12.7c-1.7.3-3.3 1-4.7 2"/></svg></span>Order Detail</div>
+      <div class="section-title"><span class="sec-mark">📋</span>Order Detail</div>
       <div class="section-desc">แสดงเฉพาะรายการที่ไม่ใช่ "ส่งในวัน" (ก่อนกำหนด/ล่าช้า/ไม่ระบุ) · เรียง Remark Team notes ก่อน แล้วตามด้วยล่าสุด</div>
       <div class="table-panel">
         <div class="table-scroll remark-scroll">
@@ -628,7 +651,7 @@
     </div>
 
     <div class="section">
-      <div class="section-title"><span class="sec-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 3.4C10.7 4.5 3.9 10.8 3.3 19.2c-.1 1.4 1.1 2.4 2.4 2.1 8.3-2.1 14.1-8.8 14.9-17.9z"/><path d="M17.5 6.5C12.2 9.6 8.3 14.4 6.5 20.2"/><path d="M11.4 7.6c.5 1.7.5 3.4 0 5.1"/><path d="M14.9 12.7c-1.7.3-3.3 1-4.7 2"/></svg></span>รายการที่ต้องเติม Stock <span style="font-size:calc(22.4px * var(--type-scale));font-weight:400;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;">(ไม่รวมที่ไม่มีโควต้า / ไม่มี Raw Material)</span></div>
+      <div class="section-title"><span class="sec-mark">🔄</span>รายการที่ต้องเติม Stock <span style="font-size:calc(22.4px * var(--type-scale));font-weight:400;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;">(ไม่รวมที่ไม่มีโควต้า / ไม่มี Raw Material)</span></div>
       <div class="section-desc">เรียงตามคะแนนขายดี · ไม่นับสินค้าที่ Remark ระบุว่า "ไม่มีโควต้า" หรือ "ไม่มี Raw Material"</div>
       <div class="table-panel">
         <div class="table-scroll remark-scroll">
@@ -641,7 +664,7 @@
     </div>
 
     <div class="section">
-      <div class="section-title"><span class="sec-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 3.4C10.7 4.5 3.9 10.8 3.3 19.2c-.1 1.4 1.1 2.4 2.4 2.1 8.3-2.1 14.1-8.8 14.9-17.9z"/><path d="M17.5 6.5C12.2 9.6 8.3 14.4 6.5 20.2"/><path d="M11.4 7.6c.5 1.7.5 3.4 0 5.1"/><path d="M14.9 12.7c-1.7.3-3.3 1-4.7 2"/></svg></span>สาเหตุที่ยังไม่ได้เติม</div>
+      <div class="section-title"><span class="sec-mark">🚧</span>สาเหตุที่ยังไม่ได้เติม</div>
       <div class="section-desc">Products blocked, by reason</div>
       <div class="chart-panel"><div class="chart-box" style="height:305px;"><canvas id="chart_remark3"></canvas></div></div>
       <div class="table-panel" style="margin-top:14px;">
@@ -655,7 +678,7 @@
     </div>
 
     <div class="section">
-      <div class="section-title"><span class="sec-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 3.4C10.7 4.5 3.9 10.8 3.3 19.2c-.1 1.4 1.1 2.4 2.4 2.1 8.3-2.1 14.1-8.8 14.9-17.9z"/><path d="M17.5 6.5C12.2 9.6 8.3 14.4 6.5 20.2"/><path d="M11.4 7.6c.5 1.7.5 3.4 0 5.1"/><path d="M14.9 12.7c-1.7.3-3.3 1-4.7 2"/></svg></span>รวมทั้งหมด</div>
+      <div class="section-title"><span class="sec-mark">📊</span>รวมทั้งหมด</div>
       <div class="section-desc">ทุกสินค้า — เรียง "ต้องเติม" ก่อน แล้วเรียงตามคะแนนขายดีมาก→น้อยในแต่ละกลุ่ม</div>
       <div class="table-panel" style="overflow-x:auto;">
         <div class="table-scroll remark-scroll">
@@ -685,7 +708,7 @@
     </div>
 
     <div class="section">
-      <div class="section-title"><span class="sec-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 3.4C10.7 4.5 3.9 10.8 3.3 19.2c-.1 1.4 1.1 2.4 2.4 2.1 8.3-2.1 14.1-8.8 14.9-17.9z"/><path d="M17.5 6.5C12.2 9.6 8.3 14.4 6.5 20.2"/><path d="M11.4 7.6c.5 1.7.5 3.4 0 5.1"/><path d="M14.9 12.7c-1.7.3-3.3 1-4.7 2"/></svg></span>พยากรณ์รายสัปดาห์ (Weekly Forecast)</div>
+      <div class="section-title"><span class="sec-mark">🔮</span>พยากรณ์รายสัปดาห์ (Weekly Forecast)</div>
       <div class="section-desc">ยอดจริงรายสัปดาห์ (นับตามวันที่ต้องการจัดส่ง) + ประมาณการ 4 สัปดาห์ข้างหน้า</div>
       <details class="calc-note">
         <summary class="cn-head">วิธีคิด — บวกกัน 3 อย่าง</summary>
@@ -716,7 +739,7 @@
     </div>
 
     <div class="section">
-      <div class="section-title"><span class="sec-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 3.4C10.7 4.5 3.9 10.8 3.3 19.2c-.1 1.4 1.1 2.4 2.4 2.1 8.3-2.1 14.1-8.8 14.9-17.9z"/><path d="M17.5 6.5C12.2 9.6 8.3 14.4 6.5 20.2"/><path d="M11.4 7.6c.5 1.7.5 3.4 0 5.1"/><path d="M14.9 12.7c-1.7.3-3.3 1-4.7 2"/></svg></span>พยากรณ์รายวัน (Daily Forecast)</div>
+      <div class="section-title"><span class="sec-mark">📅</span>พยากรณ์รายวัน (Daily Forecast)</div>
       <div class="section-desc">ยอดจริงตั้งแต่ ม.ค. 2569 ถึงวันล่าสุด (นับตามวันที่ต้องการจัดส่ง) + ประมาณการ 7 วันข้างหน้า</div>
       <details class="calc-note">
         <summary class="cn-head">วิธีคิด — ให้น้ำหนักวันใกล้มากกว่าวันไกล</summary>
@@ -752,7 +775,7 @@
     </div>
 
     <div class="section">
-      <div class="section-title"><span class="sec-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 3.4C10.7 4.5 3.9 10.8 3.3 19.2c-.1 1.4 1.1 2.4 2.4 2.1 8.3-2.1 14.1-8.8 14.9-17.9z"/><path d="M17.5 6.5C12.2 9.6 8.3 14.4 6.5 20.2"/><path d="M11.4 7.6c.5 1.7.5 3.4 0 5.1"/><path d="M14.9 12.7c-1.7.3-3.3 1-4.7 2"/></svg></span>พยากรณ์อัตรากำลังคน (Staffing Forecast)</div>
+      <div class="section-title"><span class="sec-mark">👥</span>พยากรณ์อัตรากำลังคน (Staffing Forecast)</div>
       <div class="section-desc">คำนวณจากยอดพยากรณ์ 7 วันข้างหน้า (จากกราฟรายวันด้านบน) · แถวสีไฮไลท์ = วันที่ตรงกับ Double Day</div>
       <details class="calc-note">
         <summary class="cn-head">วิธีคิดจำนวนคน</summary>
@@ -807,19 +830,19 @@
     </div>
 
     <div class="section">
-      <div class="section-title"><span class="sec-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 3.4C10.7 4.5 3.9 10.8 3.3 19.2c-.1 1.4 1.1 2.4 2.4 2.1 8.3-2.1 14.1-8.8 14.9-17.9z"/><path d="M17.5 6.5C12.2 9.6 8.3 14.4 6.5 20.2"/><path d="M11.4 7.6c.5 1.7.5 3.4 0 5.1"/><path d="M14.9 12.7c-1.7.3-3.3 1-4.7 2"/></svg></span>Stock vs Demand 1 สัปดาห์</div>
+      <div class="section-title"><span class="sec-mark">⚖️</span>Stock vs Demand 1 สัปดาห์</div>
       <div class="section-desc">เรียงตาม demand มากสุด → น้อยสุด · แท่งแดงคือส่วนที่ stock ไม่พอ 1 สัปดาห์ (คำนวณจากพฤติกรรมสั่งซื้อ ไม่ใช่ตัวเลขจากชีต Replenishment)</div>
       <div class="chart-panel"><div class="chart-box" style="height:400px;"><canvas id="chart_forecast_1w"></canvas></div></div>
     </div>
 
     <div class="section">
-      <div class="section-title"><span class="sec-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 3.4C10.7 4.5 3.9 10.8 3.3 19.2c-.1 1.4 1.1 2.4 2.4 2.1 8.3-2.1 14.1-8.8 14.9-17.9z"/><path d="M17.5 6.5C12.2 9.6 8.3 14.4 6.5 20.2"/><path d="M11.4 7.6c.5 1.7.5 3.4 0 5.1"/><path d="M14.9 12.7c-1.7.3-3.3 1-4.7 2"/></svg></span>Stock vs Demand 4 สัปดาห์ (1 เดือน)</div>
+      <div class="section-title"><span class="sec-mark">🗓️</span>Stock vs Demand 4 สัปดาห์ (1 เดือน)</div>
       <div class="section-desc">เรียงตาม demand มากสุด → น้อยสุด · แท่งแดงคือส่วนที่ stock ไม่พอใน 1 เดือน (คำนวณจากพฤติกรรมสั่งซื้อ ไม่ใช่ตัวเลขจากชีต Replenishment)</div>
       <div class="chart-panel"><div class="chart-box" style="height:400px;"><canvas id="chart_forecast_4w"></canvas></div></div>
     </div>
 
     <div class="section">
-      <div class="section-title"><span class="sec-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 3.4C10.7 4.5 3.9 10.8 3.3 19.2c-.1 1.4 1.1 2.4 2.4 2.1 8.3-2.1 14.1-8.8 14.9-17.9z"/><path d="M17.5 6.5C12.2 9.6 8.3 14.4 6.5 20.2"/><path d="M11.4 7.6c.5 1.7.5 3.4 0 5.1"/><path d="M14.9 12.7c-1.7.3-3.3 1-4.7 2"/></svg></span>Stock Depletion Forecast</div>
+      <div class="section-title"><span class="sec-mark">⏳</span>Stock Depletion Forecast</div>
       <div class="section-desc">เรียงจากวิกฤตที่สุด — Avg weekly demand คำนวณจากข้อมูล order ย้อนหลัง</div>
       <div class="table-panel">
         <div class="table-scroll remark-scroll">
@@ -896,7 +919,9 @@ function togglePresentMode(){
   PRESENT_ON = !PRESENT_ON;
   document.body.classList.toggle('present', PRESENT_ON);
   const btn = document.getElementById('presentBtn');
-  if(btn) btn.textContent = PRESENT_ON ? 'ออกจากโหมดพรีเซนต์ (Esc)' : 'โหมดพรีเซนต์';
+  if(btn) btn.innerHTML = PRESENT_ON
+    ? '<span class="bi">✕</span>ออกจากโหมดพรีเซนต์ (Esc)'
+    : '<span class="bi">🖥️</span>โหมดพรีเซนต์';
   // ปรับฟอนต์ในกราฟให้เข้ากัน แล้วรอให้ layout เปลี่ยนเสร็จก่อน resize
   applyChartFontBoost(PRESENT_ON ? PRESENT_CHART_BOOST : 1 / PRESENT_CHART_BOOST);
   CHART_FONT_BOOST = PRESENT_ON ? PRESENT_CHART_BOOST : 1;
@@ -1428,8 +1453,8 @@ async function saveTabAsPNG(){
   const activeTab = document.querySelector('.tab-page.active');
   if(!activeTab || typeof html2canvas === 'undefined') return;
 
-  const originalLabel = btn.textContent;
-  btn.textContent = 'กำลังบันทึก...';
+  const originalLabel = btn.innerHTML;
+  btn.innerHTML = '<span class="bi">⏳</span>กำลังบันทึก…';
   btn.disabled = true;
 
   /*
@@ -1710,7 +1735,7 @@ async function saveTabAsPNG(){
       CHART_FONT_BOOST = 1;
     }
     resizeCharts();
-    btn.textContent = originalLabel;
+    btn.innerHTML = originalLabel;
     btn.disabled = false;
   }
 }
@@ -2464,7 +2489,7 @@ function renderTab1RemarkTable(rows){
     '<tr><td class="strong">' + escapeHtml(r.orderRef) + '</td>' +
     '<td>' + escapeHtml(r.source || '—') + '</td>' +
     '<td>' + escapeHtml(r.product || '—') + '</td>' +
-    '<td>' + (r.remarkTeam && r.remarkTeam.trim() ? escapeHtml(r.remarkTeam) : '') + '</td></tr>'
+    '<td>' + remarkChip(r.remarkTeam) + '</td></tr>'
   )).join('');
 }
 
@@ -2856,7 +2881,7 @@ function renderTab2RemarkTable(rows){
     '<tr><td class="strong">' + escapeHtml(r.orderRef) + '</td>' +
     '<td>' + escapeHtml(r.source || '—') + '</td>' +
     '<td>' + escapeHtml(r.product || '—') + '</td>' +
-    '<td>' + (r.remarkTeam && r.remarkTeam.trim() ? escapeHtml(r.remarkTeam) : '') + '</td></tr>'
+    '<td>' + remarkChip(r.remarkTeam) + '</td></tr>'
   )).join('');
 }
 
@@ -2894,6 +2919,30 @@ function tooltipStyle(){
   return { backgroundColor:'#1F2E1A', titleColor:'#fff', bodyColor:'#F6F2E7', borderColor:'rgba(0,0,0,0)', borderWidth:0, padding:10, cornerRadius:6,
     titleFont:{size:18.3, family:"'IBM Plex Sans Thai'"}, bodyFont:{size:17.8, family:"'IBM Plex Sans Thai'"} };
 }
+/* v108: Remark Team ข้อความเดียวกันต้องได้สีเดียวกันทุกแถวและทุกครั้งที่โหลดใหม่
+   จึงใช้ hash ของข้อความเลือกสีจากจานสีคงที่ (ไม่ใช่สุ่ม) — กวาดตาก็จับกลุ่มได้ทันที
+   ตัดช่องว่างซ้ำและทำเป็นตัวเล็กก่อน hash เพื่อให้ "ติด Wait" กับ "ติด  wait" นับเป็นคำเดียวกัน */
+const REMARK_PALETTE = [
+  { bg:'rgba(122,154,63,.18)', fg:'#3D5418' },   // มัทฉะ
+  { bg:'rgba(200,155,74,.22)', fg:'#7A5613' },   // ไผ่ทอง
+  { bg:'rgba(166,67,46,.15)',  fg:'#8A3524' },   // อาซึกิ
+  { bg:'rgba(72,124,130,.17)', fg:'#2C5B60' },   // ครามอมเขียว
+  { bg:'rgba(132,98,158,.16)', fg:'#5A3D72' },   // ม่วงเผือก
+  { bg:'rgba(103,116,84,.20)', fg:'#3C452F' },   // เขียวหิน
+  { bg:'rgba(191,120,58,.17)', fg:'#8A4E17' },   // ส้มอิฐ
+  { bg:'rgba(90,110,140,.17)', fg:'#33465F' }    // น้ำเงินหมอก
+];
+function remarkChip(raw){
+  const text = (raw || '').replace(/\s+/g, ' ').trim();
+  if(!text) return '';
+  const key = text.toLowerCase();
+  let h = 0;
+  for(let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) % 100000007;
+  const c = REMARK_PALETTE[h % REMARK_PALETTE.length];
+  return '<span class="remark-chip" style="background:' + c.bg + ';color:' + c.fg + ';">' +
+         escapeHtml(text) + '</span>';
+}
+
 function escapeHtml(s){
   if(s===undefined||s===null) return '';
   return s.toString().replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
