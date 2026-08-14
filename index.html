@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -19,7 +19,7 @@
     --matcha:#7A9A3F; --matcha-deep:#4C6B26; --bamboo:#C89B4A; --azuki:#A6432E;
     --type-scale:1.14;   /* v93: ตัวคูณขนาดตัวหนังสือทั้งหน้า — 1.0 = ขนาดฐาน
                             อยากใหญ่กว่านี้ใส่ 1.25 · เล็กลงใส่ 1.05 · แก้บรรทัดนี้ที่เดียวทั้งหน้าขยับตาม */
-    --page-edge:12vw;     /* v92: ระยะขอบซ้าย-ขวา คิดเป็น % ของจอ (12vw = เนื้อหากิน 76% ของความกว้างจอ)
+    --page-edge:10vw;     /* v92: ระยะขอบซ้าย-ขวา คิดเป็น % ของจอ (10vw = เนื้อหากิน 80% ของความกว้างจอ)
                             อยากให้กว้างขึ้น ลดเลขนี้ (7vw) · อยากขอบห่างขึ้น เพิ่มเลขนี้ (12vw) */
   }
   *{box-sizing:border-box;}
@@ -338,6 +338,19 @@
   /* v98: คำอธิบายใต้ช่องกรอก — บอกกติกาตรงจุดที่กรอก ไม่ต้องไปกางกล่องวิธีคิด */
   /* v102: กล่องผลลัพธ์เวลาเลิกงาน — ไฮไลต์ให้เด่นเพราะเป็นคำตอบที่คนเปิดมาดู
      แต่ย่อฟอนต์ลงจาก 24.1 เหลือ 18.5 เพราะของเดิมใหญ่กว่าหัวข้อแผงจนแย่งสายตา */
+  /* ===== v105: จัดการตัดบรรทัดให้สวยทั้งหน้า =====
+     ต้นเหตุจริงคือ <html lang="en"> ทำให้ Chrome ไม่ใช้พจนานุกรมไทยตัดคำ
+     มันจึงตัดกลางคำได้ ("คาด|การณ์") แก้เป็น lang="th" แล้วเสริมด้วยกติกาข้างล่าง */
+  body{word-break:normal;overflow-wrap:break-word;line-break:normal;}
+  /* balance = เกลี่ยความยาวแต่ละบรรทัดให้เท่ากัน เหมาะกับข้อความสั้น 2-3 บรรทัด */
+  h1, .subtitle, .section-title, .section-desc,
+  table.data-table thead th, .stat-label, .cn-head{text-wrap:balance;}
+  /* pretty = กันบรรทัดสุดท้ายเหลือคำเดียวโดดๆ เหมาะกับย่อหน้ายาว */
+  .calc-note, .cn-list, .cn-warn, .staffing-result, .footer-note,
+  table.data-table tbody td{text-wrap:pretty;}
+  /* หัวตารางไม่ควรตัดกลางวงเล็บ — ให้วงเล็บติดกับคำหน้าเสมอ */
+  table.data-table thead th{hyphens:none;}
+
   .staffing-result{flex:1;min-width:240px;font-family:'IBM Plex Sans Thai',sans-serif;
     font-size:calc(18.5px * var(--type-scale));line-height:1.55;color:var(--ink-soft);}
   .staffing-result:not(:empty){padding:10px 14px;border-radius:10px;
@@ -434,7 +447,7 @@
     <div class="meta-right">
       Last fetched<br><span id="lastUpdated">—</span>
       <div id="dataFreshness" class="freshness"></div>
-      <div id="buildTag" style="font-size:calc(13.6px * var(--type-scale));color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-13-v104-sharper-png</div>
+      <div id="buildTag" style="font-size:calc(13.6px * var(--type-scale));color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-14-v106-wider-content</div>
       <div>
         <button class="btn-plain" id="refreshBtn" onclick="loadData()">Refresh</button>
         <button class="btn-plain" id="saveImgBtn" onclick="saveTabAsPNG()" style="margin-left:14px;">Save as PNG (แนวนอน, คมชัด)</button>
@@ -747,13 +760,6 @@
           <div><b>ทีม Packing</b> — 1 คนแพ็คได้ <b>200 ออเดอร์/วัน</b> (ทำงาน 6 ชม. = 33 ออเดอร์/ชม.) <span class="cn-dim">+ คนท้ายไลน์แยกพัสดุอีก 1 คนเสมอ ไม่ว่ายอดจะน้อยแค่ไหน</span></div>
           <div><b>ทีม WH หยิบของ</b> — 1 คนหยิบได้ <b>88 ชิ้น/ชม.</b> (ทำงาน 6 ชม. = 528 ชิ้น/วัน) <span class="cn-dim">มี handheld แค่ 3 เครื่อง ถ้าคำนวณได้เกิน 3 คน จะขึ้นเตือนว่าต้องหมุนเวียนใช้เครื่อง</span></div>
         </div>
-        <div class="cn-warn"><b>ช่อง "จำนวนคนที่มาทำงานจริง" ตอบคนละคำถามกับตารางข้างล่าง</b> — ตารางบอกว่า<u>ควรมีกี่คน</u> ส่วนช่องกรอกบอกว่า<u>ถ้ามาเท่านี้จะเสร็จกี่โมง</u><br>
-          ทั้งสองที่คิด<b>เฉพาะคนแพ็ค</b>เท่านั้น · คนท้ายไลน์ต้องมี 1 คนแน่ๆ แต่<b>ไม่นับเข้ากำลังการแพ็ค</b> เพราะแค่แยกของ ไม่ได้แพ็ค</div>
-        <div class="cn-warn"><b>เรื่องชั่วโมง — 6 กับ 8 ไม่ตีกัน</b><br>
-          <b>6 ชม.</b> = เวลาแพ็คสุทธิที่ใช้คิดอัตรา 200 ออเดอร์/คน (<u>หักพักเที่ยงไปแล้ว</u>) จึงห้ามหักพักซ้ำอีก<br>
-          <b>8 ชม.</b> = เวลาแพ็คสุทธิที่มีให้ในวันปกติ (08:00–17:00 = 9 ชม. หักพักเที่ยง 1 ชม.) ถ้างานต้องใช้เกิน 8 ชม. ส่วนเกินคือ <b>OT</b><br>
-          <span class="cn-dim">พักเที่ยงจะบวกเข้าเวลาเลิกเฉพาะวันที่งานยังไม่จบก่อนเที่ยง — ถ้าออเดอร์น้อยจบ 11:00 ก็ไม่ต้องบวก</span><br>
-          <span class="cn-dim">กติกาข้อนี้ใช้กับ <b>ฝั่ง Packing เท่านั้น</b> · ฝั่ง WH ยังใช้สูตรเดิม (ไม่หักคนท้ายไลน์ ไม่บวกพักเที่ยง OT นับจากเกิน 6 ชม.)</span></div>
         <div class="cn-formula">ตาราง (ควรมีกี่คน): <code>Packing = ceil(ออเดอร์ ÷ 200) + 1 ท้ายไลน์</code> · <code>WH = ceil(ชิ้น ÷ 528)</code><br>
           ช่องกรอก (เสร็จกี่โมง): <code>คนแพ็ค = คนที่ใส่ − 1</code> · <code>เวลาสุทธิ = ออเดอร์ ÷ (คนแพ็ค × 33)</code><br>
           <code>เวลาเลิก = 08:00 + เวลาสุทธิ + พักเที่ยง 1 ชม.</code> · <code>OT = ส่วนที่เลย 17:00</code></div>
