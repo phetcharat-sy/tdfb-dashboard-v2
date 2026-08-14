@@ -19,7 +19,7 @@
     --matcha:#7A9A3F; --matcha-deep:#4C6B26; --bamboo:#C89B4A; --azuki:#A6432E;
     --type-scale:1.14;   /* v93: ตัวคูณขนาดตัวหนังสือทั้งหน้า — 1.0 = ขนาดฐาน
                             อยากใหญ่กว่านี้ใส่ 1.25 · เล็กลงใส่ 1.05 · แก้บรรทัดนี้ที่เดียวทั้งหน้าขยับตาม */
-    --page-edge:10vw;     /* v92: ระยะขอบซ้าย-ขวา คิดเป็น % ของจอ (10vw = เนื้อหากิน 80% ของความกว้างจอ)
+    --page-edge:15vw;     /* v92: ระยะขอบซ้าย-ขวา คิดเป็น % ของจอ (15vw = เนื้อหากิน 70% ของความกว้างจอ)
                             อยากให้กว้างขึ้น ลดเลขนี้ (7vw) · อยากขอบห่างขึ้น เพิ่มเลขนี้ (12vw) */
   }
   *{box-sizing:border-box;}
@@ -447,7 +447,7 @@
     <div class="meta-right">
       Last fetched<br><span id="lastUpdated">—</span>
       <div id="dataFreshness" class="freshness"></div>
-      <div id="buildTag" style="font-size:calc(13.6px * var(--type-scale));color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-14-v106-wider-content</div>
+      <div id="buildTag" style="font-size:calc(13.6px * var(--type-scale));color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-14-v107-wider-margins</div>
       <div>
         <button class="btn-plain" id="refreshBtn" onclick="loadData()">Refresh</button>
         <button class="btn-plain" id="saveImgBtn" onclick="saveTabAsPNG()" style="margin-left:14px;">Save as PNG (แนวนอน, คมชัด)</button>
