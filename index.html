@@ -498,7 +498,7 @@
     <div class="meta-right">
       Last fetched<br><span id="lastUpdated">—</span>
       <div id="dataFreshness" class="freshness"></div>
-      <div id="buildTag" style="font-size:calc(13.6px * var(--type-scale));color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-14-v111-smaller-type</div>
+      <div id="buildTag" style="font-size:calc(13.6px * var(--type-scale));color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-14-v112-bar-label-gap</div>
       <div class="btn-row">
         <button class="btn-plain btn-primary" id="refreshBtn" onclick="loadData()"><span class="bi">↻</span>รีเฟรชข้อมูล</button>
         <button class="btn-plain" id="saveImgBtn" onclick="saveTabAsPNG()"><span class="bi">🖼️</span>บันทึกเป็นภาพ</button>
@@ -978,6 +978,21 @@ function applyChartFontBoost(factor){
 
 const percentDataLabelsPlugin = {
   id: 'percentDataLabels',
+  /* v112: ตัวเลขบนยอดแท่งชิดขอบบนกราฟเกินไป (บางทีเหมือนโดนตัด)
+     เพราะแท่งที่ค่าสูงสุดจะสูงชนเพดานแกน Y พอดี ไม่เหลือที่ให้ตัวเลข
+     แก้ 2 ทาง: (1) จองที่ว่างด้านบนพื้นที่วาดไว้ล่วงหน้า  (2) ยกตัวเลขห่างจากยอดแท่งมากขึ้น */
+  beforeLayout(chart, args, options){
+    if(!options || !options.display) return;
+    const need = Math.round(fz(17) * 2.1);
+    let pad = chart.options.layout && chart.options.layout.padding;
+    if(typeof pad !== 'object' || pad === null){
+      const base = typeof pad === 'number' ? pad : 0;
+      chart.options.layout = Object.assign({}, chart.options.layout,
+        { padding: { top: need, right: base, bottom: base, left: base } });
+    } else if((pad.top || 0) < need){
+      pad.top = need;
+    }
+  },
   afterDatasetsDraw(chart, args, options){
     if(!options.display) return;
     const ctx = chart.ctx;
@@ -994,7 +1009,7 @@ const percentDataLabelsPlugin = {
         const value = dataset.data[index];
         if(value === null || value === undefined || Number.isNaN(Number(value))) return;
         const formatter = options.formatter || formatPercentLabel;
-        ctx.fillText(formatter(value), bar.x, Math.max(22, bar.y - 5));
+        ctx.fillText(formatter(value), bar.x, Math.max(fz(19), bar.y - 12));
       });
     });
     ctx.restore();
