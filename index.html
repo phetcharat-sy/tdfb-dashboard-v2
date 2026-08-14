@@ -112,13 +112,26 @@
   .hero-caption{font-family:'IBM Plex Mono',monospace;font-size:calc(22.4px * var(--type-scale));letter-spacing:.14em;color:var(--ink-faint);text-transform:uppercase;margin-top:16px;}
   .hero-caption b{color:var(--matcha-deep);}
 
-  .filter-row{display:flex;gap:22px;flex-wrap:wrap;align-items:flex-end;padding:16px 20px;border-radius:14px;background:var(--panel);border:1px solid var(--hairline);margin-bottom:28px;}
-  .filter-field{display:flex;flex-direction:column;gap:5px;}
+  /* ===== v110: ตัวกรองเป็นกล่องมีกรอบ และยืดเต็มความกว้างแถว =====
+     เดิมเป็นเส้นขีดใต้ตัวอักษร + ความกว้างตายตัว 170-186px ทำให้เหลือที่ว่างท้ายแถวเป็นแถบใหญ่
+     รอบนี้ให้แต่ละช่อง flex:1 ยืดแบ่งพื้นที่กันเอง และใส่กรอบครบสี่ด้านให้เห็นขอบเขตช่องชัด */
+  .filter-row{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;padding:16px 20px;border-radius:14px;background:var(--panel);border:1px solid var(--hairline);margin-bottom:28px;}
+  .filter-row > .filter-field{flex:1 1 190px;min-width:0;}
+  .filter-field{display:flex;flex-direction:column;gap:6px;}
   .filter-field > label{font-size:calc(19.4px * var(--type-scale));color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;}
-  .filter-field select, .filter-field input{background:transparent;border:none;border-bottom:1.5px solid var(--hairline-strong);color:var(--ink);padding:8px 2px;font-size:calc(25.4px * var(--type-scale));font-family:'IBM Plex Sans Thai';min-width:170px;}
-  .filter-field select:focus, .filter-field input:focus{outline:none;border-bottom-color:var(--matcha-deep);}
-  .filter-clear{font-family:'IBM Plex Mono',monospace;font-size:calc(20.5px * var(--type-scale));color:var(--ink-faint);background:none;border:none;cursor:pointer;text-decoration:underline;text-underline-offset:3px;}
-  .filter-clear:hover{color:var(--azuki);}
+  .filter-field select, .filter-field input{width:100%;min-width:0;box-sizing:border-box;
+    background:var(--paper);border:1.5px solid var(--hairline-strong);border-radius:10px;
+    color:var(--ink);padding:10px 13px;font-size:calc(25.4px * var(--type-scale));
+    font-family:'IBM Plex Sans Thai',sans-serif;transition:border-color .14s ease, box-shadow .14s ease;}
+  .filter-field select:hover, .filter-field input:hover{border-color:var(--matcha);}
+  .filter-field select:focus, .filter-field input:focus{outline:none;border-color:var(--matcha-deep);
+    box-shadow:0 0 0 3px rgba(122,154,63,.18);}
+  /* Clear filters ดันไปชิดขวาสุดของแถว และทำเป็นปุ่มมีกรอบให้รู้ว่ากดได้ */
+  .filter-clear{margin-left:auto;flex:0 0 auto;align-self:flex-end;
+    font-family:'IBM Plex Sans Thai',sans-serif;font-size:calc(19.5px * var(--type-scale));font-weight:600;
+    color:var(--ink-faint);background:var(--paper);border:1.5px solid var(--hairline-strong);
+    border-radius:10px;padding:10px 15px;cursor:pointer;transition:color .14s ease, border-color .14s ease;}
+  .filter-clear:hover{color:var(--azuki);border-color:var(--azuki);}
 
   /* ===== v77: ตัวกรองติ๊กหลายค่า + ปฏิทิน =====
      หมายเหตุ: .ms-opt เป็น <label> ที่อยู่ใน .filter-field จึงเคยรับกฎ
@@ -128,15 +141,18 @@
 
   .ms-trigger, .cal-trigger{
     display:flex;align-items:center;justify-content:space-between;gap:12px;
-    background:transparent;border:none;border-bottom:1.5px solid var(--hairline-strong);
-    color:var(--ink);padding:7px 2px;font-size:calc(25.4px * var(--type-scale));font-weight:500;
-    font-family:'IBM Plex Sans Thai',sans-serif;min-width:186px;max-width:280px;
-    text-align:left;cursor:pointer;white-space:nowrap;transition:border-color .14s ease,color .14s ease;}
-  .ms-trigger:hover, .cal-trigger:hover{border-bottom-color:var(--matcha);}
+    width:100%;box-sizing:border-box;
+    background:var(--paper);border:1.5px solid var(--hairline-strong);border-radius:10px;
+    color:var(--ink);padding:10px 13px;font-size:calc(25.4px * var(--type-scale));font-weight:500;
+    font-family:'IBM Plex Sans Thai',sans-serif;min-width:0;
+    text-align:left;cursor:pointer;white-space:nowrap;transition:border-color .14s ease,color .14s ease,box-shadow .14s ease;}
+  .ms-trigger:hover, .cal-trigger:hover{border-color:var(--matcha);}
+  .ms-trigger:focus-visible, .cal-trigger:focus-visible{outline:none;border-color:var(--matcha-deep);
+    box-shadow:0 0 0 3px rgba(122,154,63,.18);}
   .ms-trigger > span, .cal-trigger > span{overflow:hidden;text-overflow:ellipsis;}
   .ms-caret{flex-shrink:0;color:var(--ink-faint);font-size:calc(14.9px * var(--type-scale));line-height:1;transition:transform .16s ease;}
   .ms.open .ms-caret, .cal.open .ms-caret{transform:rotate(180deg);}
-  .ms-trigger.has-value, .cal-trigger.has-value{color:var(--matcha-deep);font-weight:600;border-bottom-color:var(--matcha-deep);}
+  .ms-trigger.has-value, .cal-trigger.has-value{color:var(--matcha-deep);font-weight:600;border-color:var(--matcha-deep);background:rgba(122,154,63,.10);}
   .ms-trigger.has-value .ms-caret, .cal-trigger.has-value .ms-caret{color:var(--matcha-deep);}
 
   .ms-panel, .cal-panel{
@@ -477,7 +493,7 @@
     <div class="meta-right">
       Last fetched<br><span id="lastUpdated">—</span>
       <div id="dataFreshness" class="freshness"></div>
-      <div id="buildTag" style="font-size:calc(13.6px * var(--type-scale));color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-14-v109-align-columns</div>
+      <div id="buildTag" style="font-size:calc(13.6px * var(--type-scale));color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-14-v110-filter-boxes</div>
       <div class="btn-row">
         <button class="btn-plain btn-primary" id="refreshBtn" onclick="loadData()"><span class="bi">↻</span>รีเฟรชข้อมูล</button>
         <button class="btn-plain" id="saveImgBtn" onclick="saveTabAsPNG()"><span class="bi">🖼️</span>บันทึกเป็นภาพ</button>
