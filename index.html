@@ -17,7 +17,9 @@
     --paper:#F6F2E7; --panel:#FFFDF5; --ink:#18240F; --ink-soft:#3F4C37; --ink-faint:#6B7561;
     --hairline:#DED6BD; --hairline-strong:#C9BF9E;
     --matcha:#7A9A3F; --matcha-deep:#4C6B26; --bamboo:#C89B4A; --azuki:#A6432E;
-    --type-scale:1.14;   /* v93: ตัวคูณขนาดตัวหนังสือทั้งหน้า — 1.0 = ขนาดฐาน
+    --type-scale:1.05;   /* v111: ลดจาก 1.14 (เล็กลง ~8%) · โหมดพรีเซนต์ไม่กระทบ เพราะ body.present
+                            ตั้งค่านี้ทับเป็น 1.62 แบบตายตัวอยู่แล้ว ไม่ได้คิดต่อจากค่าฐาน
+                            v93: ตัวคูณขนาดตัวหนังสือทั้งหน้า — 1.0 = ขนาดฐาน
                             อยากใหญ่กว่านี้ใส่ 1.25 · เล็กลงใส่ 1.05 · แก้บรรทัดนี้ที่เดียวทั้งหน้าขยับตาม */
     --page-edge:15vw;     /* v92: ระยะขอบซ้าย-ขวา คิดเป็น % ของจอ (15vw = เนื้อหากิน 70% ของความกว้างจอ)
                             อยากให้กว้างขึ้น ลดเลขนี้ (7vw) · อยากขอบห่างขึ้น เพิ่มเลขนี้ (12vw) */
@@ -299,6 +301,9 @@
   table.data-table thead th{text-align:left;font-family:'IBM Plex Mono',monospace;font-size:calc(19.4px * var(--type-scale));letter-spacing:.06em;color:var(--ink-faint);text-transform:uppercase;font-weight:600;padding:8px 12px 10px;border-bottom:1.5px solid var(--hairline-strong);position:sticky;top:0;background:var(--panel);}
   table.data-table tbody td{padding:10px 12px;border-bottom:1px solid var(--hairline);color:var(--ink-soft);}
   table.data-table tbody td.strong{color:var(--ink);font-weight:600;font-family:'IBM Plex Mono',monospace;}
+  /* v111: คอลัมน์ Source สั้นแต่มีเว้นวรรค ("TikTok Shop") เลยตกบรรทัด ทำให้แถวสูงขึ้นเปล่าๆ */
+  table.data-table td.nowrap-cell{white-space:nowrap;}
+
   .remark-chip{display:inline-block;padding:4px 11px;border-radius:7px;font-weight:600;
     font-family:'IBM Plex Sans Thai',sans-serif;line-height:1.4;}
 
@@ -493,7 +498,7 @@
     <div class="meta-right">
       Last fetched<br><span id="lastUpdated">—</span>
       <div id="dataFreshness" class="freshness"></div>
-      <div id="buildTag" style="font-size:calc(13.6px * var(--type-scale));color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-14-v110-filter-boxes</div>
+      <div id="buildTag" style="font-size:calc(13.6px * var(--type-scale));color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-14-v111-smaller-type</div>
       <div class="btn-row">
         <button class="btn-plain btn-primary" id="refreshBtn" onclick="loadData()"><span class="bi">↻</span>รีเฟรชข้อมูล</button>
         <button class="btn-plain" id="saveImgBtn" onclick="saveTabAsPNG()"><span class="bi">🖼️</span>บันทึกเป็นภาพ</button>
@@ -2509,7 +2514,7 @@ function renderTab1RemarkTable(rows){
   }
   tbody.innerHTML = dedupedRows.map(r => (
     '<tr><td class="strong">' + escapeHtml(r.orderRef) + '</td>' +
-    '<td>' + escapeHtml(r.source || '—') + '</td>' +
+    '<td class="nowrap-cell">' + escapeHtml(r.source || '—') + '</td>' +
     '<td>' + escapeHtml(r.product || '—') + '</td>' +
     '<td>' + remarkChip(r.remarkTeam) + '</td></tr>'
   )).join('');
@@ -2902,7 +2907,7 @@ function renderTab2RemarkTable(rows){
   }
   tbody.innerHTML = dedupedRows.map(r => (
     '<tr><td class="strong">' + escapeHtml(r.orderRef) + '</td>' +
-    '<td>' + escapeHtml(r.source || '—') + '</td>' +
+    '<td class="nowrap-cell">' + escapeHtml(r.source || '—') + '</td>' +
     '<td>' + escapeHtml(r.product || '—') + '</td>' +
     '<td>' + remarkChip(r.remarkTeam) + '</td></tr>'
   )).join('');
