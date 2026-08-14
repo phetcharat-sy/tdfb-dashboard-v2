@@ -265,6 +265,13 @@
   /* v96: ต้องเป็น minmax(0,1fr) ไม่ใช่ 1fr เฉยๆ — เพราะ 1fr มีพื้นขั้นต่ำเป็น min-content
      พอฟอนต์หัวข้อใหญ่ขึ้น (47px + ไอคอน 51px) min-content ของคอลัมน์เลยกว้างเกิน
      grid จึงดันตัวเองล้นขอบขวาออกไป ใส่ minmax(0,...) เพื่อยอมให้คอลัมน์บีบได้ */
+  /* v109: คอลัมน์ข้างกันสูงไม่เท่ากัน เพราะคำอธิบายใต้หัวข้อบางอันยาว 1 บรรทัด บางอัน 2 บรรทัด
+     กราฟจึงเริ่มไม่พร้อมกัน แก้โดยทำแต่ละคอลัมน์เป็น flex column แล้วดันแผงกราฟ/ตาราง
+     ไปชิดล่างด้วย margin-top:auto — ขอบล่างเสมอกัน และเพราะแผงสูงเท่ากัน ขอบบนจึงตรงกันด้วย */
+  .grid-2 > .section, .grid-3 > .section{display:flex;flex-direction:column;}
+  .grid-2 > .section > .chart-panel, .grid-3 > .section > .chart-panel,
+  .grid-2 > .section > .table-panel, .grid-3 > .section > .table-panel{margin-top:auto;}
+
   .grid-2{display:grid;grid-template-columns:repeat(2, minmax(0,1fr));gap:20px;}
   .grid-3{display:grid;grid-template-columns:repeat(3, minmax(0,1fr));gap:20px;}
   @media (max-width:900px){.grid-2,.grid-3{grid-template-columns:1fr;}}
@@ -470,7 +477,7 @@
     <div class="meta-right">
       Last fetched<br><span id="lastUpdated">—</span>
       <div id="dataFreshness" class="freshness"></div>
-      <div id="buildTag" style="font-size:calc(13.6px * var(--type-scale));color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-14-v108-ui-polish</div>
+      <div id="buildTag" style="font-size:calc(13.6px * var(--type-scale));color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-14-v109-align-columns</div>
       <div class="btn-row">
         <button class="btn-plain btn-primary" id="refreshBtn" onclick="loadData()"><span class="bi">↻</span>รีเฟรชข้อมูล</button>
         <button class="btn-plain" id="saveImgBtn" onclick="saveTabAsPNG()"><span class="bi">🖼️</span>บันทึกเป็นภาพ</button>
@@ -624,7 +631,6 @@
     </div>
 
     <div class="footer-note" id="tab2_footer"></div>
-    <div class="daycheck" id="tab2_audit" style="display:none;"></div>
   </div>
 
   <!-- ============ TAB 3 (Replenishment) ============ -->
@@ -2729,7 +2735,8 @@ function renderTab2(){
   document.getElementById('tab2_footer').textContent =
     totalQty.toLocaleString('en-US') + ' units (' + rows.length.toLocaleString('en-US') + ' line items) from ' + uniqueOrders.toLocaleString('en-US') + ' orders · updated ' + new Date().toLocaleString('en-GB');
 
-  // v82: กล่องตรวจสอบที่มาของจำนวนชิ้น — โชว์ให้เห็นว่าผลรวมเฟ้อจากแถวซ้ำเท่าไหร่
+  // v82: กล่องตรวจสอบที่มาของจำนวนชิ้น — v109 เอา element ออกจากหน้าแล้ว (ไม่ต้องแสดง)
+  //       โค้ดคงไว้เพราะมี if(auditEl) คุมอยู่ ถ้าวันหลังอยากเปิดดูใหม่ ใส่ <div id="tab2_audit"> กลับมาก็ทำงานทันที
   const auditEl = document.getElementById('tab2_audit');
   if(auditEl){
     const a = auditDuplicateRows(rows);
