@@ -1123,9 +1123,9 @@ const lineDataLabelsPlugin = {
         ctx.font = emphasize
           ? (isForecast ? 'italic 700 ' + fz(14.5) + "px 'IBM Plex Mono', monospace"
                         : '700 ' + fz(15) + "px 'IBM Plex Mono', monospace")
-          : '500 ' + fz(12.5) + "px 'IBM Plex Mono', monospace";
+          : '700 ' + fz(14) + "px 'IBM Plex Mono', monospace";
         const w = ctx.measureText(text).width;
-        const h = emphasize ? fz(15) : fz(12.5);
+        const h = emphasize ? fz(15) : fz(14);
 
         const above = emphasize ? true : (index % 2 === 0);
         const baseY = above ? point.y - 9 : point.y + h + 8;
@@ -1194,7 +1194,13 @@ const lineDataLabelsPlugin = {
             ctx.fillStyle = '#1F2E1A';
           }
         } else {
-          ctx.fillStyle = '#9AA290';
+          // v100: เดิมเป็นสีเทาอ่อน 500 12.5px อ่านไม่ออกเวลาทับเส้นตาราง
+          //       เปลี่ยนเป็นเขียวเข้มตัวหนา + ขอบสีพื้นกระดาษหนาๆ (halo) ให้เลขลอยเด่นขึ้นมา
+          ctx.lineJoin = 'round';
+          ctx.lineWidth = 4;
+          ctx.strokeStyle = 'rgba(255,253,245,0.92)';
+          ctx.strokeText(text, x, y);
+          ctx.fillStyle = '#4A5A3C';
         }
         ctx.fillText(text, x, y);
       });
