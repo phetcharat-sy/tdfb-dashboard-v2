@@ -1140,8 +1140,13 @@ const lineDataLabelsPlugin = {
         const w = ctx.measureText(text).width;
         const h = emphasize ? fz(15) : fz(plainSize);
 
-        const above = emphasize ? true : (index % 2 === 0);
-        const baseY = above ? point.y - 9 : point.y + h + 8;
+        // v100: เลขตัวใหญ่ต้องเว้นห่างจากจุดมากขึ้น ไม่งั้นตัวหนังสือไปคร่อมจุดวงกลมพอดี
+        const gap = (plainBig && !emphasize) ? Math.max(14, h * 0.55) : 9;
+        // ถ้าจุดอยู่ชิดขอบบนจนวางเลขข้างบนไม่พอ ให้ย้ายไปไว้ใต้จุดแทน
+        // (เดิมโดน clamp ด้านล่างดันกลับลงมาทับจุดพอดี — เป็นที่มาของอาการเลขทับจุด)
+        let above = emphasize ? true : (index % 2 === 0);
+        if(above && point.y - gap - h < area.top + 2) above = false;
+        const baseY = above ? point.y - gap : point.y + h + gap;
         const x = Math.max(area.left + w/2 + 2, Math.min(point.x, area.right - w/2 - 2));
 
         const hitTest = (yy) => {
