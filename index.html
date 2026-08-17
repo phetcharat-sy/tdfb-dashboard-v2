@@ -1082,6 +1082,19 @@ const lineDataLabelsPlugin = {
       const data    = dataset.data;
       const lastIdx = data.length - 1;
 
+      /* v100: เวลาเลือกกรองเหลือสัปดาห์เดียว กราฟจะมีจุดเดียวลอยกลางพื้นที่ว่างๆ
+         แต่เลขยังใช้ขนาด 12.5px เท่าตอนโชว์ 30-40 สัปดาห์ เลยดูจิ๋วมากอ่านไม่ออก
+         จึงขยายขนาดผกผันกับจำนวนจุด — จุดน้อย = ที่ว่างเยอะ = ตัวใหญ่ได้เต็มที่
+         จุดเยอะ (ไม่ได้กรอง) ยังใช้ขนาด/สีเดิมทุกอย่าง เพราะเลขต้องไม่เบียดกัน */
+      const ptCount = data.reduce((n, v) =>
+        n + ((v === null || v === undefined || Number.isNaN(Number(v))) ? 0 : 1), 0);
+      const plainSize = ptCount <= 1 ? 30
+                      : ptCount <= 2 ? 26
+                      : ptCount <= 4 ? 22
+                      : ptCount <= 8 ? 17
+                      : 12.5;
+      const plainBig = ptCount <= 8;
+
       let maxI = -1, minI = -1;
       if(boundaryIndex >= 0 && showPeaks){
         for(let i = 0; i <= boundaryIndex; i++){
@@ -1123,9 +1136,9 @@ const lineDataLabelsPlugin = {
         ctx.font = emphasize
           ? (isForecast ? 'italic 700 ' + fz(14.5) + "px 'IBM Plex Mono', monospace"
                         : '700 ' + fz(15) + "px 'IBM Plex Mono', monospace")
-          : '700 ' + fz(14) + "px 'IBM Plex Mono', monospace";
+          : (plainBig ? '700 ' : '500 ') + fz(plainSize) + "px 'IBM Plex Mono', monospace";
         const w = ctx.measureText(text).width;
-        const h = emphasize ? fz(15) : fz(14);
+        const h = emphasize ? fz(15) : fz(plainSize);
 
         const above = emphasize ? true : (index % 2 === 0);
         const baseY = above ? point.y - 9 : point.y + h + 8;
@@ -1193,14 +1206,15 @@ const lineDataLabelsPlugin = {
             ctx.fill();
             ctx.fillStyle = '#1F2E1A';
           }
-        } else {
-          // v100: เดิมเป็นสีเทาอ่อน 500 12.5px อ่านไม่ออกเวลาทับเส้นตาราง
-          //       เปลี่ยนเป็นเขียวเข้มตัวหนา + ขอบสีพื้นกระดาษหนาๆ (halo) ให้เลขลอยเด่นขึ้นมา
+        } else if(plainBig){
+          // จุดน้อย = ตัวใหญ่ ต้องเข้มพอให้อ่านออกและมีขอบสีพื้นกระดาษกันกลืนกับเส้นตาราง
           ctx.lineJoin = 'round';
-          ctx.lineWidth = 4;
+          ctx.lineWidth = 5;
           ctx.strokeStyle = 'rgba(255,253,245,0.92)';
           ctx.strokeText(text, x, y);
-          ctx.fillStyle = '#4A5A3C';
+          ctx.fillStyle = '#3E5230';
+        } else {
+          ctx.fillStyle = '#9AA290';
         }
         ctx.fillText(text, x, y);
       });
