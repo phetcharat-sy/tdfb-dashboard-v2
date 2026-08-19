@@ -402,7 +402,8 @@
   /* หัวตารางไม่ควรตัดกลางวงเล็บ — ให้วงเล็บติดกับคำหน้าเสมอ */
   table.data-table thead th{hyphens:none;}
 
-  .staffing-result{flex:1;min-width:240px;font-family:'IBM Plex Sans Thai',sans-serif;
+  /* v103: ให้กล่องผลลัพธ์ตกลงมาบรรทัดใหม่ใต้ช่องกรอกเสมอ (เดิมแทรกอยู่ข้างๆ ทำให้อ่านยาก) */
+  .staffing-result{flex:1 0 100%;width:100%;margin-top:4px;font-family:'IBM Plex Sans Thai',sans-serif;
     font-size:calc(18.5px * var(--type-scale));line-height:1.55;color:var(--ink-soft);}
   .staffing-result:not(:empty){padding:10px 14px;border-radius:10px;
     background:rgba(122,154,63,.15);border-left:4px solid var(--matcha);}
@@ -811,8 +812,8 @@
           <div><b>ทีม WH หยิบของ</b> — 1 คนหยิบได้ <b>88 ชิ้น/ชม.</b> (ทำงาน 6 ชม. = 528 ชิ้น/วัน) <span class="cn-dim">มี handheld แค่ 3 เครื่อง ถ้าคำนวณได้เกิน 3 คน จะขึ้นเตือนว่าต้องหมุนเวียนใช้เครื่อง</span></div>
         </div>
         <div class="cn-formula">ตาราง (ควรมีกี่คน): <code>Packing = ceil(ออเดอร์ ÷ 200) + 1 ท้ายไลน์</code> · <code>WH = ceil(ชิ้น ÷ 528)</code><br>
-          ช่องกรอก (เสร็จกี่โมง): <code>คนแพ็ค = คนที่ใส่ − 1</code> · <code>เวลาสุทธิ = ออเดอร์ ÷ (คนแพ็ค × 33)</code><br>
-          <code>เวลาเลิก = 08:00 + เวลาสุทธิ + พักเที่ยง 1 ชม.</code> · <code>OT = ส่วนที่เลย 17:00</code></div>
+          ช่องกรอก (เสร็จกี่โมง): <code>คนแพ็ค = คนที่ใส่ − 1</code> · <code>เวลาสุทธิ = ออเดอร์ ÷ (คนแพ็ค × 33)</code> · <code>WH เวลาสุทธิ = ชิ้น ÷ (คน × 88)</code><br>
+          <code>เวลาเลิก = 08:00 + เวลาสุทธิ + พักเที่ยง 1 ชม.</code> · <code>OT = ส่วนที่เลย 17:00</code> <span class="cn-dim">(ใช้กติกาเดียวกันทั้ง Packing และ WH · เวลาสุทธิที่มีให้ก่อนเข้า OT = 8 ชม.)</span></div>
       </details>
       <div class="grid-2">
         <div class="table-panel">
@@ -3691,24 +3692,19 @@ function onWhStaffingChange(){
   const staffCount = Number(staffInput.value);
   if(!row || !staffCount){ resultEl.textContent = ''; return; }
 
-  // v100: ฝั่ง WH คงสูตรเดิมไว้ตามที่ต้องการ — ไม่หักคนท้ายไลน์ ไม่บวกพักเที่ยง
-  //        และ OT วัดจากจำนวนชั่วโมงที่เกิน 6 ชม. (ไม่ได้ผูกกับนาฬิกา 17:00 เหมือนฝั่งแพ็ค)
-  const { whItemsPerPersonPerHour, whHours, whMaxHandhelds } = STAFFING_CRITERIA;
-  const effectiveStaff = Math.min(staffCount, whMaxHandhelds);
-  const totalHours = row.forecastedQty / (effectiveStaff * whItemsPerPersonPerHour);
-  const otHours    = Math.max(0, totalHours - whHours);
-  const finishTime = minutesToTime(timeToMinutes('08:00') + Math.round(totalHours * 60));
-  const idleStaff  = staffCount > whMaxHandhelds ? staffCount - whMaxHandhelds : 0;
+  // v102: ฝั่ง WH ใช้กติกาเดียวกับฝั่งแพ็คแล้ว — OT วัดจากนาฬิกา ไม่ใช่จำนวนชั่วโมง
+  //        (ของเดิมเทียบกับ 6 ชม. ทำให้ขึ้น "ต้องทำ OT" ทั้งที่เวลาเลิกยังไม่ถึง 17:00)
+  //        หักพักเที่ยง 1 ชม. เหมือนกัน เพราะทีมพักพร้อมกัน · จำกัดคนทำพร้อมกันตามจำนวน handheld
+  const { whItemsPerPersonPerHour, whMaxHandhelds } = STAFFING_CRITERIA;
+  const result = computeShiftOutcome(row.forecastedQty, staffCount, whItemsPerPersonPerHour, '08:00',
+    { excludeEndOfLine:false, maxConcurrent: whMaxHandhelds });
+  if(!result){ resultEl.textContent = ''; return; }
 
-  const idleNote = idleStaff > 0
+  const idleNote = result.idleStaff > 0
     ? ' <span style="color:var(--ink-faint);">(มี handheld แค่ ' + whMaxHandhelds +
-      ' เครื่อง เลยใช้งานพร้อมกันได้แค่ ' + effectiveStaff + ' คน อีก ' + idleStaff + ' คนต้องหมุนเวียน)</span>'
+      ' เครื่อง เลยใช้งานพร้อมกันได้แค่ ' + result.effectiveStaff + ' คน อีก ' + result.idleStaff + ' คนต้องหมุนเวียน)</span>'
     : '';
-  resultEl.innerHTML = 'ใช้เวลาทำงานรวม <b>' + totalHours.toFixed(1) + ' ชม.</b>' +
-    (otHours > 0
-      ? ' (ต้องทำ OT <b style="color:var(--azuki);">' + otHours.toFixed(1) + ' ชม.</b>)'
-      : ' (ไม่ต้องทำ OT)') +
-    ' · คาดว่าจะหยิบของเสร็จเวลา <b style="color:var(--matcha-deep);">' + finishTime + '</b>' + idleNote;
+  resultEl.innerHTML = shiftOutcomeText(result, 'หยิบของ') + idleNote;
 }
 
 function renderForecast1wChart(forecastRows){
