@@ -430,6 +430,9 @@
      เพื่อให้เนื้อหาจริงเต็มหน้ามากขึ้นและตัวหนังสือใหญ่ที่สุดเท่าที่ทำได้
      ใช้เฉพาะตอนกดปุ่ม Save เท่านั้น ถอดคลาสทิ้งทันทีหลัง capture */
   body.exporting .filter-row{display:none !important;}          /* ซ้ำกับหัวเรื่องในภาพอยู่แล้ว */
+  /* ซ่อนฟิลเตอร์เฉพาะหน้า On-Time Performance */
+  #tab1 .filter-row{display:none;}
+  #tab1 .stat-grid{margin-top:0;}
   /* v74: ขยายฟอนต์ที่เล็กที่สุดราว 1.5-1.6 เท่า โดยไม่แตะความกว้าง layout
      ตัวที่อ่านไม่ออกบนโปรเจกเตอร์คือพวก label / หัวตาราง / คำอธิบาย จึงขยายกลุ่มนี้แรงสุด */
   body.exporting .stat-label{font-size:26px !important;letter-spacing:.03em !important;}
