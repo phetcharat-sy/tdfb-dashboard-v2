@@ -430,9 +430,8 @@
      เพื่อให้เนื้อหาจริงเต็มหน้ามากขึ้นและตัวหนังสือใหญ่ที่สุดเท่าที่ทำได้
      ใช้เฉพาะตอนกดปุ่ม Save เท่านั้น ถอดคลาสทิ้งทันทีหลัง capture */
   body.exporting .filter-row{display:none !important;}          /* ซ้ำกับหัวเรื่องในภาพอยู่แล้ว */
-  /* ซ่อนฟิลเตอร์เฉพาะหน้า On-Time Performance */
-  #tab1 .filter-row{display:none;}
-  #tab1 .stat-grid{margin-top:0;}
+  /* v113: เอากฎที่ซ่อนฟิลเตอร์หน้า On-Time Performance ออก — ฟิลเตอร์กลับมาแสดงตามปกติ
+     (ยังซ่อนอยู่ตอน export/present เหมือนหน้าอื่น) */
   /* v74: ขยายฟอนต์ที่เล็กที่สุดราว 1.5-1.6 เท่า โดยไม่แตะความกว้าง layout
      ตัวที่อ่านไม่ออกบนโปรเจกเตอร์คือพวก label / หัวตาราง / คำอธิบาย จึงขยายกลุ่มนี้แรงสุด */
   body.exporting .stat-label{font-size:26px !important;letter-spacing:.03em !important;}
@@ -502,7 +501,7 @@
     <div class="meta-right">
       Last fetched<br><span id="lastUpdated">—</span>
       <div id="dataFreshness" class="freshness"></div>
-      <div id="buildTag" style="font-size:calc(13.6px * var(--type-scale));color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-14-v112-bar-label-gap</div>
+      <div id="buildTag" style="font-size:calc(13.6px * var(--type-scale));color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-31-v113-tab1-filter-back</div>
       <div class="btn-row">
         <button class="btn-plain btn-primary" id="refreshBtn" onclick="loadData()"><span class="bi">↻</span>รีเฟรชข้อมูล</button>
         <button class="btn-plain" id="saveImgBtn" onclick="saveTabAsPNG()"><span class="bi">🖼️</span>บันทึกเป็นภาพ</button>
