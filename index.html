@@ -17,7 +17,7 @@
     --paper:#F6F2E7; --panel:#FFFDF5; --ink:#18240F; --ink-soft:#3F4C37; --ink-faint:#6B7561;
     --hairline:#DED6BD; --hairline-strong:#C9BF9E;
     --matcha:#7A9A3F; --matcha-deep:#4C6B26; --bamboo:#C89B4A; --azuki:#A6432E;
-    --type-scale:1.25;   /* v115: ขยายจาก 1.14 (ใหญ่ขึ้น ~10%) · v111 เคยลดเหลือ 1.05 · โหมดพรีเซนต์ไม่กระทบ เพราะ body.present
+    --type-scale:1.45;   /* v116: ขยายจาก 1.25 · v115=1.25 · v114=1.14 · v111 เคยลดเหลือ 1.05 · โหมดพรีเซนต์ไม่กระทบ เพราะ body.present
                             ตั้งค่านี้ทับเป็น 1.62 แบบตายตัวอยู่แล้ว ไม่ได้คิดต่อจากค่าฐาน
                             v93: ตัวคูณขนาดตัวหนังสือทั้งหน้า — 1.0 = ขนาดฐาน
                             อยากใหญ่กว่านี้ใส่ 1.25 · เล็กลงใส่ 1.05 · แก้บรรทัดนี้ที่เดียวทั้งหน้าขยับตาม */
@@ -510,7 +510,7 @@
     <div class="meta-right">
       Last fetched<br><span id="lastUpdated">—</span>
       <div id="dataFreshness" class="freshness"></div>
-      <div id="buildTag" style="font-size:calc(13.6px * var(--type-scale));color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-09-01-v115-forecast-chips-14d</div>
+      <div id="buildTag" style="font-size:calc(13.6px * var(--type-scale));color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-09-01-v116-bigger-labels</div>
       <div class="btn-row">
         <button class="btn-plain btn-primary" id="refreshBtn" onclick="loadData()"><span class="bi">↻</span>รีเฟรชข้อมูล</button>
         <button class="btn-plain" id="saveImgBtn" onclick="saveTabAsPNG()"><span class="bi">🖼️</span>บันทึกเป็นภาพ</button>
@@ -768,12 +768,12 @@
       <div class="grid-2">
         <div class="chart-panel">
           <div style="font-size:calc(21.4px * var(--type-scale));color:var(--ink-soft);font-weight:600;margin-bottom:8px;">จำนวนออเดอร์ / สัปดาห์</div>
-          <div class="chart-box" style="height:320px;"><canvas id="chart_forecast_weekly_orders"></canvas></div>
+          <div class="chart-box" style="height:400px;"><canvas id="chart_forecast_weekly_orders"></canvas></div>
           <div class="fc-chips" id="fcchips_weekly_orders"></div>
         </div>
         <div class="chart-panel">
           <div style="font-size:calc(21.4px * var(--type-scale));color:var(--ink-soft);font-weight:600;margin-bottom:8px;">จำนวนสินค้า (ชิ้น) / สัปดาห์</div>
-          <div class="chart-box" style="height:320px;"><canvas id="chart_forecast_weekly_qty"></canvas></div>
+          <div class="chart-box" style="height:400px;"><canvas id="chart_forecast_weekly_qty"></canvas></div>
           <div class="fc-chips" id="fcchips_weekly_qty"></div>
         </div>
       </div>
@@ -806,12 +806,12 @@
       <div class="grid-2">
         <div class="chart-panel">
           <div style="font-size:calc(21.4px * var(--type-scale));color:var(--ink-soft);font-weight:600;margin-bottom:8px;">จำนวนออเดอร์ / วัน</div>
-          <div class="chart-box" style="height:320px;"><canvas id="chart_forecast_daily_orders"></canvas></div>
+          <div class="chart-box" style="height:400px;"><canvas id="chart_forecast_daily_orders"></canvas></div>
           <div class="fc-chips" id="fcchips_daily_orders"></div>
         </div>
         <div class="chart-panel">
           <div style="font-size:calc(21.4px * var(--type-scale));color:var(--ink-soft);font-weight:600;margin-bottom:8px;">จำนวนสินค้า (ชิ้น) / วัน</div>
-          <div class="chart-box" style="height:320px;"><canvas id="chart_forecast_daily_qty"></canvas></div>
+          <div class="chart-box" style="height:400px;"><canvas id="chart_forecast_daily_qty"></canvas></div>
           <div class="fc-chips" id="fcchips_daily_qty"></div>
         </div>
       </div>
@@ -1104,13 +1104,16 @@ const lineDataLabelsPlugin = {
          จุดเยอะ (ไม่ได้กรอง) ยังใช้ขนาด/สีเดิมทุกอย่าง เพราะเลขต้องไม่เบียดกัน */
       const ptCount = data.reduce((n, v) =>
         n + ((v === null || v === undefined || Number.isNaN(Number(v))) ? 0 : 1), 0);
-      const plainSize = ptCount <= 1 ? 30
-                      : ptCount <= 2 ? 26
-                      : ptCount <= 4 ? 22
-                      : ptCount <= 8 ? 17
-                      : ptCount <= 18 ? 15
-                      : 12.5;
-      const plainBig = ptCount <= 18;
+      /* v116: ขยายทุกระดับ — เลขบนจุดเดิมเล็กจนอ่านไม่ออกบนจอใหญ่
+         จุดที่เลขชนกันจะถูกข้ามอัตโนมัติอยู่แล้ว (hitTest ข้างล่าง) ตัวใหญ่ได้ไม่กลัวทับ */
+      const plainSize = ptCount <= 1 ? 34
+                      : ptCount <= 2 ? 30
+                      : ptCount <= 4 ? 26
+                      : ptCount <= 8 ? 22
+                      : ptCount <= 18 ? 19
+                      : ptCount <= 50 ? 17
+                      : 15;
+      const plainBig = true;
 
       let maxI = -1, minI = -1;
       if(boundaryIndex >= 0 && showPeaks){
@@ -1153,11 +1156,11 @@ const lineDataLabelsPlugin = {
         // v95: ย่อขนาดลงจาก 19/18/15 — เลขพยากรณ์เกาะกันแน่นที่ขอบขวา
         //      ตัวเล็กลง = กล่องแคบลง = ซ้อนกันน้อยลงมาก (เลขพยากรณ์ยังเป็นตัวเอียงเหมือนเดิม)
         ctx.font = emphasize
-          ? (isForecast ? 'italic 700 ' + fz(14.5) + "px 'IBM Plex Mono', monospace"
-                        : '700 ' + fz(15) + "px 'IBM Plex Mono', monospace")
+          ? (isForecast ? 'italic 700 ' + fz(18) + "px 'IBM Plex Mono', monospace"
+                        : '700 ' + fz(18) + "px 'IBM Plex Mono', monospace")
           : (plainBig ? '700 ' : '500 ') + fz(plainSize) + "px 'IBM Plex Mono', monospace";
         const w = ctx.measureText(text).width;
-        const h = emphasize ? fz(15) : fz(plainSize);
+        const h = emphasize ? fz(18) : fz(plainSize);
 
         // v100: เลขตัวใหญ่ต้องเว้นห่างจากจุดมากขึ้น ไม่งั้นตัวหนังสือไปคร่อมจุดวงกลมพอดี
         const gap = (plainBig && !emphasize) ? Math.max(14, h * 0.55) : 9;
@@ -2980,11 +2983,11 @@ function statusText(cls){
 function baseChartOptions({legend=true}={}){
   return {
     responsive:true, maintainAspectRatio:false,
-    plugins:{ legend:{ display:legend, labels:{ color:'#4E5C46', font:{size:26, family:"'IBM Plex Sans Thai'"} } }, tooltip: tooltipStyle() },
+    plugins:{ legend:{ display:legend, labels:{ color:'#4E5C46', font:{size:29, family:"'IBM Plex Sans Thai'"} } }, tooltip: tooltipStyle() },
     scales:{
       /* v115: ขยายตัวเลขแกนกราฟจาก 22.1 → 25 (Chart.js วาดลง canvas เอง CSS คุมไม่ได้) */
-      x:{ ticks:{ color:'#4E5C46', font:{size:25} }, grid:{ display:false } },
-      y:{ ticks:{ color:'#4E5C46', font:{size:25} }, grid:{ color:'rgba(31,46,26,0.06)' }, beginAtZero:true }
+      x:{ ticks:{ color:'#4E5C46', font:{size:29} }, grid:{ display:false } },
+      y:{ ticks:{ color:'#4E5C46', font:{size:29} }, grid:{ color:'rgba(31,46,26,0.06)' }, beginAtZero:true }
     }
   };
 }
@@ -3454,12 +3457,11 @@ function renderTrendLineChart(canvasId, chartKey, series, seriesLabel){
   if(charts[chartKey]) charts[chartKey].destroy();
   const opts = baseChartOptions({ legend:false });
 
-  // v59: โชว์ค่าจริงย้อนหลังราวๆ 8 จุดกำลังพอดี ที่เหลือ hover เอา
-  //      ส่วนเลขพยากรณ์โชว์ครบทุกตัวเสมอ + padding ขวากันเลขตัวท้ายโดนขอบตัด
+  // v116: โชว์เลขบนทุกจุดย้อนหลัง (เดิมเว้นเหลือ ~8 จุด) — จุดที่เลขจะทับกันถูกข้ามให้เอง
   opts.plugins.lineDataLabels = {
     display: true,
     boundaryIndex,
-    everyNth: Math.max(1, Math.ceil(historical.length / 8)),
+    everyNth: 1,
     // v115: เลขพยากรณ์ย้ายไปเป็นชิปใต้กราฟ ไม่วาดทับบนเส้นแล้ว
     hideForecastLabels: true
   };
