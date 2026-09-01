@@ -408,6 +408,13 @@
   .staffing-result:not(:empty){padding:10px 14px;border-radius:10px;
     background:rgba(122,154,63,.15);border-left:4px solid var(--matcha);}
 
+  /* v118: สีบอกความคลาดของพยากรณ์ย้อนหลัง */
+  .bt-good{color:var(--matcha-deep);font-weight:700;}
+  .bt-mid{color:#8a6a2f;font-weight:700;}
+  .bt-bad{color:var(--azuki);font-weight:700;}
+  .bt-na{color:var(--ink-faint);}
+  .bt-sub{font-family:'IBM Plex Mono',monospace;font-size:calc(17px * var(--type-scale));color:var(--ink-faint);font-weight:400;}
+
   /* v115: แถบเลขพยากรณ์ใต้กราฟ — อ่านง่ายกว่าเลขเล็กๆ ที่เคยวาดทับบนเส้น */
   .fc-chips{display:flex;flex-wrap:wrap;align-items:center;gap:9px;margin-top:12px;padding-top:11px;border-top:1px dashed var(--hairline);}
   .fc-chips .fc-lead,.fc-chips .fc-unit{font-family:'IBM Plex Mono',monospace;font-size:calc(18px * var(--type-scale));color:var(--ink-faint);letter-spacing:.04em;}
@@ -510,7 +517,7 @@
     <div class="meta-right">
       Last fetched<br><span id="lastUpdated">—</span>
       <div id="dataFreshness" class="freshness"></div>
-      <div id="buildTag" style="font-size:calc(13.6px * var(--type-scale));color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-09-01-v116-bigger-labels</div>
+      <div id="buildTag" style="font-size:calc(13.6px * var(--type-scale));color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-09-01-v119-smaller-axis-labels</div>
       <div class="btn-row">
         <button class="btn-plain btn-primary" id="refreshBtn" onclick="loadData()"><span class="bi">↻</span>รีเฟรชข้อมูล</button>
         <button class="btn-plain" id="saveImgBtn" onclick="saveTabAsPNG()"><span class="bi">🖼️</span>บันทึกเป็นภาพ</button>
@@ -813,6 +820,48 @@
           <div style="font-size:calc(21.4px * var(--type-scale));color:var(--ink-soft);font-weight:600;margin-bottom:8px;">จำนวนสินค้า (ชิ้น) / วัน</div>
           <div class="chart-box" style="height:400px;"><canvas id="chart_forecast_daily_qty"></canvas></div>
           <div class="fc-chips" id="fcchips_daily_qty"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title"><span class="sec-mark">🎯</span>ความแม่นของพยากรณ์ย้อนหลัง (Forecast Accuracy)</div>
+      <div class="section-desc">ย้อนเวลากลับไปพยากรณ์ทีละวันด้วยข้อมูลเท่าที่ "มีอยู่จริงในวันนั้น" แล้วเทียบกับยอดจริง · 30 วันล่าสุด</div>
+      <details class="calc-note" open>
+        <summary class="cn-head">วิธีคิด — ทำไมไม่ต้องเก็บไฟล์พยากรณ์เก่าไว้</summary>
+        <div class="cn-list">
+          <div><b>1. เดินย้อนเวลา (walk-forward)</b> — โมเดล Holt เดินไล่ทีละวันอยู่แล้ว ระหว่างเดินเราจด <span class="cl-var">Level</span>/<span class="cl-var">Trend</span> ณ <b>สิ้นวันที่ D−1</b> ไว้ก่อน แล้วใช้ค่านั้นทำนายวันที่ D <span class="cn-dim">= พยากรณ์ล่วงหน้า 1 วัน ตอนที่ยังไม่เห็นยอดวันที่ D — ได้ผลเหมือนย้อนไปกดดูหน้านี้เมื่อวานเป๊ะๆ</span></div>
+          <div><b>2. เทียบกับยอดจริง</b> — <code>%คลาด = (พยากรณ์ − จริง) ÷ จริง</code> · <b>+</b> = ทายสูงเกินจริง · <b>−</b> = ทายต่ำกว่าจริง</div>
+          <div><b>3. สรุปรวม</b> — <b>MAPE</b> = เฉลี่ยของ |%คลาด| · <b>ความแม่น</b> = 100% − MAPE · <b>Bias</b> = เฉลี่ย %คลาดแบบคิดเครื่องหมาย บอกว่าโมเดล<b>ทายสูงหรือทายต่ำเป็นนิสัย</b> <span class="cn-dim">(ใกล้ 0 = ไม่เอนไปทางไหน)</span></div>
+        </div>
+        <div class="cn-warn">⚠️ ไม่นับ <b>วันล่าสุด</b> (ยอดยังไม่ครบวัน) และ <b>วันที่ยอดจริง = 0</b> (หารไม่ได้) · ตัวคูณ Double Day ใช้ค่าที่เรียนรู้จากข้อมูลทั้งหมด ไม่ได้เรียนรู้ใหม่ทุกวัน ตัวเลขจึงสวยกว่าความจริงเล็กน้อย</div>
+      </details>
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/></svg></div><div class="stat-label">ความแม่น (ออเดอร์)</div><div class="stat-value c-matcha" id="bt_acc">—</div></div>
+        <div class="stat-card"><div class="stat-icon i-bamboo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18L10 8l4 5 6-9"/></svg></div><div class="stat-label">MAPE คลาดเฉลี่ย</div><div class="stat-value c-bamboo" id="bt_mape">—</div></div>
+        <div class="stat-card"><div class="stat-icon i-gray"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v16M5 9l7-5 7 5"/></svg></div><div class="stat-label">Bias สูง/ต่ำกว่าจริง</div><div class="stat-value" id="bt_bias">—</div></div>
+        <div class="stat-card"><div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 12l2.5 2.5L16 9"/><circle cx="12" cy="12" r="9"/></svg></div><div class="stat-label">วันที่คลาดไม่เกิน ±10%</div><div class="stat-value" id="bt_hit">—</div></div>
+      </div>
+      <div class="grid-2">
+        <div class="table-panel">
+          <div style="font-size:calc(21.4px * var(--type-scale));color:var(--ink-soft);font-weight:600;margin-bottom:8px;">จำนวนออเดอร์ / วัน <span class="bt-sub" id="bt_sub_orders"></span></div>
+          <div class="chart-box" style="height:300px;"><canvas id="chart_backtest_orders"></canvas></div>
+          <div class="table-scroll" style="margin-top:12px;">
+            <table class="data-table">
+              <thead><tr><th>วันที่</th><th>พยากรณ์</th><th>จริง</th><th>ต่าง</th><th>%คลาด</th></tr></thead>
+              <tbody id="tab4_backtest_orders_body"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="table-panel">
+          <div style="font-size:calc(21.4px * var(--type-scale));color:var(--ink-soft);font-weight:600;margin-bottom:8px;">จำนวนสินค้า (ชิ้น) / วัน <span class="bt-sub" id="bt_sub_qty"></span></div>
+          <div class="chart-box" style="height:300px;"><canvas id="chart_backtest_qty"></canvas></div>
+          <div class="table-scroll" style="margin-top:12px;">
+            <table class="data-table">
+              <thead><tr><th>วันที่</th><th>พยากรณ์</th><th>จริง</th><th>ต่าง</th><th>%คลาด</th></tr></thead>
+              <tbody id="tab4_backtest_qty_body"></tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
@@ -2983,11 +3032,11 @@ function statusText(cls){
 function baseChartOptions({legend=true}={}){
   return {
     responsive:true, maintainAspectRatio:false,
-    plugins:{ legend:{ display:legend, labels:{ color:'#4E5C46', font:{size:29, family:"'IBM Plex Sans Thai'"} } }, tooltip: tooltipStyle() },
+    plugins:{ legend:{ display:legend, labels:{ color:'#4E5C46', font:{size:23, family:"'IBM Plex Sans Thai'"} } }, tooltip: tooltipStyle() },
     scales:{
-      /* v115: ขยายตัวเลขแกนกราฟจาก 22.1 → 25 (Chart.js วาดลง canvas เอง CSS คุมไม่ได้) */
-      x:{ ticks:{ color:'#4E5C46', font:{size:29} }, grid:{ display:false } },
-      y:{ ticks:{ color:'#4E5C46', font:{size:29} }, grid:{ color:'rgba(31,46,26,0.06)' }, beginAtZero:true }
+      /* v119: ตัวเลข/ชื่อแกนไม่ต้องใหญ่ (ลง 29 → 21) — ที่ต้องอ่านชัดคือเลขบนจุด ไม่ใช่ป้ายแกน */
+      x:{ ticks:{ color:'#4E5C46', font:{size:21} }, grid:{ display:false } },
+      y:{ ticks:{ color:'#4E5C46', font:{size:21} }, grid:{ color:'rgba(31,46,26,0.06)' }, beginAtZero:true }
     }
   };
 }
@@ -3154,6 +3203,12 @@ function renderTab4(){
   renderForecastChips('fcchips_daily_qty', dailyQtySeries, 'ชิ้น');
   renderDailyCalcLive('calc_live_daily_qty', dailyQtySeries, 'ชิ้น', 'จำนวนสินค้า (ชิ้น)');
 
+  renderForecastBacktest(
+    mapSetToSize(ordersByDate), qtyByDate,
+    dailyOrdersSeries ? dailyOrdersSeries.DOUBLE_DAY_BOOST : 1,
+    dailyQtySeries ? dailyQtySeries.DOUBLE_DAY_BOOST : 1
+  );
+
   renderStaffingForecast(dailyOrdersSeries, dailyQtySeries);
 
   renderForecast1wChart(forecastRows);
@@ -3229,6 +3284,7 @@ function formatDateShort(d){
 const FC_HIST_WEEKS_SHOWN = 5;    // สัปดาห์ย้อนหลังที่โชว์ในกราฟรายสัปดาห์ (~1 เดือน)
 const FC_HIST_DAYS_SHOWN  = 30;   // วันย้อนหลังที่โชว์ในกราฟรายวัน (1 เดือน)
 const FC_DAILY_HORIZON    = 14;   // พยากรณ์รายวันกี่วันข้างหน้า
+const FC_BACKTEST_DAYS    = 30;   // ย้อนดูความแม่นของพยากรณ์กี่วันล่าสุด
 
 // พยากรณ์ 4 สัปดาห์ข้างหน้า = ค่าเฉลี่ย 4 สัปดาห์ล่าสุด + ความชัน + Double Day boost
 function computeWeeklyForecastSeries(weekList, valueByWeek, weekDateRange, ddInfo){
@@ -3431,6 +3487,142 @@ function renderDailyCalcLive(elId, series, unitName, unitLabel){
   el.innerHTML = h;
 }
 
+/* v118: ย้อนดูความแม่นของพยากรณ์ (walk-forward backtest)
+   เดิน Holt ไล่ทีละวันเหมือน computeDailyForecastSeries แต่ระหว่างเดิน
+   เราหยุดจด Level/Trend ณ สิ้นวันที่ D−1 ไว้ก่อน แล้วเอาไปทำนายวันที่ D
+   → ได้ "พยากรณ์ล่วงหน้า 1 วัน" ของทุกวันในอดีต โดยไม่ต้องเก็บไฟล์พยากรณ์เก่าไว้เลย */
+function computeDailyBacktest(valueByDateKey, ddBoost){
+  const todayKey = toDateKey(new Date());
+  const HIST_START_KEY = '2026-01-01';
+  const pastKeys = Object.keys(valueByDateKey).filter(k => k >= HIST_START_KEY && k <= todayKey).sort();
+  if(pastKeys.length < 3) return null;
+
+  const lastDate  = new Date(pastKeys[pastKeys.length-1] + 'T00:00:00');
+  const startDate = new Date(HIST_START_KEY + 'T00:00:00');
+  const totalDays = Math.round((lastDate - startDate) / 86400000) + 1;
+  const keys = [], vals = [];
+  for(let i = 0; i < totalDays; i++){
+    const d = new Date(startDate); d.setDate(startDate.getDate() + i);
+    const k = toDateKey(d);
+    keys.push(k); vals.push(valueByDateKey[k] || 0);
+  }
+
+  const ALPHA = 0.3, BETA = 0.15;
+  let level = vals[0];
+  let trend = vals.length > 1 ? (vals[1] - vals[0]) : 0;
+  const rows = [];
+  for(let i = 1; i < vals.length; i++){
+    // ทำนายก่อน แล้วค่อยให้โมเดลเห็นยอดจริงของวันนั้น (กันข้อมูลอนาคตรั่ว)
+    const d = new Date(keys[i] + 'T00:00:00');
+    const isDD = isDoubleDay(d);
+    let f = Math.max(0, level + trend);
+    if(isDD && ddBoost > 1) f *= ddBoost;
+    rows.push({ dateKey:keys[i], label:formatDateShort(d), isDD, forecast:Math.round(f), actual:vals[i] });
+
+    const value = vals[i], prevLevel = level;
+    level = ALPHA*value + (1-ALPHA)*(level + trend);
+    trend = BETA*(level - prevLevel) + (1-BETA)*trend;
+  }
+
+  rows.pop();                                    // วันล่าสุด ยอดยังไม่ครบวัน ไม่เอามาตัดสิน
+  const win = rows.slice(-FC_BACKTEST_DAYS).map(r => ({
+    ...r,
+    diff: r.forecast - r.actual,
+    pct : r.actual > 0 ? ((r.forecast - r.actual) / r.actual) * 100 : null
+  }));
+
+  const usable = win.filter(r => r.pct !== null);
+  const mape = usable.length ? usable.reduce((s,r)=>s+Math.abs(r.pct),0) / usable.length : null;
+  const bias = usable.length ? usable.reduce((s,r)=>s+r.pct,0) / usable.length : null;
+  const hit  = usable.filter(r => Math.abs(r.pct) <= 10).length;
+  return { rows: win, mape, bias, hit, usable: usable.length };
+}
+
+function btClass(pct){
+  if(pct === null) return 'bt-na';
+  const a = Math.abs(pct);
+  return a <= 10 ? 'bt-good' : (a <= 25 ? 'bt-mid' : 'bt-bad');
+}
+function btPct(pct){
+  if(pct === null || pct === undefined) return '—';
+  return (pct >= 0 ? '+' : '−') + Math.abs(pct).toFixed(1) + '%';
+}
+
+function renderBacktestTable(bt, tbodyId){
+  const tb = document.getElementById(tbodyId);
+  if(!tb) return;
+  if(!bt || !bt.rows.length){
+    tb.innerHTML = '<tr><td colspan="5"><div class="empty-state">ไม่มีข้อมูลพอเทียบย้อนหลัง</div></td></tr>';
+    return;
+  }
+  tb.innerHTML = [...bt.rows].reverse().map(r => {
+    const diffTxt = (r.diff >= 0 ? '+' : '−') + Math.abs(r.diff).toLocaleString('en-US');
+    return '<tr' + (r.isDD ? ' style="background:rgba(166,67,46,.10);"' : '') + '>' +
+      '<td class="strong"><span style="white-space:nowrap;">' + escapeHtml(r.label) + (r.isDD ? ' ⚡' : '') + '</span></td>' +
+      '<td>' + r.forecast.toLocaleString('en-US') + '</td>' +
+      '<td><b>' + r.actual.toLocaleString('en-US') + '</b></td>' +
+      '<td>' + diffTxt + '</td>' +
+      '<td class="' + btClass(r.pct) + '">' + btPct(r.pct) + '</td>' +
+      '</tr>';
+  }).join('');
+}
+
+function renderBacktestSub(elId, bt){
+  const el = document.getElementById(elId);
+  if(!el) return;
+  el.textContent = (!bt || bt.mape === null) ? ''
+    : '· MAPE ' + bt.mape.toFixed(1) + '% · ความแม่น ' + Math.max(0, 100 - bt.mape).toFixed(1) + '% (' + bt.usable + ' วัน)';
+}
+
+function renderBacktestChart(canvasId, chartKey, bt){
+  const ctx = document.getElementById(canvasId);
+  if(!ctx) return;
+  if(charts[chartKey]) charts[chartKey].destroy();
+  if(!bt || !bt.rows.length) return;
+  const opts = baseChartOptions({ legend:true });
+  opts.layout = { padding:{ top:18, right:16, bottom:8, left:6 } };
+  charts[chartKey] = new Chart(ctx, {
+    type:'line',
+    data:{ labels: bt.rows.map(r=>r.label), datasets:[
+      { label:'ยอดจริง', data: bt.rows.map(r=>r.actual),
+        borderColor:'#7A9A3F', backgroundColor:'rgba(122,154,63,0.10)',
+        pointRadius:3, tension:0.3, fill:true, borderWidth:2 },
+      { label:'พยากรณ์ (ล่วงหน้า 1 วัน)', data: bt.rows.map(r=>r.forecast),
+        borderColor:'#C89B4A', pointRadius:3, tension:0.3, fill:false, borderWidth:2, borderDash:[7,4] }
+    ]},
+    options: opts
+  });
+}
+
+function renderForecastBacktest(ordersByDateSize, qtyByDate, ordersDDBoost, qtyDDBoost){
+  const btOrders = computeDailyBacktest(ordersByDateSize, ordersDDBoost);
+  const btQty    = computeDailyBacktest(qtyByDate, qtyDDBoost);
+
+  renderBacktestChart('chart_backtest_orders', 'backtestOrders', btOrders);
+  renderBacktestChart('chart_backtest_qty',    'backtestQty',    btQty);
+  renderBacktestTable(btOrders, 'tab4_backtest_orders_body');
+  renderBacktestTable(btQty,    'tab4_backtest_qty_body');
+  renderBacktestSub('bt_sub_orders', btOrders);
+  renderBacktestSub('bt_sub_qty',    btQty);
+
+  const set = (id, txt, cls) => {
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.textContent = txt;
+    el.className = 'stat-value' + (cls ? ' ' + cls : '');
+  };
+  if(btOrders && btOrders.mape !== null){
+    const acc = Math.max(0, 100 - btOrders.mape);
+    set('bt_acc',  acc.toFixed(1) + '%',  acc >= 85 ? 'c-matcha' : (acc >= 70 ? 'c-bamboo' : 'c-azuki'));
+    set('bt_mape', btOrders.mape.toFixed(1) + '%', 'c-bamboo');
+    set('bt_bias', btPct(btOrders.bias), Math.abs(btOrders.bias) <= 5 ? 'c-matcha' : 'c-azuki');
+    set('bt_hit',  btOrders.hit + ' / ' + btOrders.usable,
+        btOrders.hit >= btOrders.usable * 0.7 ? 'c-matcha' : 'c-bamboo');
+  } else {
+    ['bt_acc','bt_mape','bt_bias','bt_hit'].forEach(id => set(id, '—'));
+  }
+}
+
 /* v115: แถบเลขพยากรณ์ใต้กราฟ — จุดสีทอง = ช่วงที่มี Double Day */
 function renderForecastChips(elId, series, unitName){
   const el = document.getElementById(elId);
@@ -3462,10 +3654,11 @@ function renderTrendLineChart(canvasId, chartKey, series, seriesLabel){
     display: true,
     boundaryIndex,
     everyNth: 1,
-    // v115: เลขพยากรณ์ย้ายไปเป็นชิปใต้กราฟ ไม่วาดทับบนเส้นแล้ว
-    hideForecastLabels: true
+    // v117: กลับมาโชว์เลขบนจุดพยากรณ์ด้วย (ชิปใต้กราฟยังอยู่ตามเดิม)
+    hideForecastLabels: false,
+    forecastEveryNth: 1
   };
-  opts.layout = { padding:{ top:34, right:18, bottom:16, left:6 } };
+  opts.layout = { padding:{ top:40, right:56, bottom:16, left:6 } };
 
   opts.plugins.tooltip = {
     ...tooltipStyle(),
