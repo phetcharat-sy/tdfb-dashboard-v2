@@ -17,7 +17,7 @@
     --paper:#F6F2E7; --panel:#FFFDF5; --ink:#18240F; --ink-soft:#3F4C37; --ink-faint:#6B7561;
     --hairline:#DED6BD; --hairline-strong:#C9BF9E;
     --matcha:#7A9A3F; --matcha-deep:#4C6B26; --bamboo:#C89B4A; --azuki:#A6432E;
-    --type-scale:1.05;   /* v111: ลดจาก 1.14 (เล็กลง ~8%) · โหมดพรีเซนต์ไม่กระทบ เพราะ body.present
+    --type-scale:1.25;   /* v115: ขยายจาก 1.14 (ใหญ่ขึ้น ~10%) · v111 เคยลดเหลือ 1.05 · โหมดพรีเซนต์ไม่กระทบ เพราะ body.present
                             ตั้งค่านี้ทับเป็น 1.62 แบบตายตัวอยู่แล้ว ไม่ได้คิดต่อจากค่าฐาน
                             v93: ตัวคูณขนาดตัวหนังสือทั้งหน้า — 1.0 = ขนาดฐาน
                             อยากใหญ่กว่านี้ใส่ 1.25 · เล็กลงใส่ 1.05 · แก้บรรทัดนี้ที่เดียวทั้งหน้าขยับตาม */
@@ -408,6 +408,15 @@
   .staffing-result:not(:empty){padding:10px 14px;border-radius:10px;
     background:rgba(122,154,63,.15);border-left:4px solid var(--matcha);}
 
+  /* v115: แถบเลขพยากรณ์ใต้กราฟ — อ่านง่ายกว่าเลขเล็กๆ ที่เคยวาดทับบนเส้น */
+  .fc-chips{display:flex;flex-wrap:wrap;align-items:center;gap:9px;margin-top:12px;padding-top:11px;border-top:1px dashed var(--hairline);}
+  .fc-chips .fc-lead,.fc-chips .fc-unit{font-family:'IBM Plex Mono',monospace;font-size:calc(18px * var(--type-scale));color:var(--ink-faint);letter-spacing:.04em;}
+  .fc-chip{display:inline-flex;align-items:baseline;gap:8px;padding:6px 13px;border-radius:10px;
+    background:rgba(122,154,63,.13);border:1px solid var(--hairline-strong);}
+  .fc-chip .fc-k{font-family:'IBM Plex Mono',monospace;font-size:calc(17px * var(--type-scale));color:var(--ink-faint);text-transform:uppercase;letter-spacing:.03em;white-space:nowrap;}
+  .fc-chip .fc-v{font-family:'Zen Maru Gothic',sans-serif;font-weight:900;font-size:calc(25px * var(--type-scale));color:var(--ink);}
+  .fc-chip.dd{background:rgba(200,155,74,.26);border-color:rgba(200,155,74,.65);}
+  .fc-chip.dd .fc-v{color:#7A5613;}
   .cn-livebox{background:var(--paper);border:1px dashed var(--hairline-strong);border-radius:6px;padding:8px 12px;}
   .cn-livebox .cl-boxtitle{font-family:'IBM Plex Mono',monospace;font-size:calc(17.2px * var(--type-scale));letter-spacing:.04em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:7px;padding-bottom:6px;border-bottom:1px solid var(--hairline);}
   .cn-live + .cn-live{margin-top:9px;padding-top:8px;border-top:1px solid var(--hairline);}
@@ -501,7 +510,7 @@
     <div class="meta-right">
       Last fetched<br><span id="lastUpdated">—</span>
       <div id="dataFreshness" class="freshness"></div>
-      <div id="buildTag" style="font-size:calc(13.6px * var(--type-scale));color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-08-31-v113-tab1-filter-back</div>
+      <div id="buildTag" style="font-size:calc(13.6px * var(--type-scale));color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-09-01-v115-forecast-chips-14d</div>
       <div class="btn-row">
         <button class="btn-plain btn-primary" id="refreshBtn" onclick="loadData()"><span class="bi">↻</span>รีเฟรชข้อมูล</button>
         <button class="btn-plain" id="saveImgBtn" onclick="saveTabAsPNG()"><span class="bi">🖼️</span>บันทึกเป็นภาพ</button>
@@ -739,8 +748,8 @@
 
     <div class="section">
       <div class="section-title"><span class="sec-mark">🔮</span>พยากรณ์รายสัปดาห์ (Weekly Forecast)</div>
-      <div class="section-desc">ยอดจริงรายสัปดาห์ (นับตามวันที่ต้องการจัดส่ง) + ประมาณการ 4 สัปดาห์ข้างหน้า</div>
-      <details class="calc-note">
+      <div class="section-desc">กราฟโชว์ย้อนหลัง 5 สัปดาห์ล่าสุด + ประมาณการ 4 สัปดาห์ข้างหน้า (คำนวณจากข้อมูลทั้งหมด)</div>
+      <details class="calc-note" open>
         <summary class="cn-head">วิธีคิด — บวกกัน 3 อย่าง</summary>
         <div class="cn-list">
           <div><b>1. ยอดปกติ</b> — เอายอด <b>4 สัปดาห์ล่าสุด</b> มาเฉลี่ย ได้เป็นตัวตั้ง</div>
@@ -760,25 +769,27 @@
         <div class="chart-panel">
           <div style="font-size:calc(21.4px * var(--type-scale));color:var(--ink-soft);font-weight:600;margin-bottom:8px;">จำนวนออเดอร์ / สัปดาห์</div>
           <div class="chart-box" style="height:320px;"><canvas id="chart_forecast_weekly_orders"></canvas></div>
+          <div class="fc-chips" id="fcchips_weekly_orders"></div>
         </div>
         <div class="chart-panel">
           <div style="font-size:calc(21.4px * var(--type-scale));color:var(--ink-soft);font-weight:600;margin-bottom:8px;">จำนวนสินค้า (ชิ้น) / สัปดาห์</div>
           <div class="chart-box" style="height:320px;"><canvas id="chart_forecast_weekly_qty"></canvas></div>
+          <div class="fc-chips" id="fcchips_weekly_qty"></div>
         </div>
       </div>
     </div>
 
     <div class="section">
       <div class="section-title"><span class="sec-mark">📅</span>พยากรณ์รายวัน (Daily Forecast)</div>
-      <div class="section-desc">ยอดจริงตั้งแต่ ม.ค. 2569 ถึงวันล่าสุด (นับตามวันที่ต้องการจัดส่ง) + ประมาณการ 7 วันข้างหน้า</div>
-      <details class="calc-note">
+      <div class="section-desc">กราฟโชว์ย้อนหลัง 30 วันล่าสุด + ประมาณการ 14 วันข้างหน้า (คำนวณจากข้อมูลตั้งแต่ ม.ค. 2569)</div>
+      <details class="calc-note" open>
         <summary class="cn-head">วิธีคิด — ให้น้ำหนักวันใกล้มากกว่าวันไกล</summary>
         <div class="cn-list">
           <div><b>1. ยอดฐาน</b> — ไม่ได้เฉลี่ยทุกวันเท่ากัน แต่<b>ให้ความสำคัญกับวันล่าสุดมากกว่า</b> ยอดเมื่อวานมีน้ำหนักมากกว่ายอดเมื่อ 3 เดือนก่อน <span class="cn-dim">(วันใหม่ 30% + ยอดฐานเดิม 70%)</span></div>
           <div><b>2. แนวโน้ม</b> — ติดตามว่ายอด<b>ไต่ขึ้นหรือไหลลง</b>วันละเท่าไหร่ แล้วปรับตามเรื่อยๆ ถ้าเทรนด์เปลี่ยนก็ตามทัน</div>
           <div><b>3. Double Day</b> — วันที่ตรงกับเลขซ้ำจะคูณเพิ่มตามที่เคยเกิดในอดีต <span class="cn-dim">(สูงสุด 3 เท่า ต้องเคยเกิด ≥ 2 ครั้ง)</span></div>
         </div>
-        <div class="cn-warn">⚠️ <b>กราฟโชว์จุดทุก 5 วัน</b> เพื่อไม่ให้รก — แต่การคำนวณใช้ข้อมูล<b>ทุกวันจริง</b> ไม่ได้ข้ามนะครับ</div>
+        <div class="cn-warn">⚠️ <b>กราฟโชว์แค่ 30 วันล่าสุด</b> เพื่อให้อ่านง่าย — แต่การคำนวณใช้ข้อมูล<b>ทุกวันตั้งแต่ ม.ค. 2569</b> ไม่ได้ตัดทิ้งนะครับ</div>
         <div class="cn-split">
           <div class="cn-formula">สูตรเต็ม (Holt's Exponential Smoothing):<br>
             <code>Level(t) = 0.3 × ค่าจริง(t) + 0.7 × (Level(t-1) + Trend(t-1))</code><br>
@@ -796,18 +807,20 @@
         <div class="chart-panel">
           <div style="font-size:calc(21.4px * var(--type-scale));color:var(--ink-soft);font-weight:600;margin-bottom:8px;">จำนวนออเดอร์ / วัน</div>
           <div class="chart-box" style="height:320px;"><canvas id="chart_forecast_daily_orders"></canvas></div>
+          <div class="fc-chips" id="fcchips_daily_orders"></div>
         </div>
         <div class="chart-panel">
           <div style="font-size:calc(21.4px * var(--type-scale));color:var(--ink-soft);font-weight:600;margin-bottom:8px;">จำนวนสินค้า (ชิ้น) / วัน</div>
           <div class="chart-box" style="height:320px;"><canvas id="chart_forecast_daily_qty"></canvas></div>
+          <div class="fc-chips" id="fcchips_daily_qty"></div>
         </div>
       </div>
     </div>
 
     <div class="section">
       <div class="section-title"><span class="sec-mark">👥</span>พยากรณ์อัตรากำลังคน (Staffing Forecast)</div>
-      <div class="section-desc">คำนวณจากยอดพยากรณ์ 7 วันข้างหน้า (จากกราฟรายวันด้านบน) · แถวสีไฮไลท์ = วันที่ตรงกับ Double Day</div>
-      <details class="calc-note">
+      <div class="section-desc">คำนวณจากยอดพยากรณ์ 14 วันข้างหน้า (จากกราฟรายวันด้านบน) · แถวสีไฮไลท์ = วันที่ตรงกับ Double Day</div>
+      <details class="calc-note" open>
         <summary class="cn-head">วิธีคิดจำนวนคน</summary>
         <div class="cn-list">
           <div><b>ทีม Packing</b> — 1 คนแพ็คได้ <b>200 ออเดอร์/วัน</b> (ทำงาน 6 ชม. = 33 ออเดอร์/ชม.) <span class="cn-dim">+ คนท้ายไลน์แยกพัสดุอีก 1 คนเสมอ ไม่ว่ายอดจะน้อยแค่ไหน</span></div>
@@ -1095,8 +1108,9 @@ const lineDataLabelsPlugin = {
                       : ptCount <= 2 ? 26
                       : ptCount <= 4 ? 22
                       : ptCount <= 8 ? 17
+                      : ptCount <= 18 ? 15
                       : 12.5;
-      const plainBig = ptCount <= 8;
+      const plainBig = ptCount <= 18;
 
       let maxI = -1, minI = -1;
       if(boundaryIndex >= 0 && showPeaks){
@@ -1115,6 +1129,8 @@ const lineDataLabelsPlugin = {
         if(value === null || value === undefined || Number.isNaN(Number(value))) return;
 
         const isForecast = boundaryIndex >= 0 && index >  boundaryIndex;
+        // v115: เลขพยากรณ์ย้ายไปอยู่เป็นชิปใต้กราฟแล้ว ไม่ต้องวาดทับบนเส้น
+        if(isForecast && options.hideForecastLabels) return;
         const isBoundary = boundaryIndex >= 0 && index === boundaryIndex;
         const emphasize  = isForecast || isBoundary;
 
@@ -2964,10 +2980,11 @@ function statusText(cls){
 function baseChartOptions({legend=true}={}){
   return {
     responsive:true, maintainAspectRatio:false,
-    plugins:{ legend:{ display:legend, labels:{ color:'#4E5C46', font:{size:23.4, family:"'IBM Plex Sans Thai'"} } }, tooltip: tooltipStyle() },
+    plugins:{ legend:{ display:legend, labels:{ color:'#4E5C46', font:{size:26, family:"'IBM Plex Sans Thai'"} } }, tooltip: tooltipStyle() },
     scales:{
-      x:{ ticks:{ color:'#4E5C46', font:{size:22.1} }, grid:{ display:false } },
-      y:{ ticks:{ color:'#4E5C46', font:{size:22.1} }, grid:{ color:'rgba(31,46,26,0.06)' }, beginAtZero:true }
+      /* v115: ขยายตัวเลขแกนกราฟจาก 22.1 → 25 (Chart.js วาดลง canvas เอง CSS คุมไม่ได้) */
+      x:{ ticks:{ color:'#4E5C46', font:{size:25} }, grid:{ display:false } },
+      y:{ ticks:{ color:'#4E5C46', font:{size:25} }, grid:{ color:'rgba(31,46,26,0.06)' }, beginAtZero:true }
     }
   };
 }
@@ -3114,20 +3131,24 @@ function renderTab4(){
     weekDateRange, weeklyOrdersDD
   );
   renderTrendLineChart('chart_forecast_weekly_orders', 'forecastWeeklyOrders', weeklyOrdersSeries, 'จำนวนออเดอร์');
+  renderForecastChips('fcchips_weekly_orders', weeklyOrdersSeries, 'ออเดอร์');
   renderWeeklyCalcLive('calc_live_weekly_orders', weeklyOrdersSeries, 'ใบ', 'จำนวนออเดอร์');
   lastDoubleDayInfo = { multiplier: weeklyOrdersDD.multiplier, samples: weeklyOrdersDD.samples };
 
   const weeklyQtyDD = learnDoubleDayMultiplierByValue(qtyByDate);
   const weeklyQtySeries = computeWeeklyForecastSeries(weekList, qtyByWeekTotal, weekDateRange, weeklyQtyDD);
   renderTrendLineChart('chart_forecast_weekly_qty', 'forecastWeeklyQty', weeklyQtySeries, 'จำนวนสินค้า (ชิ้น)');
+  renderForecastChips('fcchips_weekly_qty', weeklyQtySeries, 'ชิ้น');
   renderWeeklyCalcLive('calc_live_weekly_qty', weeklyQtySeries, 'ชิ้น', 'จำนวนสินค้า (ชิ้น)');
 
   const dailyOrdersSeries = computeDailyForecastSeries(mapSetToSize(ordersByDate));
   if(dailyOrdersSeries) renderTrendLineChart('chart_forecast_daily_orders', 'forecastDailyOrders', dailyOrdersSeries, 'จำนวนออเดอร์');
+  renderForecastChips('fcchips_daily_orders', dailyOrdersSeries, 'ออเดอร์');
   renderDailyCalcLive('calc_live_daily_orders', dailyOrdersSeries, 'ใบ', 'จำนวนออเดอร์');
 
   const dailyQtySeries = computeDailyForecastSeries(qtyByDate);
   if(dailyQtySeries) renderTrendLineChart('chart_forecast_daily_qty', 'forecastDailyQty', dailyQtySeries, 'จำนวนสินค้า (ชิ้น)');
+  renderForecastChips('fcchips_daily_qty', dailyQtySeries, 'ชิ้น');
   renderDailyCalcLive('calc_live_daily_qty', dailyQtySeries, 'ชิ้น', 'จำนวนสินค้า (ชิ้น)');
 
   renderStaffingForecast(dailyOrdersSeries, dailyQtySeries);
@@ -3200,6 +3221,12 @@ function formatDateShort(d){
   return d.getDate() + ' ' + months[d.getMonth()];
 }
 
+/* v115: ปรับได้ที่เดียว — จำนวนย้อนหลังที่ "โชว์" ในกราฟ และระยะพยากรณ์รายวัน
+   หมายเหตุ: ตัวเลขพวกนี้คุมแค่การแสดงผล การคำนวณยังใช้ข้อมูลทั้งหมดเหมือนเดิม */
+const FC_HIST_WEEKS_SHOWN = 5;    // สัปดาห์ย้อนหลังที่โชว์ในกราฟรายสัปดาห์ (~1 เดือน)
+const FC_HIST_DAYS_SHOWN  = 30;   // วันย้อนหลังที่โชว์ในกราฟรายวัน (1 เดือน)
+const FC_DAILY_HORIZON    = 14;   // พยากรณ์รายวันกี่วันข้างหน้า
+
 // พยากรณ์ 4 สัปดาห์ข้างหน้า = ค่าเฉลี่ย 4 สัปดาห์ล่าสุด + ความชัน + Double Day boost
 function computeWeeklyForecastSeries(weekList, valueByWeek, weekDateRange, ddInfo){
   const historical = weekList.map(w => valueByWeek[w] || 0);
@@ -3259,10 +3286,18 @@ function computeWeeklyForecastSeries(weekList, valueByWeek, weekDateRange, ddInf
     const r = weekDateRange ? weekDateRange[w] : null;
     return r ? (formatDateShort(r.min) + ' – ' + formatDateShort(r.max)) : '';
   });
-  const allRangeLabels = [...historicalRangeLabels, ...forecastRangeLabels];
-  const labels = [...weekList.map(w=>'W'+w), ...forecastLabels];
+  // v115: โชว์ย้อนหลังแค่ ~1 เดือน (คำนวณยังใช้ทุกสัปดาห์เหมือนเดิม)
+  const cut = Math.max(0, historical.length - FC_HIST_WEEKS_SHOWN);
+  const histShown       = historical.slice(cut);
+  const histLabelsShown = weekList.slice(cut).map(w=>'W'+w);
+  const histRangeShown  = historicalRangeLabels.slice(cut);
+  const ddShown = doubleDayHits.map(i => i - cut).filter(i => i >= 0);
 
-  return { labels, historical, forecastData, allRangeLabels, doubleDayHits, DOUBLE_DAY_BOOST, ddSamples,
+  const allRangeLabels = [...histRangeShown, ...forecastRangeLabels];
+  const labels = [...histLabelsShown, ...forecastLabels];
+
+  return { labels, historical: histShown, forecastData, allRangeLabels, doubleDayHits: ddShown,
+           DOUBLE_DAY_BOOST, ddSamples,
            avg4, slope, dailyBaseline, ddCountPerForecast, weeksUsed: n, forecastLabels };
 }
 
@@ -3274,7 +3309,7 @@ function computeDailyForecastSeries(valueByDateKey){
   const pastKeys = Object.keys(valueByDateKey).filter(k => k >= HIST_START_KEY && k <= todayKey).sort();
   if(!pastKeys.length) return null;
 
-  const FORECAST_DAYS = 7;
+  const FORECAST_DAYS = FC_DAILY_HORIZON;
   const lastDateKey = pastKeys[pastKeys.length-1];
   const lastDate = new Date(lastDateKey + 'T00:00:00');
   const startDate = new Date(HIST_START_KEY + 'T00:00:00');
@@ -3301,10 +3336,10 @@ function computeDailyForecastSeries(valueByDateKey){
   const { multiplier: learnedMultiplier, samples: ddSamples } = learnDoubleDayMultiplierByValue(pastOnlyValues);
   const DOUBLE_DAY_BOOST = learnedMultiplier || 1;
 
-  const DISPLAY_INTERVAL = 5;
+  // v115: เดิมโชว์ทั้งปีแบบเว้นทุก 5 วัน · ตอนนี้โชว์แค่ 30 วันล่าสุดแบบครบทุกวัน
+  const displayStart = Math.max(0, allDayKeys.length - FC_HIST_DAYS_SHOWN);
   const displayIdx = [];
-  for(let i = 0; i < allDayKeys.length; i += DISPLAY_INTERVAL) displayIdx.push(i);
-  if(displayIdx[displayIdx.length-1] !== allDayKeys.length-1) displayIdx.push(allDayKeys.length-1);
+  for(let i = displayStart; i < allDayKeys.length; i++) displayIdx.push(i);
 
   const recentKeys = displayIdx.map(i => allDayKeys[i]);
   const historical = displayIdx.map(i => allDayValues[i]);
@@ -3393,6 +3428,22 @@ function renderDailyCalcLive(elId, series, unitName, unitLabel){
   el.innerHTML = h;
 }
 
+/* v115: แถบเลขพยากรณ์ใต้กราฟ — จุดสีทอง = ช่วงที่มี Double Day */
+function renderForecastChips(elId, series, unitName){
+  const el = document.getElementById(elId);
+  if(!el) return;
+  if(!series || !series.forecastData || !series.forecastData.length){ el.innerHTML = ''; return; }
+  const histLen = series.historical.length;
+  const chips = series.forecastData.map((v, i) => {
+    const key = (series.forecastLabels[i] || '').replace('*','');
+    const isDD = series.doubleDayHits.includes(histLen + i);
+    return '<span class="fc-chip' + (isDD ? ' dd' : '') + '">' +
+           '<span class="fc-k">' + escapeHtml(key) + (isDD ? ' ⚡' : '') + '</span>' +
+           '<span class="fc-v">' + Number(v).toLocaleString('en-US') + '</span></span>';
+  }).join('');
+  el.innerHTML = '<span class="fc-lead">พยากรณ์</span>' + chips + '<span class="fc-unit">' + escapeHtml(unitName) + '</span>';
+}
+
 function renderTrendLineChart(canvasId, chartKey, series, seriesLabel){
   const { labels, historical, forecastData, allRangeLabels, doubleDayHits, DOUBLE_DAY_BOOST, ddSamples } = series;
   const boundaryIndex = historical.length - 1;
@@ -3409,10 +3460,10 @@ function renderTrendLineChart(canvasId, chartKey, series, seriesLabel){
     display: true,
     boundaryIndex,
     everyNth: Math.max(1, Math.ceil(historical.length / 8)),
-    // v97: โชว์ครบทุกวันที่พยากรณ์ตามที่ต้องการ (ตัวเลขเล็กพอ + มีระบบไล่หลบไม่ให้ทับกัน)
-    forecastEveryNth: 1
+    // v115: เลขพยากรณ์ย้ายไปเป็นชิปใต้กราฟ ไม่วาดทับบนเส้นแล้ว
+    hideForecastLabels: true
   };
-  opts.layout = { padding:{ top:34, right:52, bottom:16, left:6 } };
+  opts.layout = { padding:{ top:34, right:18, bottom:16, left:6 } };
 
   opts.plugins.tooltip = {
     ...tooltipStyle(),
