@@ -759,12 +759,12 @@
     <div class="section">
       <div class="section-title"><span class="sec-mark">🔮</span>พยากรณ์รายสัปดาห์ (Weekly Forecast)</div>
       <div class="section-desc">กราฟโชว์ย้อนหลัง 5 สัปดาห์ล่าสุด + ประมาณการ 4 สัปดาห์ข้างหน้า (คำนวณจากข้อมูลทั้งหมด)</div>
-      <details class="calc-note" open>
+      <details class="calc-note">
         <summary class="cn-head">วิธีคิด — บวกกัน 3 อย่าง</summary>
         <div class="cn-list">
           <div><b>1. ยอดปกติ</b> — เอายอด <b>4 สัปดาห์ล่าสุด</b> มาเฉลี่ย ได้เป็นตัวตั้ง</div>
           <div><b>2. แนวโน้ม</b> — ดูจากข้อมูลทั้งหมดว่ายอดกำลัง<b>ขึ้นหรือลง</b>สัปดาห์ละกี่ออเดอร์ แล้วบวก/ลบตามระยะที่ทำนายไกลออกไป (ไกล 2 สัปดาห์ = คูณ 2)</div>
-          <div><b>3. Double Day</b> — ถ้าสัปดาห์นั้นมีวันเลขซ้ำ (1.1, 2.2, … 12.12) จะบวกเพิ่ม โดยดูจากอดีตว่าวันแบบนี้ยอดพุ่งกี่เท่า <span class="cn-dim">(สูงสุด 3 เท่า และต้องเคยเกิด ≥ 2 ครั้งถึงจะนับ ไม่งั้นไม่บวกเลย)</span></div>
+          <div><b>3. Double Day</b> — ถ้าสัปดาห์นั้นมีวันเลขซ้ำ (2.2, 3.3, … 12.12 · ไม่นับ 1.1) จะบวกเพิ่ม โดยดูจากอดีตว่าวันแบบนี้ยอดพุ่งกี่เท่า <span class="cn-dim">(สูงสุด 3 เท่า และต้องเคยเกิด ≥ 2 ครั้งถึงจะนับ ไม่งั้นไม่บวกเลย)</span></div>
         </div>
         <div class="cn-split">
           <div class="cn-formula">สูตรเต็ม: <code>พยากรณ์(h สัปดาห์ข้างหน้า) = avg4 + slope × h</code> + Double Day boost</div>
@@ -792,19 +792,20 @@
     <div class="section">
       <div class="section-title"><span class="sec-mark">📅</span>พยากรณ์รายวัน (Daily Forecast)</div>
       <div class="section-desc">กราฟโชว์ย้อนหลัง 30 วันล่าสุด + ประมาณการ 14 วันข้างหน้า (คำนวณจากข้อมูลตั้งแต่ ม.ค. 2569)</div>
-      <details class="calc-note" open>
+      <details class="calc-note">
         <summary class="cn-head">วิธีคิด — ให้น้ำหนักวันใกล้มากกว่าวันไกล</summary>
         <div class="cn-list">
           <div><b>1. ยอดฐาน</b> — ไม่ได้เฉลี่ยทุกวันเท่ากัน แต่<b>ให้ความสำคัญกับวันล่าสุดมากกว่า</b> ยอดเมื่อวานมีน้ำหนักมากกว่ายอดเมื่อ 3 เดือนก่อน <span class="cn-dim">(วันใหม่ 30% + ยอดฐานเดิม 70%)</span></div>
-          <div><b>2. แนวโน้ม</b> — ติดตามว่ายอด<b>ไต่ขึ้นหรือไหลลง</b>วันละเท่าไหร่ แล้วปรับตามเรื่อยๆ ถ้าเทรนด์เปลี่ยนก็ตามทัน</div>
-          <div><b>3. Double Day</b> — วันที่ตรงกับเลขซ้ำจะคูณเพิ่มตามที่เคยเกิดในอดีต <span class="cn-dim">(สูงสุด 3 เท่า ต้องเคยเกิด ≥ 2 ครั้ง)</span></div>
+          <div><b>2. ไม่ทายเทรนด์</b> — ทุกวันข้างหน้าได้ยอดเท่ากัน เพราะเราไม่เดาว่ายอดจะไต่ขึ้นต่อ <span class="cn-dim">(กันกรณีที่ยอดพุ่งช่วงสั้นๆ แล้วโมเดลเข้าใจว่าจะพุ่งไปเรื่อยๆ)</span></div>
+          <div><b>3. Double Day</b> — วันที่ตรงกับเลขซ้ำจะคูณเพิ่มตามที่เคยเกิดในอดีต <span class="cn-dim">(2.2 ถึง 12.12 · ไม่นับ 1.1 · สูงสุด 3 เท่า ต้องเคยเกิด ≥ 2 ครั้ง)</span></div>
         </div>
         <div class="cn-warn">⚠️ <b>กราฟโชว์แค่ 30 วันล่าสุด</b> เพื่อให้อ่านง่าย — แต่การคำนวณใช้ข้อมูล<b>ทุกวันตั้งแต่ ม.ค. 2569</b> ไม่ได้ตัดทิ้งนะครับ</div>
         <div class="cn-split">
-          <div class="cn-formula">สูตรเต็ม (Holt's Exponential Smoothing):<br>
-            <code>Level(t) = 0.3 × ค่าจริง(t) + 0.7 × (Level(t-1) + Trend(t-1))</code><br>
-            <code>Trend(t) = 0.15 × (Level(t) − Level(t-1)) + 0.85 × Trend(t-1)</code><br>
-            <code>พยากรณ์(h วันข้างหน้า) = Level + Trend × h</code>
+          <div class="cn-formula">สูตรเต็ม (Simple Exponential Smoothing):<br>
+            <code>F(t+1) = α × Y(t) + (1 − α) × F(t)</code><br>
+            <code>α = 0.3 · Y(t) = ยอดจริงวันนั้น · F(t) = ยอดฐานเดิม</code><br>
+            <code>พยากรณ์(ทุกวันข้างหน้า) = F ล่าสุด</code><br>
+            <code>วันเลขซ้ำ = F × ตัวคูณ Double Day</code>
           </div>
           <div class="cn-livebox">
             <div class="cl-boxtitle">ตัวเลขจริงที่แทนค่าลงในสูตร</div>
@@ -830,14 +831,14 @@
     <div class="section">
       <div class="section-title"><span class="sec-mark">🎯</span>ความแม่นของพยากรณ์ย้อนหลัง (Forecast Accuracy)</div>
       <div class="section-desc">ย้อนเวลากลับไปพยากรณ์ทีละวันด้วยข้อมูลเท่าที่ "มีอยู่จริงในวันนั้น" แล้วเทียบกับยอดจริง · 30 วันล่าสุด</div>
-      <details class="calc-note" open>
+      <details class="calc-note">
         <summary class="cn-head">วิธีคิด — ทำไมไม่ต้องเก็บไฟล์พยากรณ์เก่าไว้</summary>
         <div class="cn-list">
-          <div><b>1. เดินย้อนเวลา (walk-forward)</b> — โมเดล Holt เดินไล่ทีละวันอยู่แล้ว ระหว่างเดินเราจด <span class="cl-var">Level</span>/<span class="cl-var">Trend</span> ณ <b>สิ้นวันที่ D−1</b> ไว้ก่อน แล้วใช้ค่านั้นทำนายวันที่ D <span class="cn-dim">= พยากรณ์ล่วงหน้า 1 วัน ตอนที่ยังไม่เห็นยอดวันที่ D — ได้ผลเหมือนย้อนไปกดดูหน้านี้เมื่อวานเป๊ะๆ</span></div>
+          <div><b>1. เดินย้อนเวลา (walk-forward)</b> — โมเดลเดินไล่ทีละวันอยู่แล้ว ระหว่างเดินเราจด <span class="cl-var">F</span> ณ <b>สิ้นวันที่ D−1</b> ไว้ก่อน แล้วใช้ค่านั้นทำนายวันที่ D <span class="cn-dim">= พยากรณ์ล่วงหน้า 1 วัน ตอนที่ยังไม่เห็นยอดวันที่ D — ได้ผลเหมือนย้อนไปกดดูหน้านี้เมื่อวานเป๊ะๆ</span></div>
           <div><b>2. เทียบกับยอดจริง</b> — <code>%คลาด = (พยากรณ์ − จริง) ÷ จริง</code> · <b>+</b> = ทายสูงเกินจริง · <b>−</b> = ทายต่ำกว่าจริง</div>
           <div><b>3. สรุปรวม</b> — <b>MAPE</b> = เฉลี่ยของ |%คลาด| · <b>ความแม่น</b> = 100% − MAPE · <b>Bias</b> = เฉลี่ย %คลาดแบบคิดเครื่องหมาย บอกว่าโมเดล<b>ทายสูงหรือทายต่ำเป็นนิสัย</b> <span class="cn-dim">(ใกล้ 0 = ไม่เอนไปทางไหน)</span></div>
         </div>
-        <div class="cn-warn">⚠️ ไม่นับ <b>วันล่าสุด</b> (ยอดยังไม่ครบวัน) และ <b>วันที่ยอดจริง = 0</b> (หารไม่ได้) · ตัวคูณ Double Day ใช้ค่าที่เรียนรู้จากข้อมูลทั้งหมด ไม่ได้เรียนรู้ใหม่ทุกวัน ตัวเลขจึงสวยกว่าความจริงเล็กน้อย</div>
+        <div class="cn-warn">⚠️ ไม่นับ <b>วันนี้</b> (ยอดยังไม่ครบวัน) และ <b>วันที่ยอดจริง = 0</b> (หารไม่ได้) · ตัวคูณ Double Day ใช้ค่าที่เรียนรู้จากข้อมูลทั้งหมด ไม่ได้เรียนรู้ใหม่ทุกวัน ตัวเลขจึงสวยกว่าความจริงเล็กน้อย</div>
       </details>
       <div class="stat-grid">
         <div class="stat-card"><div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/></svg></div><div class="stat-label">ความแม่น (ออเดอร์)</div><div class="stat-value c-matcha" id="bt_acc">—</div></div>
@@ -872,7 +873,7 @@
     <div class="section">
       <div class="section-title"><span class="sec-mark">👥</span>พยากรณ์อัตรากำลังคน (Staffing Forecast)</div>
       <div class="section-desc">คำนวณจากยอดพยากรณ์ 14 วันข้างหน้า (จากกราฟรายวันด้านบน) · แถวสีไฮไลท์ = วันที่ตรงกับ Double Day</div>
-      <details class="calc-note" open>
+      <details class="calc-note">
         <summary class="cn-head">วิธีคิดจำนวนคน</summary>
         <div class="cn-list">
           <div><b>ทีม Packing</b> — 1 คนแพ็คได้ <b>200 ออเดอร์/วัน</b> (ทำงาน 6 ชม. = 33 ออเดอร์/ชม.) <span class="cn-dim">+ คนท้ายไลน์แยกพัสดุอีก 1 คนเสมอ ไม่ว่ายอดจะน้อยแค่ไหน</span></div>
@@ -3229,7 +3230,8 @@ function renderTab4(){
 
 let lastDoubleDayInfo = { multiplier:null, samples:0 };
 function isDoubleDay(d){
-  return d.getDate() === (d.getMonth()+1);
+  // v119: 1/1 ไม่นับ — ไม่มีการจัดแคมเปญวันนั้น (นับ 2/2 ถึง 12/12)
+  return d.getDate() === (d.getMonth()+1) && d.getDate() !== 1;
 }
 function countDoubleDaysInRange(start, end){
   if(!start || !end) return 0;
@@ -3383,14 +3385,12 @@ function computeDailyForecastSeries(valueByDateKey){
   }
   const allDayValues = allDayKeys.map(k => valueByDateKey[k] || 0);
 
-  const ALPHA = 0.3, BETA = 0.15;
+  // v120: เปลี่ยนจาก Holt (Level+Trend) มาเป็น Simple Exponential Smoothing
+  //       F(t+1) = α·Y(t) + (1−α)·F(t) — ไม่มีพจน์เทรนด์ พยากรณ์จึงแบนทุก horizon
+  const ALPHA = 0.3;
   let level = allDayValues[0];
-  let trend = allDayValues.length > 1 ? (allDayValues[1] - allDayValues[0]) : 0;
   for(let i = 1; i < allDayValues.length; i++){
-    const value = allDayValues[i];
-    const prevLevel = level;
-    level = ALPHA*value + (1-ALPHA)*(level + trend);
-    trend = BETA*(level - prevLevel) + (1-BETA)*trend;
+    level = ALPHA*allDayValues[i] + (1-ALPHA)*level;
   }
 
   const pastOnlyValues = {};
@@ -3418,7 +3418,7 @@ function computeDailyForecastSeries(valueByDateKey){
   const ddFlagPerForecast = [];
   for(let i=1;i<=FORECAST_DAYS;i++){
     const d = new Date(lastDate); d.setDate(lastDate.getDate()+i);
-    let val = Math.max(0, level + trend*i);
+    let val = Math.max(0, level);                // v120: SES — ทุก horizon ได้ค่าเดียวกัน
     const isDD = isDoubleDay(d);
     ddFlagPerForecast.push(isDD);                           // v85: เก็บไว้โชว์ในช่อง "แทนค่าจริง"
     if(isDD && DOUBLE_DAY_BOOST > 1) val *= DOUBLE_DAY_BOOST;
@@ -3432,7 +3432,7 @@ function computeDailyForecastSeries(valueByDateKey){
   const labels = [...historicalLabels, ...forecastLabels];
 
   return { labels, historical, forecastData, allRangeLabels: labels, doubleDayHits, DOUBLE_DAY_BOOST, ddSamples, forecastDates,
-           level, trend, ALPHA, BETA, daysUsed: allDayValues.length, forecastLabels, ddFlagPerForecast };
+           level, ALPHA, daysUsed: allDayValues.length, forecastLabels, ddFlagPerForecast };
 }
 
 /* v85: ช่อง "แทนค่าจริงตอนนี้" ข้างสูตร — เอาตัวแปรที่โมเดลคำนวณได้จริงมากางให้เห็น
@@ -3470,19 +3470,17 @@ function renderDailyCalcLive(elId, series, unitName, unitLabel){
   const el = document.getElementById(elId);
   if(!el) return;
   if(!series){ el.innerHTML = '<div class="cl-unit">' + unitLabel + '</div>ไม่มีข้อมูลพอคำนวณ'; return; }
-  const { level, trend, ALPHA, BETA, daysUsed, DOUBLE_DAY_BOOST, ddSamples, forecastLabels, forecastData, ddFlagPerForecast } = series;
+  const { level, ALPHA, daysUsed, DOUBLE_DAY_BOOST, ddSamples, forecastLabels, forecastData, ddFlagPerForecast } = series;
 
   let h = '<div class="cl-unit">' + unitLabel + '</div>';
-  h += '<div><span class="cl-var">Level</span> ล่าสุด = <b>' + nfmt(level) + '</b> ' + unitName + '/วัน <span style="color:var(--ink-faint);">(α=' + ALPHA + ')</span></div>';
-  h += '<div><span class="cl-var">Trend</span> ล่าสุด = <b>' + signed(trend, 1) + '</b> ' + unitName + '/วัน <span style="color:var(--ink-faint);">(β=' + BETA + ' · fit จาก ' + nfmt(daysUsed) + ' วัน)</span></div>';
+  h += '<div><span class="cl-var">F</span> ล่าสุด = <b>' + nfmt(level) + '</b> ' + unitName + '/วัน <span style="color:var(--ink-faint);">(α=' + ALPHA + ' · fit จาก ' + nfmt(daysUsed) + ' วัน)</span></div>';
   h += '<div>' + (DOUBLE_DAY_BOOST > 1
         ? '<span class="cl-var cl-dd">Double Day</span> = คูณ ×' + DOUBLE_DAY_BOOST.toFixed(2) + ' <span style="color:var(--ink-faint);">(เรียนรู้จาก ' + ddSamples + ' ครั้ง)</span>'
         : '<span class="cl-var">Double Day</span> = <b>ไม่คูณ</b> <span style="color:var(--ink-faint);">(เจอในอดีตแค่ ' + ddSamples + ' ครั้ง)</span>') + '</div>';
   h += '<div style="margin-top:6px;">';
   (forecastLabels || []).forEach((lb, idx) => {
-    const hh = idx + 1;
     const isDD = ddFlagPerForecast && ddFlagPerForecast[idx];
-    let calc = nfmt(level) + ' ' + signed(trend, 1) + '×' + hh;
+    let calc = nfmt(level);
     if(isDD && DOUBLE_DAY_BOOST > 1) calc += ' <span class="cl-dd">×' + DOUBLE_DAY_BOOST.toFixed(2) + '</span>';
     h += '<div class="cl-row"><span class="cl-calc">' + lb + ' = ' + calc + '</span><span class="cl-out">' + nfmt(forecastData[idx]) + '</span></div>';
   });
@@ -3510,24 +3508,23 @@ function computeDailyBacktest(valueByDateKey, ddBoost){
     keys.push(k); vals.push(valueByDateKey[k] || 0);
   }
 
-  const ALPHA = 0.3, BETA = 0.15;
+  const ALPHA = 0.3;                             // v120: SES ให้ตรงกับ computeDailyForecastSeries
   let level = vals[0];
-  let trend = vals.length > 1 ? (vals[1] - vals[0]) : 0;
   const rows = [];
   for(let i = 1; i < vals.length; i++){
     // ทำนายก่อน แล้วค่อยให้โมเดลเห็นยอดจริงของวันนั้น (กันข้อมูลอนาคตรั่ว)
     const d = new Date(keys[i] + 'T00:00:00');
     const isDD = isDoubleDay(d);
-    let f = Math.max(0, level + trend);
+    let f = Math.max(0, level);
     if(isDD && ddBoost > 1) f *= ddBoost;
     rows.push({ dateKey:keys[i], label:formatDateShort(d), isDD, forecast:Math.round(f), actual:vals[i] });
 
-    const value = vals[i], prevLevel = level;
-    level = ALPHA*value + (1-ALPHA)*(level + trend);
-    trend = BETA*(level - prevLevel) + (1-BETA)*trend;
+    level = ALPHA*vals[i] + (1-ALPHA)*level;
   }
 
-  rows.pop();                                    // วันล่าสุด ยอดยังไม่ครบวัน ไม่เอามาตัดสิน
+  // v119: เดิม pop() ทิ้งแถวสุดท้ายเสมอ ทำให้ "เมื่อวาน" (วันที่ปิดแล้ว) หายไปด้วย
+  //       ตัดเฉพาะ "วันนี้" ที่ยอดยังไม่ครบวันจริงๆ
+  if(rows.length && rows[rows.length-1].dateKey === todayKey) rows.pop();
   const win = rows.slice(-FC_BACKTEST_DAYS).map(r => ({
     ...r,
     diff: r.forecast - r.actual,
