@@ -796,16 +796,16 @@
         <summary class="cn-head">วิธีคิด — ให้น้ำหนักวันใกล้มากกว่าวันไกล</summary>
         <div class="cn-list">
           <div><b>1. ยอดฐาน</b> — ไม่ได้เฉลี่ยทุกวันเท่ากัน แต่<b>ให้ความสำคัญกับวันล่าสุดมากกว่า</b> ยอดเมื่อวานมีน้ำหนักมากกว่ายอดเมื่อ 3 เดือนก่อน <span class="cn-dim">(วันใหม่ 30% + ยอดฐานเดิม 70%)</span></div>
-          <div><b>2. ไม่ทายเทรนด์</b> — ทุกวันข้างหน้าได้ยอดเท่ากัน เพราะเราไม่เดาว่ายอดจะไต่ขึ้นต่อ <span class="cn-dim">(กันกรณีที่ยอดพุ่งช่วงสั้นๆ แล้วโมเดลเข้าใจว่าจะพุ่งไปเรื่อยๆ)</span></div>
+          <div><b>2. วันในสัปดาห์</b> — เรียนจากอดีตว่า<b>แต่ละวันในสัปดาห์ยอดต่างกันกี่เท่า</b> เช่นเสาร์ ×1.3 อังคาร ×0.8 พยากรณ์จึงขึ้นลงตามปฏิทินจริง <span class="cn-dim">(ต้องมีตัวอย่าง ≥ 3 ครั้ง · จำกัดช่วง ×0.5 ถึง ×2.0 · ไม่นับวันเลขซ้ำ กันนับซ้ำกับข้อ 3)</span></div>
           <div><b>3. Double Day</b> — วันที่ตรงกับเลขซ้ำจะคูณเพิ่มตามที่เคยเกิดในอดีต <span class="cn-dim">(2.2 ถึง 12.12 · ไม่นับ 1.1 · สูงสุด 3 เท่า ต้องเคยเกิด ≥ 2 ครั้ง)</span></div>
         </div>
         <div class="cn-warn">⚠️ <b>กราฟโชว์แค่ 30 วันล่าสุด</b> เพื่อให้อ่านง่าย — แต่การคำนวณใช้ข้อมูล<b>ทุกวันตั้งแต่ ม.ค. 2569</b> ไม่ได้ตัดทิ้งนะครับ</div>
         <div class="cn-split">
-          <div class="cn-formula">สูตรเต็ม (Simple Exponential Smoothing):<br>
+          <div class="cn-formula">สูตรเต็ม (SES + Day-of-Week):<br>
             <code>F(t+1) = α × Y(t) + (1 − α) × F(t)</code><br>
             <code>α = 0.3 · Y(t) = ยอดจริงวันนั้น · F(t) = ยอดฐานเดิม</code><br>
-            <code>พยากรณ์(ทุกวันข้างหน้า) = F ล่าสุด</code><br>
-            <code>วันเลขซ้ำ = F × ตัวคูณ Double Day</code>
+            <code>พยากรณ์ = F × ตัวคูณวันในสัปดาห์ × ตัวคูณ Double Day</code><br>
+            <code>ตัวคูณวันในสัปดาห์ = เฉลี่ยยอดวันนั้น ÷ เฉลี่ยยอดรวม</code>
           </div>
           <div class="cn-livebox">
             <div class="cl-boxtitle">ตัวเลขจริงที่แทนค่าลงในสูตร</div>
@@ -838,7 +838,7 @@
           <div><b>2. เทียบกับยอดจริง</b> — <code>%คลาด = (พยากรณ์ − จริง) ÷ จริง</code> · <b>+</b> = ทายสูงเกินจริง · <b>−</b> = ทายต่ำกว่าจริง</div>
           <div><b>3. สรุปรวม</b> — <b>MAPE</b> = เฉลี่ยของ |%คลาด| · <b>ความแม่น</b> = 100% − MAPE · <b>Bias</b> = เฉลี่ย %คลาดแบบคิดเครื่องหมาย บอกว่าโมเดล<b>ทายสูงหรือทายต่ำเป็นนิสัย</b> <span class="cn-dim">(ใกล้ 0 = ไม่เอนไปทางไหน)</span></div>
         </div>
-        <div class="cn-warn">⚠️ ไม่นับ <b>วันนี้</b> (ยอดยังไม่ครบวัน) และ <b>วันที่ยอดจริง = 0</b> (หารไม่ได้) · ตัวคูณ Double Day ใช้ค่าที่เรียนรู้จากข้อมูลทั้งหมด ไม่ได้เรียนรู้ใหม่ทุกวัน ตัวเลขจึงสวยกว่าความจริงเล็กน้อย</div>
+        <div class="cn-warn">⚠️ ไม่นับ <b>วันนี้</b> (ยอดยังไม่ครบวัน) และ <b>วันที่ยอดจริง = 0</b> (หารไม่ได้) · ตัวคูณ Double Day และตัวคูณวันในสัปดาห์ใช้ค่าที่เรียนรู้จากข้อมูลทั้งหมด ไม่ได้เรียนรู้ใหม่ทุกวัน ตัวเลขจึงสวยกว่าความจริงเล็กน้อย</div>
       </details>
       <div class="stat-grid">
         <div class="stat-card"><div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/></svg></div><div class="stat-label">ความแม่น (ออเดอร์)</div><div class="stat-value c-matcha" id="bt_acc">—</div></div>
@@ -3210,7 +3210,9 @@ function renderTab4(){
   renderForecastBacktest(
     mapSetToSize(ordersByDate), qtyByDate,
     dailyOrdersSeries ? dailyOrdersSeries.DOUBLE_DAY_BOOST : 1,
-    dailyQtySeries ? dailyQtySeries.DOUBLE_DAY_BOOST : 1
+    dailyQtySeries ? dailyQtySeries.DOUBLE_DAY_BOOST : 1,
+    dailyOrdersSeries && dailyOrdersSeries.dow ? dailyOrdersSeries.dow.factors : null,
+    dailyQtySeries && dailyQtySeries.dow ? dailyQtySeries.dow.factors : null
   );
 
   renderStaffingForecast(dailyOrdersSeries, dailyQtySeries);
@@ -3276,6 +3278,36 @@ function learnDoubleDayMultiplierByValue(valueByDateKey){
   const avgRatio = ratios.reduce((s,v)=>s+v,0) / ratios.length;
   const cappedRatio = Math.min(avgRatio, DOUBLE_DAY_MAX_MULTIPLIER);
   return { multiplier: cappedRatio, samples: ratios.length };
+}
+
+/* v121: ตัวคูณวันในสัปดาห์ — ตัวที่ทำให้พยากรณ์แต่ละวันไม่เท่ากันจริงๆ
+   ratio = ค่าเฉลี่ยของวันนั้นในสัปดาห์ ÷ ค่าเฉลี่ยรวมทุกวัน
+   นับแค่วันที่ "มีอยู่ในชีตและยอด > 0" กันวันที่ขาดข้อมูลถูกเติม 0 แล้วกดตัวคูณลง */
+const DOW_MIN_SAMPLES = 3;      // แต่ละวันต้องมีตัวอย่างกี่ครั้งถึงจะเชื่อ
+const DOW_MIN_FACTOR  = 0.5;    // กันตัวคูณต่ำสุดโต่ง
+const DOW_MAX_FACTOR  = 2.0;    // กันตัวคูณสูงสุดโต่ง
+const DOW_NAMES = ['อา.','จ.','อ.','พ.','พฤ.','ศ.','ส.'];
+function learnDayOfWeekFactors(valueByDateKey){
+  const sums = [0,0,0,0,0,0,0], counts = [0,0,0,0,0,0,0];
+  Object.keys(valueByDateKey).forEach(key => {
+    const v = valueByDateKey[key];
+    if(!(v > 0)) return;                                  // ข้ามวันที่ขาดข้อมูล / ยอด 0
+    const d = new Date(key + 'T00:00:00');
+    if(isDoubleDay(d)) return;                            // กันนับซ้ำกับตัวคูณ Double Day
+    const w = d.getDay();
+    sums[w] += v; counts[w]++;
+  });
+  const totalN = counts.reduce((s,v)=>s+v,0);
+  const totalSum = sums.reduce((s,v)=>s+v,0);
+  if(!totalN || !totalSum) return { factors:[1,1,1,1,1,1,1], counts, usable:false };
+  const grandMean = totalSum / totalN;
+  const factors = sums.map((s,w) => {
+    if(counts[w] < DOW_MIN_SAMPLES || grandMean <= 0) return 1;
+    const f = (s / counts[w]) / grandMean;
+    return Math.min(DOW_MAX_FACTOR, Math.max(DOW_MIN_FACTOR, f));
+  });
+  const usable = counts.every(c => c >= DOW_MIN_SAMPLES);
+  return { factors, counts, usable };
 }
 
 function formatDateShort(d){
@@ -3397,6 +3429,7 @@ function computeDailyForecastSeries(valueByDateKey){
   pastKeys.forEach(k => { pastOnlyValues[k] = valueByDateKey[k]; });
   const { multiplier: learnedMultiplier, samples: ddSamples } = learnDoubleDayMultiplierByValue(pastOnlyValues);
   const DOUBLE_DAY_BOOST = learnedMultiplier || 1;
+  const dow = learnDayOfWeekFactors(pastOnlyValues);       // v121
 
   // v115: เดิมโชว์ทั้งปีแบบเว้นทุก 5 วัน · ตอนนี้โชว์แค่ 30 วันล่าสุดแบบครบทุกวัน
   const displayStart = Math.max(0, allDayKeys.length - FC_HIST_DAYS_SHOWN);
@@ -3416,11 +3449,14 @@ function computeDailyForecastSeries(valueByDateKey){
   const forecastLabels = [];
   const forecastDates = [];
   const ddFlagPerForecast = [];
+  const dowFactorPerForecast = [];
   for(let i=1;i<=FORECAST_DAYS;i++){
     const d = new Date(lastDate); d.setDate(lastDate.getDate()+i);
-    let val = Math.max(0, level);                // v120: SES — ทุก horizon ได้ค่าเดียวกัน
+    const dowF = dow.factors[d.getDay()];
+    let val = Math.max(0, level * dowF);         // v121: SES × ตัวคูณวันในสัปดาห์
     const isDD = isDoubleDay(d);
     ddFlagPerForecast.push(isDD);                           // v85: เก็บไว้โชว์ในช่อง "แทนค่าจริง"
+    dowFactorPerForecast.push(dowF);
     if(isDD && DOUBLE_DAY_BOOST > 1) val *= DOUBLE_DAY_BOOST;
     forecastData.push(Math.max(0, Math.round(val)));
     forecastLabels.push(formatDateShort(d) + '*');
@@ -3432,7 +3468,8 @@ function computeDailyForecastSeries(valueByDateKey){
   const labels = [...historicalLabels, ...forecastLabels];
 
   return { labels, historical, forecastData, allRangeLabels: labels, doubleDayHits, DOUBLE_DAY_BOOST, ddSamples, forecastDates,
-           level, ALPHA, daysUsed: allDayValues.length, forecastLabels, ddFlagPerForecast };
+           level, ALPHA, daysUsed: allDayValues.length, forecastLabels, ddFlagPerForecast,
+           dow, dowFactorPerForecast };
 }
 
 /* v85: ช่อง "แทนค่าจริงตอนนี้" ข้างสูตร — เอาตัวแปรที่โมเดลคำนวณได้จริงมากางให้เห็น
@@ -3470,17 +3507,23 @@ function renderDailyCalcLive(elId, series, unitName, unitLabel){
   const el = document.getElementById(elId);
   if(!el) return;
   if(!series){ el.innerHTML = '<div class="cl-unit">' + unitLabel + '</div>ไม่มีข้อมูลพอคำนวณ'; return; }
-  const { level, ALPHA, daysUsed, DOUBLE_DAY_BOOST, ddSamples, forecastLabels, forecastData, ddFlagPerForecast } = series;
+  const { level, ALPHA, daysUsed, DOUBLE_DAY_BOOST, ddSamples, forecastLabels, forecastData, ddFlagPerForecast, dow, dowFactorPerForecast } = series;
 
   let h = '<div class="cl-unit">' + unitLabel + '</div>';
   h += '<div><span class="cl-var">F</span> ล่าสุด = <b>' + nfmt(level) + '</b> ' + unitName + '/วัน <span style="color:var(--ink-faint);">(α=' + ALPHA + ' · fit จาก ' + nfmt(daysUsed) + ' วัน)</span></div>';
+  if(dow && dow.factors){
+    const fx = dow.factors.map((f,w) => DOW_NAMES[w] + ' ×' + f.toFixed(2)).join(' · ');
+    h += '<div><span class="cl-var">วันในสัปดาห์</span> = ' + fx +
+         (dow.usable ? '' : ' <span style="color:var(--ink-faint);">(บางวันตัวอย่างน้อย ใช้ ×1.00)</span>') + '</div>';
+  }
   h += '<div>' + (DOUBLE_DAY_BOOST > 1
         ? '<span class="cl-var cl-dd">Double Day</span> = คูณ ×' + DOUBLE_DAY_BOOST.toFixed(2) + ' <span style="color:var(--ink-faint);">(เรียนรู้จาก ' + ddSamples + ' ครั้ง)</span>'
         : '<span class="cl-var">Double Day</span> = <b>ไม่คูณ</b> <span style="color:var(--ink-faint);">(เจอในอดีตแค่ ' + ddSamples + ' ครั้ง)</span>') + '</div>';
   h += '<div style="margin-top:6px;">';
   (forecastLabels || []).forEach((lb, idx) => {
     const isDD = ddFlagPerForecast && ddFlagPerForecast[idx];
-    let calc = nfmt(level);
+    const dowF = dowFactorPerForecast ? dowFactorPerForecast[idx] : 1;
+    let calc = nfmt(level) + ' ×' + Number(dowF).toFixed(2);
     if(isDD && DOUBLE_DAY_BOOST > 1) calc += ' <span class="cl-dd">×' + DOUBLE_DAY_BOOST.toFixed(2) + '</span>';
     h += '<div class="cl-row"><span class="cl-calc">' + lb + ' = ' + calc + '</span><span class="cl-out">' + nfmt(forecastData[idx]) + '</span></div>';
   });
@@ -3492,7 +3535,8 @@ function renderDailyCalcLive(elId, series, unitName, unitLabel){
    เดิน Holt ไล่ทีละวันเหมือน computeDailyForecastSeries แต่ระหว่างเดิน
    เราหยุดจด Level/Trend ณ สิ้นวันที่ D−1 ไว้ก่อน แล้วเอาไปทำนายวันที่ D
    → ได้ "พยากรณ์ล่วงหน้า 1 วัน" ของทุกวันในอดีต โดยไม่ต้องเก็บไฟล์พยากรณ์เก่าไว้เลย */
-function computeDailyBacktest(valueByDateKey, ddBoost){
+function computeDailyBacktest(valueByDateKey, ddBoost, dowFactors){
+  const DOW = dowFactors || [1,1,1,1,1,1,1];
   const todayKey = toDateKey(new Date());
   const HIST_START_KEY = '2026-01-01';
   const pastKeys = Object.keys(valueByDateKey).filter(k => k >= HIST_START_KEY && k <= todayKey).sort();
@@ -3515,7 +3559,7 @@ function computeDailyBacktest(valueByDateKey, ddBoost){
     // ทำนายก่อน แล้วค่อยให้โมเดลเห็นยอดจริงของวันนั้น (กันข้อมูลอนาคตรั่ว)
     const d = new Date(keys[i] + 'T00:00:00');
     const isDD = isDoubleDay(d);
-    let f = Math.max(0, level);
+    let f = Math.max(0, level * DOW[d.getDay()]);          // v121
     if(isDD && ddBoost > 1) f *= ddBoost;
     rows.push({ dateKey:keys[i], label:formatDateShort(d), isDD, forecast:Math.round(f), actual:vals[i] });
 
@@ -3594,9 +3638,9 @@ function renderBacktestChart(canvasId, chartKey, bt){
   });
 }
 
-function renderForecastBacktest(ordersByDateSize, qtyByDate, ordersDDBoost, qtyDDBoost){
-  const btOrders = computeDailyBacktest(ordersByDateSize, ordersDDBoost);
-  const btQty    = computeDailyBacktest(qtyByDate, qtyDDBoost);
+function renderForecastBacktest(ordersByDateSize, qtyByDate, ordersDDBoost, qtyDDBoost, ordersDow, qtyDow){
+  const btOrders = computeDailyBacktest(ordersByDateSize, ordersDDBoost, ordersDow);
+  const btQty    = computeDailyBacktest(qtyByDate, qtyDDBoost, qtyDow);
 
   renderBacktestChart('chart_backtest_orders', 'backtestOrders', btOrders);
   renderBacktestChart('chart_backtest_qty',    'backtestQty',    btQty);
