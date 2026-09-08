@@ -313,6 +313,9 @@
   table.data-table tbody tr:hover{background:rgba(122,154,63,.06);}
   .table-scroll{max-height:340px;overflow-y:auto;}
   .remark-scroll{max-height:420px;}
+  /* v121: ตารางนี้ต้องโชว์ครบทุกแถว ไม่มีเลื่อนในกรอบ
+     เพราะตอน "บันทึกเป็นภาพ" ส่วนที่ถูกเลื่อนซ่อนไว้จะไม่ติดมาในรูป */
+  .full-rows{max-height:none!important;overflow:visible!important;}
   .status-text{display:inline-flex;align-items:center;gap:6px;font-size:calc(21.4px * var(--type-scale));font-weight:600;}
   .status-text.ontime{color:var(--matcha-deep);}
   .status-text.early{color:#8a6a2f;}
@@ -520,7 +523,7 @@
     <div class="meta-right">
       Last fetched<br><span id="lastUpdated">—</span>
       <div id="dataFreshness" class="freshness"></div>
-      <div id="buildTag" style="font-size:calc(13.6px * var(--type-scale));color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-09-01-v120-present-filters</div>
+      <div id="buildTag" style="font-size:calc(13.6px * var(--type-scale));color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;margin-top:2px;">Build: 2026-09-08-v121-full-rows</div>
       <div class="btn-row">
         <button class="btn-plain btn-primary" id="refreshBtn" onclick="loadData()"><span class="bi">↻</span>รีเฟรชข้อมูล</button>
         <button class="btn-plain" id="saveImgBtn" onclick="saveTabAsPNG()"><span class="bi">🖼️</span>บันทึกเป็นภาพ</button>
@@ -703,12 +706,12 @@
       <div class="section-title"><span class="sec-mark">🔄</span>รายการที่ต้องเติม Stock <span style="font-size:calc(22.4px * var(--type-scale));font-weight:400;color:var(--ink-faint);font-family:'IBM Plex Mono',monospace;">(ไม่รวมที่ไม่มีโควต้า / ไม่มี Raw Material)</span></div>
       <div class="section-desc">เรียงตามคะแนนขายดี · ไม่นับสินค้าที่ Remark ระบุว่า "ไม่มีโควต้า" หรือ "ไม่มี Raw Material"</div>
       <div class="table-panel">
-        <div class="table-scroll remark-scroll">
-          <table class="data-table">
-            <thead><tr><th>Product</th><th>คะแนนขายดี</th><th>ต้องเติมสินค้า</th><th>Quota</th><th>จำนวนที่ต้องเติม</th><th>Remark</th></tr></thead>
-            <tbody id="tab3_body"></tbody>
-          </table>
-        </div>
+        <!-- v121: ไม่ห่อด้วย .table-scroll เพราะตารางนี้ต้องโชว์ครบทุกแถว
+             ถ้ามีกรอบเลื่อน ส่วนที่ถูกซ่อนจะไม่ติดมาตอน "บันทึกเป็นภาพ" -->
+        <table class="data-table">
+          <thead><tr><th>Product</th><th>คะแนนขายดี</th><th>ต้องเติมสินค้า</th><th>Quota</th><th>จำนวนที่ต้องเติม</th><th>Remark</th></tr></thead>
+          <tbody id="tab3_body"></tbody>
+        </table>
       </div>
     </div>
 
