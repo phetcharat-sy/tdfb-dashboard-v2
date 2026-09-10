@@ -2585,6 +2585,11 @@ function renderTab1(){
     'COUNTUNIQUE(Order Reference) = ' + totalOrders.toLocaleString('en-US') +
     ' · จาก ' + lineRows.length.toLocaleString('en-US') + ' line items · late(pack)=' + lateByPackOnly + ' late(WH)=' + lateByWhOnly + ' late(combined orders)=' + lateOrders +
     ' · นับ "วัน" ตามวันที่ต้องการจัดส่ง' +
+    // v120: การ์ด ส่งปกติ + ด่วน ไม่รวมออเดอร์ที่คอลัมน์ประเภทการส่งว่าง/เขียนอย่างอื่น
+    //       ถ้าไม่บอกไว้ ผลรวมสองการ์ดจะน้อยกว่าการ์ด ORDERS แบบไม่มีคำอธิบาย
+    ((normalOrders + urgentOrders) !== orderRows.length
+      ? ' · ประเภทการส่งไม่ระบุ ' + (orderRows.length - normalOrders - urgentOrders).toLocaleString('en-US') + ' ออเดอร์'
+      : '') +
     (EXCLUDED_ONLY_ORDERS ? ' · ไม่นับ ' + EXCLUDED_ONLY_ORDERS.toLocaleString('en-US') + ' ออเดอร์ที่มีแต่ Box/ค่าส่ง/คูปอง' : '') +
     ' · updated ' + new Date().toLocaleString('en-GB');
 
@@ -2692,8 +2697,8 @@ function renderWeeklyChart(orderRows){
 
 function renderPackingChart(onTime, late){
   const total = onTime + late || 1;
-  const onPct = Math.round((onTime/total)*1000)/10;
-  const latePct = Math.round((late/total)*1000)/10;
+  const onPct = Math.round((onTime/total)*10000)/100;
+  const latePct = Math.round((late/total)*10000)/100;
   const ctx = document.getElementById('chart_packing');
   if(charts.packing) charts.packing.destroy();
   charts.packing = new Chart(ctx, {
@@ -2707,8 +2712,8 @@ function renderPackingChart(onTime, late){
 
 function renderPlatformChart(platform, walkin){
   const total = platform + walkin || 1;
-  const pPct = Math.round((platform/total)*1000)/10;
-  const wPct = Math.round((walkin/total)*1000)/10;
+  const pPct = Math.round((platform/total)*10000)/100;
+  const wPct = Math.round((walkin/total)*10000)/100;
   const ctx = document.getElementById('chart_platform');
   if(charts.platform) charts.platform.destroy();
   charts.platform = new Chart(ctx, {
@@ -2740,7 +2745,7 @@ const pieValueLabelsPlugin = {
       const r = arc.innerRadius + (arc.outerRadius - arc.innerRadius) * 0.62;
       const x = arc.x + Math.cos(angle) * r;
       const y = arc.y + Math.sin(angle) * r;
-      const text = (Number.isInteger(v) ? v : v.toFixed(1)) + '%';
+      const text = formatPercentLabel(v);
       ctx.lineWidth = 3.5;
       ctx.strokeStyle = 'rgba(31,46,26,0.35)';
       ctx.strokeText(text, x, y);
@@ -2758,7 +2763,7 @@ function renderChannelChart(orderRows){
   const total = orderRows.length || 1;
   const entries = Object.entries(counts).sort((a,b)=>b[1]-a[1]);
   const labels = entries.map(e=>e[0]);
-  const data = entries.map(e=> Math.round((e[1]/total)*1000)/10);
+  const data = entries.map(e=> Math.round((e[1]/total)*10000)/100);
   const fixedColors = { 'began':'#D9A727', 'rootroute':'#8A5A2E' };
   const fallbackPalette = ['#7A9A3F','#A6432E','#4C6B26','#C89B4A','#8C9482','#5E7B32'];
   let fallbackIdx = 0;
@@ -2776,7 +2781,7 @@ function renderChannelChart(orderRows){
   // v65: วาด legend เองเป็น HTML จะได้คุมขนาด/กรอบ/การจัดคอลัมน์ได้เต็มที่
   const legendEl = document.getElementById('channel_legend');
   if(legendEl){
-    const fmtPct = v => (Number.isInteger(v) ? v : v.toFixed(1)) + '%';
+    const fmtPct = formatPercentLabel;
     legendEl.innerHTML =
       '<div class="ch-legend-title">Orders by brand</div>' +
       labels.map((l, i) =>
@@ -2809,10 +2814,12 @@ function renderUrgentChart(orderRows){
   const counts = {};
   orderRows.forEach(r => { const u = r.urgent || 'Unspecified'; counts[u] = (counts[u]||0)+1; });
   const total = orderRows.length || 1;
+  // v120: เดิมกรองด้วย % ที่ปัดแล้ว → กลุ่มเล็ก (เช่น "ไม่ระบุ" 16 ออเดอร์) หายไปจากกราฟ
+  //       ทำให้แท่งที่เหลือรวมกันได้ 100% พอดีทั้งที่ของจริงไม่ครบ  จึงกรองด้วยจำนวนนับแทน
   const entries = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,5)
-    .filter(e => Math.round((e[1]/total)*1000)/10 > 0);
+    .filter(e => e[1] > 0);
   const labels = entries.map(e=>e[0]);
-  const data = entries.map(e=> Math.round((e[1]/total)*1000)/10);
+  const data = entries.map(e=> Math.round((e[1]/total)*10000)/100);
   const palette = ['#7A9A3F','#A6432E','#4C6B26','#C89B4A','#8C9482'];
   const ctx = document.getElementById('chart_urgent');
   if(charts.urgent) charts.urgent.destroy();
@@ -2988,7 +2995,7 @@ function renderTop5Chart(rows){
 
 function renderOosChart(onTime, early, late){
   const total = onTime+early+late || 1;
-  const pct = arr => arr.map(v => Math.round((v/total)*1000)/10);
+  const pct = arr => arr.map(v => Math.round((v/total)*10000)/100);
   const [onP, earP, lateP] = pct([onTime, early, late]);
   const ctx = document.getElementById('chart_oos');
   if(charts.oos) charts.oos.destroy();
@@ -3057,10 +3064,18 @@ function percentChartOptions({ dataLabels=false, target=null }={}){
   opts.layout = { padding:{ top:dataLabels ? 30 : 0 } };
   return opts;
 }
+/* v120: ป้าย % ต้องไม่โกหก
+   ก่อนหน้านี้ปัดเป็น 1 ตำแหน่งเสมอ → 99.95% กลายเป็น "100%" และ 0.05% กลายเป็น "0%"
+   ทั้งที่การ์ดข้างบนยังโชว์ว่ามีของช้าอยู่จริง เลขจึงดูขัดกันเอง
+   กติกาใหม่: ถ้าปัดแล้วไปชน 0% หรือ 100% ทั้งที่ค่าจริงไม่ใช่ ให้โชว์ 2 ตำแหน่งแทน */
 function formatPercentLabel(value){
   const num = Number(value);
   if(!Number.isFinite(num)) return '';
-  return (Number.isInteger(num) ? num.toString() : num.toFixed(1)) + '%';
+  if(num === 0) return '0%';
+  if(Number.isInteger(num)) return num.toString() + '%';
+  if(Math.abs(num) < 0.1) return num.toFixed(2) + '%';
+  if(num > 99.9 && num < 100) return num.toFixed(2) + '%';
+  return num.toFixed(1) + '%';
 }
 function tooltipStyle(){
   return { backgroundColor:'#1F2E1A', titleColor:'#fff', bodyColor:'#F6F2E7', borderColor:'rgba(0,0,0,0)', borderWidth:0, padding:10, cornerRadius:6,
