@@ -458,7 +458,10 @@
      ตัวที่อ่านไม่ออกบนโปรเจกเตอร์คือพวก label / หัวตาราง / คำอธิบาย จึงขยายกลุ่มนี้แรงสุด */
   body.exporting .stat-label{font-size:26px !important;letter-spacing:.03em !important;}
   body.exporting .stat-value{font-size:58px !important;}
-  body.exporting .section-title{font-size:40px !important;}
+  /* v124: หัวข้อ section (📈 📦 📋 ฯลฯ) เดิมโตแค่ 40px แทบเท่าตอนแสดงผลปกติ (41.4px)
+     ทำให้ในภาพ export ไม่เด่นพอจะบอกว่าเป็นหัวข้ออะไร ตอนนี้ขยายให้ใหญ่ + หนา + ไอคอนโตตามชัดๆ */
+  body.exporting .section-title{font-size:56px !important;font-weight:800 !important;margin-bottom:16px !important;gap:16px !important;}
+  body.exporting .section-title .sec-mark{width:76px !important;height:76px !important;font-size:38px !important;border-radius:20px !important;}
   body.exporting .section-title svg{width:32px !important;height:32px !important;}
   body.exporting .section-desc{font-size:27px !important;}
   body.exporting .hero-caption{font-size:28px !important;}
