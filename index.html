@@ -670,7 +670,7 @@
       <div class="table-panel">
         <div class="table-scroll remark-scroll">
           <table class="data-table">
-            <thead><tr><th>Order Ref</th><th>Source</th><th>Product</th><th>Remark Team</th></tr></thead>
+            <thead><tr><th>Order Ref</th><th>Source</th><th>Product</th><th>Qty</th><th>Remark Team</th></tr></thead>
             <tbody id="tab2_remark_body"></tbody>
           </table>
         </div>
@@ -2550,12 +2550,13 @@ function renderTab1(){
   const orderRows = toOrderLevel(lineRows);
 
   const totalOrders = countUniqueOrders(lineRows);   // v79: COUNTUNIQUE ของ Order Reference
-  const onTimeOrders = orderRows.filter(r => r._packWorst === 'ontime' || r._packWorst === 'early').length;
+  // v123 FIX: "ก่อนกำหนด" ไม่ใช่ "ตรงวัน" — เดิม onTimeOrders รวม early เข้าไปด้วย ทำให้ % ขึ้น 100%
+  // แม้จะมี order ที่ส่งไม่ตรงวันอยู่ ตอนนี้แยกนับ early ออกจากตัวเศษ และเอาไปรวมในตัวหารแทน (นับเป็น "ไม่ตรงวัน")
+  const onTimeOrders = orderRows.filter(r => r._packWorst === 'ontime').length;
   const lateOrders = orderRows.filter(r => r._packWorst === 'late').length;
-  // v122: แยกนับ "แพ็คก่อนวันจัดส่ง" ออกมาต่างหาก — เป็นส่วนย่อยของ onTimeOrders ข้างบน (ไม่กระทบ % เดิม)
   const earlyOrders = orderRows.filter(r => r._packWorst === 'early').length;
   const pendingOrders = orderRows.filter(r => isPending(r.deliveryStatus)).length;
-  const denom = onTimeOrders + lateOrders || 1;
+  const denom = onTimeOrders + earlyOrders + lateOrders || 1;
   const onPct = Math.round((onTimeOrders/denom)*10000)/100;
 
   setHero('hero_tab1', 'hero_tab1_ring', onPct);
@@ -2579,7 +2580,7 @@ function renderTab1(){
   document.getElementById('m1_urgent').textContent = urgentOrders.toLocaleString('en-US');
 
   renderWeeklyChart(orderRows);
-  renderPackingChart(onTimeOrders, lateOrders);
+  renderPackingChart(onTimeOrders, earlyOrders + lateOrders);
   renderPlatformChart(platformOrders, walkInOrders);
   renderUrgentChart(orderRows);
   renderChannelChart(orderRows);
@@ -2871,7 +2872,8 @@ function renderTab2(){
   const uniqueOrders = countUniqueOrders(rows);
 
   const denom = totalQty || 1;
-  const oosPct = Math.round(((onTimeQty+earlyQty)/denom)*10000)/100;
+  // v123 FIX: เหมือน tab1 — "ก่อนกำหนด" ไม่นับเป็น "ตรงวัน" แล้ว ตัวเศษเหลือแต่ onTimeQty ล้วนๆ
+  const oosPct = Math.round((onTimeQty/denom)*10000)/100;
 
   setHero('hero_tab2', 'hero_tab2_ring', oosPct);
 
@@ -3035,13 +3037,14 @@ function renderTab2RemarkTable(rows){
   });
   const tbody = document.getElementById('tab2_remark_body');
   if(dedupedRows.length === 0){
-    tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state">ไม่มีรายการที่ผิดปกติ (ทุกออเดอร์ส่งในวัน)</div></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state">ไม่มีรายการที่ผิดปกติ (ทุกออเดอร์ส่งในวัน)</div></td></tr>';
     return;
   }
   tbody.innerHTML = dedupedRows.map(r => (
     '<tr><td class="strong">' + escapeHtml(r.orderRef) + '</td>' +
     '<td class="nowrap-cell">' + escapeHtml(r.source || '—') + '</td>' +
     '<td>' + escapeHtml(r.product || '—') + '</td>' +
+    '<td class="nowrap-cell">' + parseQty(r.orderLine).toLocaleString('en-US') + '</td>' +
     '<td>' + remarkChip(r.remarkTeam) + '</td></tr>'
   )).join('');
 }
