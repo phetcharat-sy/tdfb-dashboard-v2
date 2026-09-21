@@ -571,6 +571,7 @@
       <div class="stat-card"><div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg></div><div class="stat-label">Orders</div><div class="stat-value" id="m1_order">—</div></div>
       <div class="stat-card"><div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12l2.5 2.5L16 9"/></svg></div><div class="stat-label">Packed On Time</div><div class="stat-value c-matcha" id="m1_ontime">—</div></div>
       <div class="stat-card"><div class="stat-icon i-azuki"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l10 18H2L12 3z"/><path d="M12 9v5"/><path d="M12 17h.01"/></svg></div><div class="stat-label">แพ็คล่าช้า</div><div class="stat-value c-azuki" id="m1_late">—</div></div>
+      <div class="stat-card"><div class="stat-icon i-bamboo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 16V8"/><path d="M8 12l4-4 4 4"/></svg></div><div class="stat-label">แพ็คก่อนวันจัดส่ง</div><div class="stat-value c-bamboo" id="m1_early">—</div></div>
       <div class="stat-card"><div class="stat-icon i-gray"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></div><div class="stat-label">ยังไม่ได้จัดส่ง</div><div class="stat-value" id="m1_pending">—</div></div>
     </div>
     <div class="stat-grid">
@@ -610,7 +611,7 @@
       <div class="table-panel">
         <div class="table-scroll remark-scroll">
           <table class="data-table">
-            <thead><tr><th>Order Ref</th><th>Source</th><th>Product</th><th>Remark Team</th></tr></thead>
+            <thead><tr><th>Order Ref</th><th>Source</th><th>Product</th><th>Status</th><th>Remark Team</th></tr></thead>
             <tbody id="tab1_remark_body"></tbody>
           </table>
         </div>
@@ -1501,6 +1502,9 @@ function combineStatus(packCls, whCls){
   return 'unknown';
 }
 function statusLabel(cls){ return { ontime:'On time', early:'Early', late:'Delayed', unknown:'—' }[cls] || '—'; }
+// v122: label ไทยสำหรับคอลัมน์ Status ในตาราง Order Detail — แยกจาก statusLabel() (อังกฤษ) เพราะใช้คนละที่
+function statusLabelTH(cls){ return { ontime:'ส่งในวัน', early:'แพ็คก่อนวันจัดส่ง', late:'ล่าช้า', unknown:'ไม่ระบุ' }[cls] || 'ไม่ระบุ'; }
+function statusChipTH(cls){ return '<span class="status-text ' + cls + '"><span class="status-dot ' + cls + '"></span>' + statusLabelTH(cls) + '</span>'; }
 function isPending(deliveryStatus){
   if(!deliveryStatus) return true;
   return deliveryStatus.toLowerCase().includes('pending');
@@ -2548,6 +2552,8 @@ function renderTab1(){
   const totalOrders = countUniqueOrders(lineRows);   // v79: COUNTUNIQUE ของ Order Reference
   const onTimeOrders = orderRows.filter(r => r._packWorst === 'ontime' || r._packWorst === 'early').length;
   const lateOrders = orderRows.filter(r => r._packWorst === 'late').length;
+  // v122: แยกนับ "แพ็คก่อนวันจัดส่ง" ออกมาต่างหาก — เป็นส่วนย่อยของ onTimeOrders ข้างบน (ไม่กระทบ % เดิม)
+  const earlyOrders = orderRows.filter(r => r._packWorst === 'early').length;
   const pendingOrders = orderRows.filter(r => isPending(r.deliveryStatus)).length;
   const denom = onTimeOrders + lateOrders || 1;
   const onPct = Math.round((onTimeOrders/denom)*10000)/100;
@@ -2557,6 +2563,7 @@ function renderTab1(){
   document.getElementById('m1_order').textContent = totalOrders.toLocaleString('en-US');
   document.getElementById('m1_ontime').textContent = onTimeOrders.toLocaleString('en-US');
   document.getElementById('m1_late').textContent = lateOrders.toLocaleString('en-US');
+  document.getElementById('m1_early').textContent = earlyOrders.toLocaleString('en-US');
   document.getElementById('m1_pending').textContent = pendingOrders.toLocaleString('en-US');
 
   const uniqueCustomers = new Set(orderRows.map(r=>r.customer).filter(Boolean)).size;
@@ -2632,13 +2639,14 @@ function renderTab1RemarkTable(rows){
   });
   const tbody = document.getElementById('tab1_remark_body');
   if(dedupedRows.length === 0){
-    tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state">ไม่มีรายการที่ผิดปกติ (ทุกออเดอร์ส่งในวัน)</div></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state">ไม่มีรายการที่ผิดปกติ (ทุกออเดอร์ส่งในวัน)</div></td></tr>';
     return;
   }
   tbody.innerHTML = dedupedRows.map(r => (
     '<tr><td class="strong">' + escapeHtml(r.orderRef) + '</td>' +
     '<td class="nowrap-cell">' + escapeHtml(r.source || '—') + '</td>' +
     '<td>' + escapeHtml(r.product || '—') + '</td>' +
+    '<td class="nowrap-cell">' + statusChipTH(classify(r.whStatus)) + '</td>' +
     '<td>' + remarkChip(r.remarkTeam) + '</td></tr>'
   )).join('');
 }
